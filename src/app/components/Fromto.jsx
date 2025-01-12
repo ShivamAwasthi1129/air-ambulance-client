@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import CloseIcon from "@mui/icons-material/Close";
 
+
 export const Fromto = ({ handleChange }) => {
   const [airports, setAirports] = useState([]);
   const [segments, setSegments] = useState([
@@ -16,7 +17,6 @@ export const Fromto = ({ handleChange }) => {
     departureDate: new Date().toISOString().split("T")[0], // Today's date
     returnDate: "", // Empty by default
     travelerCount: 1,
-    travelClass: "Economy",
   });
 
   useEffect(() => {
@@ -125,7 +125,8 @@ export const Fromto = ({ handleChange }) => {
           {/* ONEWAY */}
           <label
             htmlFor="oneway"
-            className="flex items-center space-x-2 cursor-pointer group"
+            className={`flex items-center space-x-2 cursor-pointer group px-4 py-2 rounded-lg transition-all duration-300 ${formData.flightType === "oneway" ? "bg-blue-50" : "bg-white"
+              }`}
           >
             <input
               type="radio"
@@ -134,17 +135,21 @@ export const Fromto = ({ handleChange }) => {
               value="oneway"
               checked={formData.flightType === "oneway"}
               onChange={() => handleFlightTypeChange("oneway")}
-              className="w-[16px] h-[16px] text-blue-500 border-gray-300 rounded-full focus:ring-blue-500 transition-transform"
+              className="w-[16px] h-[16px] text-blue-500 rounded-full focus:ring-blue-500 transition-transform"
             />
-            <span className="text-gray-700 group-hover:text-blue-500 transition-colors">
+            <span
+              className={`text-gray-700 transition-colors duration-300 ${formData.flightType === "oneway" ? "text-blue-500 font-semibold" : ""
+                }`}
+            >
               One Way
             </span>
           </label>
 
-          {/* ROUNDTRIP*/}
+          {/* ROUNDTRIP */}
           <label
             htmlFor="round_trip"
-            className="flex items-center space-x-2 cursor-pointer group"
+            className={`flex items-center space-x-2 cursor-pointer group px-4 py-2 rounded-lg transition-all duration-300 ${formData.flightType === "round_trip" ? "bg-blue-50" : "bg-white"
+              }`}
           >
             <input
               type="radio"
@@ -153,9 +158,12 @@ export const Fromto = ({ handleChange }) => {
               value="round_trip"
               checked={formData.flightType === "round_trip"}
               onChange={() => handleFlightTypeChange("round_trip")}
-              className="w-[16px] h-[16px] text-blue-500 border-gray-300 rounded-full focus:ring-blue-500 transition-transform"
+              className="w-[16px] h-[16px] text-blue-500 rounded-full focus:ring-blue-500 transition-transform"
             />
-            <span className="text-gray-700 group-hover:text-blue-500 transition-colors">
+            <span
+              className={`text-gray-700 transition-colors duration-300 ${formData.flightType === "round_trip" ? "text-blue-500 font-semibold" : ""
+                }`}
+            >
               Round Trip
             </span>
           </label>
@@ -163,7 +171,8 @@ export const Fromto = ({ handleChange }) => {
           {/* MULTI CITY */}
           <label
             htmlFor="multicity"
-            className="flex items-center space-x-2 cursor-pointer group"
+            className={`flex items-center space-x-2 cursor-pointer group px-4 py-2 rounded-lg transition-all duration-300 ${formData.flightType === "multicity" ? "bg-blue-50" : "bg-white"
+              }`}
           >
             <input
               type="radio"
@@ -171,28 +180,36 @@ export const Fromto = ({ handleChange }) => {
               id="multicity"
               value="multicity"
               checked={formData.flightType === "multicity"}
-              onChange={handleInputChange}
-              className="w-[16px] h-[16px] text-blue-500 border-gray-300 rounded-full focus:ring-blue-500 transition-transform"
+              onChange={(e) => handleFlightTypeChange(e.target.value)}
+              className="w-[16px] h-[16px] text-blue-500 rounded-full focus:ring-blue-500 transition-transform"
             />
-            <span className="text-gray-700 group-hover:text-blue-500 transition-colors">
+            <span
+              className={`text-gray-700 transition-colors duration-300 ${formData.flightType === "multicity" ? "text-blue-500 font-semibold" : ""
+                }`}
+            >
               Multi City
             </span>
           </label>
         </div>
 
+
+
         {/* Flight Categories */}
         <div className="text-gray-500 text-sm">
           <span className="px-3 py-2 bg-gray-100 rounded-full hover:bg-blue-100 hover:text-blue-500 transition-all cursor-pointer">
-            Book National and International Flights
+            Book National and International Fleets
           </span>
         </div>
+
+
       </div>
 
       {/* Main Search Container */}
       <div className="bg-white shadow-md rounded-lg border border-gray-300 py-4 px-6 flex items-center relative">
-        <div className="flex">
+        <div className="flex flex-[3]">
           {/* From Section */}
-          <div className="flex-1 border-r border-gray-300 pr-4">
+          <div className="flex-[3] border-r border-gray-300 pr-4">
+
             <p className="text-sm text-gray-500 mb-1">From</p>
             <select
               name="from"
@@ -219,7 +236,7 @@ export const Fromto = ({ handleChange }) => {
 
           {/* Interchange Icon */}
           {formData.flightType !== "multicity" && (
-            <div className="relative transform translate-y-[40%] -translate-x-1/2 z-10 bg-white rounded-full shadow-[0_0_10px_rgba(0,0,255,0.6),0_0_20px_rgba(0,0,255,0.4)] flex items-center justify-center w-[40px] h-[40px]">
+            <div className="relative transform translate-y-[40%] -translate-x-1/2 z-10 bg-white rounded-full shadow-[0_0_10px_#93c5fd,0_0_20px_#bfdbfe] flex items-center justify-center w-[40px] h-[40px]">
               <button
                 onClick={handleInterchange}
                 className="p-2 hover:bg-gray-100 rounded-full"
@@ -229,9 +246,8 @@ export const Fromto = ({ handleChange }) => {
             </div>
           )}
 
-
           {/* To Section */}
-          <div className="flex-1 border-r border-gray-300 px-4">
+          <div className="flex-[3] border-r border-gray-300 px-4">
             <p className="text-sm text-gray-500 mb-1">To</p>
             <select
               name="to"
@@ -258,7 +274,7 @@ export const Fromto = ({ handleChange }) => {
         </div>
 
         {/* Departure Section */}
-        <div className="flex-1 border-r border-gray-300 px-4">
+        <div className=" border-r border-gray-300 px-4">
           <p className="text-sm text-gray-500 mb-1">Departure</p>
           <input
             type="date"
@@ -279,21 +295,21 @@ export const Fromto = ({ handleChange }) => {
 
         {/* Return Section */}
         {formData.flightType !== "multicity" && (
-          <div className="flex-1 border-r border-gray-300 px-4 relative">
-            <p className="text-sm text-gray-500 mb-1 flex items-center justify-between">
+          <div className="flex-1 border-r border-gray-300 pl-4  relative">
+            <span className="text-sm text-gray-500 mb-1 flex items-center justify-between">
               Return
               {formData.flightType === "round_trip" && (
                 <button onClick={handleClearRoundTrip} className="text-gray-500">
                   <CloseIcon />
                 </button>
               )}
-            </p>
+            </span>
             <input
               type="date"
               name="returnDate"
               value={formData.returnDate}
               onChange={handleInputChange}
-              className="w-full text-lg font-semibold bg-transparent border-none appearance-none focus:outline-none cursor-pointer"
+              className=" text-lg font-semibold bg-transparent border-none appearance-none focus:outline-none cursor-pointer"
               min={new Date().toISOString().split("T")[0]} // Disable past dates
               onKeyDown={(e) => e.preventDefault()} // Prevent manual input
             />
@@ -306,39 +322,27 @@ export const Fromto = ({ handleChange }) => {
             </p>
           </div>
         )}
-
-
-
-
-
-        {/* Travelers & Class Section */}
+        {/* Passengers Section */}
         <div className="flex-1 px-4">
-          <p className="text-sm text-gray-500 mb-1">Travelers & Class</p>
-          <div className="flex items-center space-x-2">
-            <input
-              type="number"
-              name="travelerCount"
-              min="1"
-              value={formData.travelerCount}
-              onChange={handleInputChange}
-              className="w-[50px] text-center text-lg font-semibold bg-transparent border-none appearance-none focus:outline-none cursor-pointer"
-            />
-            <select
-              name="travelClass"
-              value={formData.travelClass}
-              onChange={handleInputChange}
-              className="w-full text-lg font-semibold bg-transparent border-none appearance-none focus:outline-none cursor-pointer"
-            >
-              <option value="Economy">Economy</option>
-              <option value="Premium">Premium</option>
-            </select>
-          </div>
+          <p className="text-sm text-gray-500 mb-4">Passengers</p>
+          <select
+            name="travelerCount"
+            value={formData.travelerCount}
+            onChange={handleInputChange} // Updates formData.travelerCount dynamically
+            className=" text-lg font-semibold bg-transparent border border-gray-300 rounded-lg focus:outline-none cursor-pointer"
+          >
+            {[...Array(20)].map((_, index) => (
+              <option key={index + 1} value={index + 1}>
+                {index + 1} Passenger{index > 0 ? "s" : ""}
+              </option>
+            ))}
+          </select>
           <p className="text-xs text-gray-400 mt-1">
-            {formData.travelerCount} Traveler
-            {formData.travelerCount > 1 ? "s" : ""} - {formData.travelClass}
+            {formData.travelerCount} Passenger{formData.travelerCount > 1 ? "s" : ""}
           </p>
         </div>
       </div>
+
 
       {/* Multi-City Segments */}
       {formData.flightType === "multicity" && (
@@ -348,9 +352,9 @@ export const Fromto = ({ handleChange }) => {
               key={index}
               className="multi-city-segment bg-white shadow-md rounded-lg border border-gray-300 py-4 px-6 mb-4"
             >
-              <div className="flex items-center">
+              <div className="flex items-center justify-between gap-4">
                 {/* From Section */}
-                <div className="flex-1 border-r border-gray-300 pr-4">
+                <div className="flex-1 border-r border-gray-300 px-6">
                   <p className="text-sm text-gray-500 mb-1">From</p>
                   <select
                     name="from"
@@ -369,10 +373,13 @@ export const Fromto = ({ handleChange }) => {
                       </option>
                     ))}
                   </select>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {segment.from ? airports.find((a) => a.city_name === segment.from)?.country_name : "Select a city"}
+                  </p>
                 </div>
 
                 {/* To Section */}
-                <div className="flex-1 border-r border-gray-300 px-4">
+                <div className="flex-1 border-r border-gray-300 px-6">
                   <p className="text-sm text-gray-500 mb-1">To</p>
                   <select
                     name="to"
@@ -391,7 +398,11 @@ export const Fromto = ({ handleChange }) => {
                       </option>
                     ))}
                   </select>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {segment.to ? airports.find((a) => a.city_name === segment.to)?.country_name : "Select a city"}
+                  </p>
                 </div>
+
 
                 {/* Departure Section */}
                 <div className="flex-1 border-r border-gray-300 px-4">
@@ -406,27 +417,41 @@ export const Fromto = ({ handleChange }) => {
                     min={new Date().toISOString().split("T")[0]}
                     onKeyDown={(e) => e.preventDefault()}
                   />
+                  <p className="text-xs text-gray-400 mt-1">
+                    {segment.departureDate &&
+                      new Date(segment.departureDate).toLocaleDateString("en-US", {
+                        weekday: "long", // Get the full name of the weekday
+                      })}
+                  </p>
                 </div>
 
-                {/* Remove Segment Button */}
-                {index > 0 && (
-                  <button
-                    onClick={() => removeSegment(index)}
-                    className="text-red-500 ml-4"
-                  >
-                    Remove
-                  </button>
-                )}
+                {/* Add Another City Button and Remove Segment Button */}
+                <div className="flex items-center gap-4">
+                  {/* Add Another City Button */}
+                  {index === segments.length - 1 && (
+                    <button
+                      onClick={addSegment}
+                      className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200"
+                    >
+                      Add Another City
+                    </button>
+                  )}
 
-                {/* Add Another City Button */}
-                {index === segments.length - 1 && (
-                  <button
-                    onClick={addSegment}
-                    className="bg-blue-500 text-white px-4 py-2 rounded ml-4"
-                  >
-                    Add Another City
-                  </button>
-                )}
+                  {/* Border Divider */}
+                  {index > 0 && index === segments.length - 1 && (
+                    <div className="h-6 w-[1px] bg-gray-300" />
+                  )}
+
+                  {/* Remove Segment Button */}
+                  {index > 0 && (
+                    <button
+                      onClick={() => removeSegment(index)}
+                      className="flex items-center text-red-500 text-lg gap-1"
+                    >
+                      <CloseIcon className="text-xl" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}

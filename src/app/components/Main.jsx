@@ -5,6 +5,7 @@ import { Fromto } from "./Fromto";
 import { Header } from "./Header";
 import Link from "next/link";
 import { Icondiv } from "./Icondiv";
+import SpecialFareSelector from "./SpecialFareSelector";
 
 export const Main = () => {
   const [data, setData] = useState({
@@ -21,15 +22,10 @@ export const Main = () => {
     localStorage.setItem("myKey", JSON.stringify(data));
   };
 
-  const handlePopup = () => {
-    const popup = document.getElementById("popup");
-    popup.classList.toggle("active");
-  };
-
   return (
     <div>
       <Header />
-      <div className="relative h-[500px]">
+      <div className="relative">
         {/* Lantern Image */}
         <img
           className="absolute top-0 left-0"
@@ -52,7 +48,7 @@ export const Main = () => {
         </div>
 
         {/* Booking Section */}
-        <div className="w-[80%] h-[330px] bg-white rounded-[10px] mx-auto mt-[50px] relative">
+        <div className="w-[80%] bg-white rounded-[10px] mx-auto mt-[50px] relative border-2 border-red-500">
           {/* Icon Div */}
           <div className="relative -top-[40px]">
             <div className="flex justify-start">
@@ -65,16 +61,24 @@ export const Main = () => {
             <Fromto handleChange={handleData} />
           </div>
 
+          {/* Special Fare Selector */}
+          <div className="flex items-start ">
+            <div className="pl-16">
+              <SpecialFareSelector />
+            </div>
+          </div>
+
           {/* Search Button */}
           <div className="flex justify-center mt-10">
             <button
               onClick={addLocal}
-              className="w-[200px] h-[50px] text-white font-semibold text-lg rounded-full bg-gradient-to-r from-[#8fdcfa] via-[#619ff0] to-[#3339e9] hover:shadow-lg transition duration-300"
+              className="absolute bottom-[-25px] left-1/2 transform -translate-x-1/2 w-[200px] h-[50px] text-white font-semibold text-lg rounded-full bg-gradient-to-r from-[#8fdcfa] via-[#619ff0] to-[#3339e9] hover:shadow-lg transition duration-300"
             >
               <Link href="/search">SEARCH</Link>
             </button>
           </div>
         </div>
+
       </div>
     </div>
   );
