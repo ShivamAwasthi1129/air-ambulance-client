@@ -6,6 +6,7 @@ import { Header } from "./Header";
 import Link from "next/link";
 import { Icondiv } from "./Icondiv";
 import SpecialFareSelector from "./SpecialFareSelector";
+import SponsoredBanner from "./SponsoredBanner";
 
 export const Main = () => {
   const [data, setData] = useState({
@@ -26,11 +27,11 @@ export const Main = () => {
     <div>
       <Header />
       <div className="relative">
-        {/* Lantern Image */}
+        {/* Background Image */}
         <img
-          className="absolute top-0 left-0"
+          className="absolute top-0 left-0 h-[75vh]"
           src="https://imgak.mmtcdn.com/pwa_v3/pwa_commons_assets/desktop/bg7.jpg"
-          alt="Lantern"
+          alt="mountains"
         />
         <div className="flex items-center justify-end py-[20px] h-[70px] pr-4">
           {/* Logo */}
@@ -46,28 +47,25 @@ export const Main = () => {
             <p>login</p>
           </div>
         </div>
-
         {/* Booking Section */}
-        <div className="w-[80%] bg-white rounded-[10px] mx-auto mt-[50px] relative border-2 border-red-500">
+        <div className="w-[80%] bg-white rounded-[10px] mx-auto mt-[50px] relative border-2 border-gray-300">
           {/* Icon Div */}
           <div className="relative -top-[40px]">
             <div className="flex justify-start">
               <Icondiv className="icondiv"></Icondiv>
             </div>
           </div>
-
           {/* From-To Component */}
           <div className="text-black">
             <Fromto handleChange={handleData} />
           </div>
-
           {/* Special Fare Selector */}
           <div className="flex items-start ">
             <div className="pl-16">
               <SpecialFareSelector />
             </div>
           </div>
-
+         
           {/* Search Button */}
           <div className="flex justify-center mt-10">
             <button
@@ -78,7 +76,6 @@ export const Main = () => {
             </button>
           </div>
         </div>
-
       </div>
     </div>
   );
