@@ -12,7 +12,7 @@ const SponsoredBanner = () => {
       <img
         src="https://platforms.makemytrip.com/contents/039eebbc-1a8f-4641-9da5-e6d75d70a5a8"
         alt="Sponsored Banner"
-        className="w-40 h-auto rounded-lg shadow-lg"
+        className="rounded-lg shadow-lg "
       />
     </div>
   );

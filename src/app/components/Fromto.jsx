@@ -30,6 +30,12 @@ export const Fromto = ({ handleChange }) => {
     fetchAirports();
   }, []);
 
+  useEffect(() => {
+    // Pass full form data and segments to the parent when they change
+    handleChange && handleChange({ formData, segments });
+  }, [formData, segments]);
+  
+
   // Handle change for all inputs dynamically
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -69,8 +75,6 @@ export const Fromto = ({ handleChange }) => {
       return updatedSegments;
     });
   };
-
-
 
   const handleInterchange = () => {
     setFormData((prevData) => ({
@@ -457,9 +461,6 @@ export const Fromto = ({ handleChange }) => {
           ))}
         </div>
       )}
-
-
-
 
     </div>
   );
