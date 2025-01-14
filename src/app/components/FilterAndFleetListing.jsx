@@ -1,10 +1,351 @@
-import React from 'react'
+"use client";
 
-const FilterAndFleetListing = () => {
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import FlightCard from "./FleetCard"; // Import your FleetCard component
+
+const fleetData = [
+  {
+    id: 1,
+    images: [
+      "https://images.unsplash.com/photo-1623258081139-b7f858fe8da1?q=80&w=1911&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "https://images.unsplash.com/photo-1681157405319-3040bcf2be39?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "https://plus.unsplash.com/premium_photo-1723527888369-a769544d69cd?q=80&w=2071&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    ],
+    title: "King Air C90",
+    type: "Charter Flights",
+    description: "Twin Engine Turboprop",
+    flightTime: "12 Hrs 50 Min",
+    pax: 6,
+    price: 1902267,
+  },
+  {
+    id: 2,
+    images: [
+      "https://images.unsplash.com/photo-1474302770737-173ee21bab63?q=80&w=1816&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "https://media.istockphoto.com/id/513230542/photo/airplane-pilots-in-the-cockpit-looking-happy.jpg?s=2048x2048&w=is&k=20&c=ay3Zvf5UOQCTGXpwc1dhOOMRMzxJL8HxZRaF7jyWE90=",
+      "https://media.istockphoto.com/id/496879574/photo/privat-jet-cabin-rear.jpg?s=612x612&w=0&k=20&c=qxhcceDv8BJcZi9zT9DEqhoRWFlY-9497r6enZTmk84=",
+    ],
+    title: "Cessna Citation X",
+    type: "Private Jets",
+    description: "Super Midsize Jet",
+    flightTime: "6 Hrs 30 Min",
+    pax: 8,
+    price: 3500000,
+  },
+  {
+    id: 3,
+    images: [
+      "https://plus.unsplash.com/premium_photo-1682142182464-3be6161b3a42?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "https://media.istockphoto.com/id/1357625061/photo/pleased-aircraft-captain-smiling-while-pulling-thrust-lever.jpg?s=2048x2048&w=is&k=20&c=l7HQE2a8pyeToPQ4bkuh1XO--WbuMUtTzu9DY9aFnqM=",
+      "https://media.istockphoto.com/id/520771462/photo/front-part-of-business-jet-cabin.jpg?s=2048x2048&w=is&k=20&c=6yz_OFqEhnd-g9bbhIuiBDUwBXWOs5wdeOUESssWo5Y=",
+    ],
+    title: "Bombardier Global 6000",
+    type: "Business Jets",
+    description: "Ultra Long-Range Jet",
+    flightTime: "14 Hrs",
+    pax: 12,
+    price: 8000000,
+  },
+];
+
+const FilterAndFleetListing = ({ refreshKey }) => {
+  // States
+  const [searchData, setSearchData] = useState(null); // State to store session data
+  const [filteredData, setFilteredData] = useState(fleetData); // Filtered fleets based on user selection
+  const [selectedTypes, setSelectedTypes] = useState([]); // Flight types selected by the user
+  const [priceRange, setPriceRange] = useState(Math.max(...fleetData.map((f) => f.price))); // Price range slider value
+  const minPrice = Math.min(...fleetData.map((f) => f.price)); // Min price for slider
+  const maxPrice = Math.max(...fleetData.map((f) => f.price)); // Max price for slider
+  const [selectedFleets, setSelectedFleets] = useState([]); // Fleet selected for each segment
+  const [selectionMode, setSelectionMode] = useState("departure"); // "departure" or "return"
+
+
+  // Fetch session data on component mount from sessionStorage
+  useEffect(() => {
+    const fetchSessionData = () => {
+      try {
+        const sessionData = JSON.parse(sessionStorage.getItem("searchData")); // Get session data
+        if (sessionData) {
+          setSearchData(sessionData); // Set the fetched session data
+          setSelectedFleets(Array(sessionData?.segments?.length || 0).fill(null)); // Initialize fleets
+        } else {
+          console.warn("No session data found in sessionStorage.");
+        }
+      } catch (error) {
+        console.error("Error fetching session data:", error);
+      }
+    };
+
+    fetchSessionData();
+  }, [refreshKey]);
+
+  // Filter Logic (Price & Type)
+  useEffect(() => {
+    const filtered = fleetData.filter(
+      (flight) =>
+        flight.price <= priceRange &&
+        (selectedTypes.length === 0 || selectedTypes.includes(flight.type))
+    );
+    setFilteredData(filtered);
+  }, [priceRange, selectedTypes]);
+
+  // Handle Type Selection
+  const handleTypeChange = (type) => {
+    setSelectedTypes((prevSelected) =>
+      prevSelected.includes(type)
+        ? prevSelected.filter((t) => t !== type)
+        : [...prevSelected, type]
+    );
+  };
+
+  // Handle Fleet Selection for a Specific Segment
+  const handleFleetSelection = (index, fleet) => {
+    const updatedFleets = [...selectedFleets];
+    updatedFleets[index] = fleet;
+    setSelectedFleets(updatedFleets);
+
+    const updatedSearchData = { ...searchData };
+    updatedSearchData.segments[index].selectedFleet = {
+      name: fleet.title,
+      model: fleet.type,
+    };
+    setSearchData(updatedSearchData);
+    sessionStorage.setItem("searchData", JSON.stringify(updatedSearchData));
+  };
+
+
+  // Navigate to Enquiry Page
+  const navigateToEnquiryPage = () => {
+    console.log("Proceeding to enquiry with data: ", searchData);
+    // Add your navigation logic here, e.g., using a router
+  };
+
+  // Render Loading State if `searchData` is not yet fetched
+  if (!searchData) {
+    return <div>Loading session data...</div>;
+  }
+
   return (
-    <div className='relative w-[80%] mx-auto flex items-center justify-start overflow-hidden rounded-lg shadow-lg mt-4'>FilterAndFleetListing
-    </div>
-  )
-}
+    <div className="relative w-[80%] mx-auto flex flex-col items-start overflow-hidden rounded-lg shadow-lg mt-4">
+      <div className="w-full p-6 bg-gray-50 border rounded-lg shadow-lg">
+        {/* Header */}
+        <h1 className="text-2xl font-bold text-center text-blue-700 mb-6">
+          Fleet Selection Panel
+        </h1>
+        {/* Container for Selected Fleets and Selection Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Selected Fleets Section */}
+          <div className="bg-gray-100 p-4 border rounded-lg shadow-md">
+            <h2 className="text-xl font-bold mb-4 text-gray-800">Selected Fleets</h2>
+            {selectedFleets.map((fleet, index) => (
+              fleet ? (
+                <p key={index} className="text-gray-700 mb-2">
+                  Trip {index + 1}: Fleet Selected - {fleet.title}
+                </p>
+              ) : (
+                <p key={index} className="text-red-500 mb-2">
+                  Trip {index + 1}: No Fleet Selected
+                </p>
+              )
+            ))}
+          </div>
 
-export default FilterAndFleetListing
+          {/* Fleet Selection Section */}
+          <div className="bg-white p-4 border-2 border-red-500 rounded-lg shadow-md">
+            {searchData.tripType === "oneway" && (
+              <div>
+                <h3 className="text-lg font-bold text-blue-600 mb-2">Oneway Trip</h3>
+                <p className="text-gray-700 mb-4">
+                  {searchData.segments[0]?.from} to {searchData.segments[0]?.to}
+                </p>
+                <button
+                  onClick={() => {
+                    handleFleetSelection(0, filteredData[0]); // Select fleet for the oneway trip
+                    navigateToEnquiryPage();
+                  }}
+                  className="bg-blue-600 text-white py-2 px-4 rounded-md shadow-lg hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition-all"
+                >
+                  Select Fleet & Proceed
+                </button>
+              </div>
+            )}
+
+            {searchData.tripType === "roundtrip" && (
+              <div>
+                <h3 className="text-lg font-bold text-blue-600 mb-2">Roundtrip</h3>
+                {searchData.segments.map((segment, index) => (
+                  <div key={index} className="mb-4">
+                    <p className="text-gray-700 mb-2">
+                      {segment.from} to {segment.to}
+                    </p>
+                    <button
+                      onClick={() => handleFleetSelection(index, filteredData[0])}
+                      disabled={!!selectedFleets[index]}
+                      className={`${!!selectedFleets[index]
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-blue-600 hover:bg-blue-500"
+                        } text-white py-2 px-4 rounded-md shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition-all`}
+                    >
+                      {index === 0 ? "Select Fleet for Departure" : "Select Fleet for Return"}
+                    </button>
+                  </div>
+                ))}
+                {selectedFleets.every((fleet) => fleet) && (
+                  <button
+                    onClick={navigateToEnquiryPage}
+                    className="bg-green-600 text-white py-2 px-4 rounded-md shadow-lg hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 transition-all"
+                  >
+                    Proceed to Enquiry
+                  </button>
+                )}
+              </div>
+            )}
+
+            {searchData.tripType === "multicity" && (
+              <div>
+                <h3 className="text-lg font-bold text-blue-600 mb-2">Multicity Trip</h3>
+                {searchData.segments.map((segment, index) => (
+                  <div key={index} className="mb-4">
+                    <p className="text-gray-700 mb-2">
+                      Segment {index + 1}: {segment.from} to {segment.to}
+                    </p>
+                    <button
+                      onClick={() => handleFleetSelection(index, filteredData[0])}
+                      disabled={!!selectedFleets[index]}
+                      className={`${!!selectedFleets[index]
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-blue-600 hover:bg-blue-500"
+                        } text-white py-2 px-4 rounded-md shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition-all`}
+                    >
+                      {selectedFleets[index] ? "Fleet Selected" : "Select Fleet"}
+                    </button>
+                  </div>
+                ))}
+                {selectedFleets.every((fleet) => fleet) && (
+                  <button
+                    onClick={navigateToEnquiryPage}
+                    className="bg-green-600 text-white py-2 px-4 rounded-md shadow-lg hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 transition-all"
+                  >
+                    Proceed to Enquiry
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+
+
+
+      <div className="flex">
+        {/* Filter Section */}
+        <motion.div
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-[30%] bg-gray-100 p-4 border-r border-gray-300"
+        >
+          {/* Filter Header */}
+          <motion.h2
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="text-xl font-bold text-gray-700 mb-4"
+          >
+            Filter Options
+          </motion.h2>
+
+          {/* Flight Type Checkboxes */}
+          <div className="space-y-4">
+            {[
+              { label: "Charter Flights", id: "charter" },
+              { label: "Private Jets", id: "private" },
+              { label: "Business Jets", id: "business" },
+            ].map((option) => {
+              // Count the number of flights of each type
+              const count = fleetData.filter((flight) => flight.type === option.label).length;
+
+              return (
+                <motion.div
+                  key={option.id}
+                  whileHover={{ scale: 1.05 }}
+                  className="flex items-center space-x-2"
+                >
+                  <input
+                    type="checkbox"
+                    id={option.id}
+                    checked={selectedTypes.includes(option.label)}
+                    onChange={() => handleTypeChange(option.label)}
+                    className="h-4 w-4 text-blue-500 border-gray-300 rounded focus:ring-blue-400"
+                  />
+                  <label
+                    htmlFor={option.id}
+                    className="text-gray-600 cursor-pointer"
+                  >
+                    {option.label} ({count})
+                  </label>
+                </motion.div>
+              );
+            })}
+          </div>
+
+
+          {/* Price Range Slider */}
+          <div className="mt-6">
+            <label className="block text-gray-600 font-semibold mb-4">
+              Price Range:
+              <span className="text-blue-600 font-bold"> ₹{minPrice.toLocaleString()}</span>
+              -
+              <span className="text-blue-600 font-bold"> ₹{priceRange.toLocaleString()}</span>
+            </label>
+            <div className="relative w-full">
+              <input
+                type="range"
+                min={minPrice}
+                max={maxPrice}
+                value={priceRange}
+                onChange={(e) => setPriceRange(Number(e.target.value))}
+                className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{
+                  background: `linear-gradient(to right, #3b82f6 ${(priceRange - minPrice) / (maxPrice - minPrice) * 100}%, #e5e7eb ${(priceRange - minPrice) / (maxPrice - minPrice) * 100}%)`,
+                }}
+              />
+            </div>
+
+            {/* Message Box */}
+            {priceRange !== maxPrice && (
+              <div className="mt-4 p-2 bg-blue-100 text-blue-800 rounded-lg shadow-md text-sm font-medium">
+                Selected Price: ₹{priceRange.toLocaleString()}
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Fleet Listing Section */}
+        <div className="w-full bg-white flex flex-col items-center p-4">
+          {searchData.segments.map((segment, segmentIndex) => (
+            <div key={segmentIndex}>
+              <h3 className="text-lg font-bold mb-2">
+                Trip {segmentIndex + 1}: {segment.from} to {segment.to}
+              </h3>
+              {filteredData.map((flight) => (
+                <FlightCard
+                  key={flight.id}
+                  filteredData={[flight]}
+                  onSelectFleet={(selectedFleet) => handleFleetSelection(segmentIndex, selectedFleet)}
+                  selectedFleet={selectedFleets[segmentIndex]} // Pass the selected fleet
+                  tripType={searchData.tripType} // Pass the trip type
+                  segment={segment} // Pass the segment data
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default FilterAndFleetListing;

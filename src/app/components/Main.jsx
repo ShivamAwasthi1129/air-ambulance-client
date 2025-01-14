@@ -21,9 +21,6 @@ export const Main = () => {
     console.log("Form Data to Submit:", data); // Log full data structure in the console
     localStorage.setItem("myKey", JSON.stringify(data));
   };
-
-
-
   return (
     <div>
       <Header />
@@ -34,12 +31,6 @@ export const Main = () => {
           src="https://imgak.mmtcdn.com/pwa_v3/pwa_commons_assets/desktop/bg7.jpg"
           alt="mountains"
         />
-
-        {/* Sponsored Banner (Bottom Center of Background Image) */}
-        {/* <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-[50%]">
-          <SponsoredBanner />
-        </div> */}
-
         <div className="flex items-center justify-end py-[20px] h-[70px] pr-4">
           {/* Logo */}
           <Link href="/">

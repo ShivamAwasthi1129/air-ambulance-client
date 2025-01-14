@@ -1,6 +1,4 @@
 "use client";
-
-import FlightIcon from "@mui/icons-material/Flight";
 import FlightTakeoffIcon from "@mui/icons-material/FlightTakeoff";
 import AirplaneTicketIcon from "@mui/icons-material/AirplaneTicket"; // Replace with the appropriate private jet icon
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices"; // Replace with appropriate air ambulance icon
