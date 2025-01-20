@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-
+import Link from "next/link";
 const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet, tripType, segment }) => {
   const ImageSlider = ({ images }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -126,6 +126,8 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet, tripType,
                       : "Fleet Selected"
                     : "Select Fleet"}
                 </button>
+
+                <Link href="/fleetPreview">
                 <button
                   onClick={() =>
                     console.log(`View details for flight ID: ${flight.id}`)
@@ -133,7 +135,9 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet, tripType,
                   className="bg-gradient-to-r from-blue-500 to-blue-700 text-white text-sm font-semibold px-4 py-2 rounded shadow-lg hover:from-blue-600 hover:to-blue-800 focus:ring-2 focus:ring-blue-300"
                 >
                   View Details
-                </button>
+                </button>             
+                </Link>
+              
               </div>
             </div>
           </div>
