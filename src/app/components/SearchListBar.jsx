@@ -243,7 +243,7 @@ export const SearchBar = () => {
   // Check if user info is complete
   const isUserInfoComplete = userInfo.name && userInfo.email && userInfo.phone;
 
-  // Step 2: confirm => fetch IP, store
+  // Step 2: confirm => fetch IP, store, **AND** send to /api/query
   const handleModalConfirm = async () => {
     try {
       // 1) Fetch IP data
@@ -267,6 +267,25 @@ export const SearchBar = () => {
       // 4) Store in session
       sessionStorage.setItem("searchData", JSON.stringify(finalSearchData));
 
+      // --- NEW PART: Console the payload and send POST request to /api/query ---
+      console.log("Final Payload to /api/query:", finalSearchData);
+
+      const response = await fetch("/api/query", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(finalSearchData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log("Response from /api/query:", result);
+      // --- END NEW PART ---
+
       // 5) Close modal
       setIsModalOpen(false);
 
@@ -278,7 +297,7 @@ export const SearchBar = () => {
         setIsMultiCityCollapsed(true);
       }
     } catch (err) {
-      console.error("Error fetching IP data on confirm:", err);
+      console.error("Error fetching IP data or sending data:", err);
       // handle error if needed
     }
   };
@@ -287,7 +306,6 @@ export const SearchBar = () => {
   return (
     <div className="flex flex-col items-center">
       <div
-        // className="bg-gradient-to-r from-blue-700 to-blue-500 p-1 rounded-lg w-full mb-8 sticky top-20 z-30"
         className="w-full mb-8 sticky top-0 z-30"
         ref={containerRef}
       >
@@ -300,7 +318,6 @@ export const SearchBar = () => {
                 <label className="text-md text-[#008cff] mb-1 block">Trip Type</label>
                 <select
                   value={tripType}
-                  // we don't want to toggle just by opening the select
                   onChange={(e) => handleTripTypeChange(e.target.value)}
                   className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 rounded-md shadow-md cursor-pointer focus:outline-none w-full"
                 >
@@ -453,7 +470,7 @@ export const SearchBar = () => {
                     />
                   </div>
 
-                  {/* Passengers + "Search" (which opens modal) */}
+                  {/* Passengers + "Search" */}
                   <div className="flex items-end gap-3 flex-1">
                     <div className="w-full">
                       <label className="text-md text-[#008cff] mb-1">Passengers</label>
@@ -642,7 +659,7 @@ export const SearchBar = () => {
       {/* Rerender listing when refreshKey changes */}
       <FilterAndFleetListing key={refreshKey} />
 
-      {/* =================== MODAL for Name/Email/Phone, fetch IP on Confirm =================== */}
+      {/* =================== MODAL for Name/Email/Phone =================== */}
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-[9999] bg-black bg-opacity-60">
           <div className="bg-white p-6 rounded-lg w-80 shadow-md relative">
