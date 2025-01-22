@@ -154,7 +154,7 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mb-11">
       {filteredData.map((flight) => {
         const isOpen = activeDetailsId === flight.id;
 
@@ -179,13 +179,6 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
             {/* LEFT: Image (40% width) + "See flight Experience ->" */}
             <div className="relative w-full md:w-2/5">
               <ImageSlider images={flight.images} />
-
-              {/* Example overlay text (optional) */}
-              <div className="absolute top-4 left-4 text-white">
-                <h3 className="text-xl font-bold">Falcon Gold</h3>
-                <p className="text-sm">Experience our Airbus A321neo</p>
-              </div>
-
               {/* BOTTOM LEFT: "See flight Experience ->" text */}
               <p
                 onClick={(e) => handleExperienceClick(flight.id, e)}
@@ -197,7 +190,7 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
             </div>
 
             {/* RIGHT: flight details or amenities */}
-            <div className="w-full md:w-3/5 relative">
+            <div className="w-full md:w-3/5  relative">
               <AnimatePresence mode="wait">
                 {/* =========== FLIGHT DETAILS (default) =========== */}
                 {!isOpen && (
@@ -208,7 +201,7 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                     animate="show"
                     exit="exit"
                     transition={{ duration: 0.4 }}
-                    className="bg-white p-4 pb-0 h-full"
+                    className="bg-white p-4 py-0 h-full"
                   >
                     {/* TOP ROW: Airline Logo / Title / Price + currency */}
                     <div className="flex items-start justify-between border-b border-gray-300 pb-2">
@@ -472,78 +465,80 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
 
       {/* =========== EXPERIENCE MODAL =========== */}
       {showExperienceModal && (
-        <div
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50"
-          onClick={closeExperienceModal}
-        >
-          <div
-            className="bg-white w-11/12 md:w-3/5 xl:w-1/2 p-5 rounded-md relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Close Button */}
+  <div
+    className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50"
+    onClick={closeExperienceModal}
+  >
+    <div
+      className="bg-white w-11/12 md:w-3/5 h-[70%] p-5 rounded-md relative"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Close Button */}
+      <button
+        onClick={closeExperienceModal}
+        className="absolute top-3 right-3 bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded"
+      >
+        X
+      </button>
+
+      {/* Tabs: interior, exterior, cockpit, aircraftLayout, video */}
+      <div className="flex space-x-4 border-b mb-4">
+        {["interior", "exterior", "cockpit", "aircraftLayout", "video"].map(
+          (tab) => (
             <button
-              onClick={closeExperienceModal}
-              className="absolute top-3 right-3 bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded"
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`py-2 px-4 text-sm font-semibold ${
+                activeTab === tab
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-500"
+              }`}
             >
-              X
+              {tab}
             </button>
+          )
+        )}
+      </div>
 
-            {/* Tabs: interior, exterior, cockpit, aircraftLayout, video */}
-            <div className="flex space-x-4 border-b mb-4">
-              {["interior", "exterior", "cockpit", "aircraftLayout", "video"].map(
-                (tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`py-2 px-4 text-sm font-semibold ${
-                      activeTab === tab
-                        ? "text-blue-600 border-b-2 border-blue-600"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                )
-              )}
-            </div>
+      {/* Show images or video for the chosen flight's aircraftGallery */}
+      {filteredData.map((f) => {
+        if (f.id !== experienceModalFlightId) return null; // Only the chosen flight
+        const gallery = f.aircraftGallery || {};
 
-            {/* Show images or video for the chosen flight's aircraftGallery */}
-            {filteredData.map((f) => {
-              if (f.id !== experienceModalFlightId) return null; // Only the chosen flight
-              const gallery = f.aircraftGallery || {};
+        return (
+          <div key={f.id} className="overflow-auto h-full">
+            {/* If tab is NOT "video", show images from that category */}
+            {activeTab !== "video" && gallery[activeTab] && (
+              <div className="flex flex-wrap gap-4">
+                {Object.entries(gallery[activeTab]).map(([view, url]) => (
+                  <img
+                    key={view}
+                    src={url}
+                    alt={view}
+                    className="w-60 h-40 object-cover rounded"
+                  />
+                ))}
+              </div>
+            )}
 
-              return (
-                <div key={f.id} className="h-72 overflow-auto">
-                  {/* If tab is NOT "video", show images from that category */}
-                  {activeTab !== "video" && gallery[activeTab] && (
-                    <div className="flex flex-wrap gap-4">
-                      {Object.entries(gallery[activeTab]).map(([view, url]) => (
-                        <img
-                          key={view}
-                          src={url}
-                          alt={view}
-                          className="w-48 h-32 object-cover rounded"
-                        />
-                      ))}
-                    </div>
-                  )}
-
-                  {/* If tab is "video," show the flight's .video link */}
-                  {activeTab === "video" && gallery.video && (
-                    <div>
-                      <video
-                        className="w-full"
-                        controls
-                        src={gallery.video}
-                      />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            {/* If tab is "video," show the flight's .video link */}
+            {activeTab === "video" && gallery.video && (
+              <div className="relative w-full h-[90%]">
+                <video
+                  autoPlay
+                  controls
+                  className="absolute inset-0 w-full h-full object-cover"
+                  src={gallery.video}
+                />
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        );
+      })}
+    </div>
+  </div>
+)}
+
     </div>
   );
 };
