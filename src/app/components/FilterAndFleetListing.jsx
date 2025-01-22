@@ -7,16 +7,9 @@ import FlightCard from "./FleetCard";
 const fleetData = [
   {
     id: 1,
-    images: [
-      "https://images.unsplash.com/photo-1623258081139-b7f858fe8da1?q=80&w=1911&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "https://images.unsplash.com/photo-1681157405319-3040bcf2be39?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "https://plus.unsplash.com/premium_photo-1723527888369-a769544d69cd?q=80&w=2071&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    ],
     title: "King Air C90",
     type: "Charter Flights",
-    engineType: "Twin Engine Turboprop",
     flightTime: "12 Hrs 50 Min",
-    pax: 6,
     price: 1902267,
     additionalAmenities: {
       "Air Hostess / Escorts": {
@@ -99,16 +92,10 @@ const fleetData = [
   },
   {
     id: 2,
-    images: [
-      "https://images.unsplash.com/photo-1474302770737-173ee21bab63?q=80&w=1816&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "https://media.istockphoto.com/id/513230542/photo/airplane-pilots-in-the-cockpit-looking-happy.jpg?s=2048x2048&w=is&k=20&c=ay3Zvf5UOQCTGXpwc1dhOOMRMzxJL8HxZRaF7jyWE90=",
-      "https://media.istockphoto.com/id/496879574/photo/privat-jet-cabin-rear.jpg?s=612x612&w=0&k=20&c=qxhcceDv8BJcZi9zT9DEqhoRWFlY-9497r6enZTmk84=",
-    ],
+ 
     title: "Cessna Citation X",
     type: "Private Jets",
-    engineType: "Super Midsize Jet",
     flightTime: "6 Hrs 30 Min",
-    pax: 8,
     price: 3500000,
     additionalAmenities: {
       "Air Hostess / Escorts": {
@@ -192,16 +179,10 @@ const fleetData = [
   },
   {
     id: 3,
-    images: [
-      "https://plus.unsplash.com/premium_photo-1682142182464-3be6161b3a42?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "https://media.istockphoto.com/id/1357625061/photo/pleased-aircraft-captain-smiling-while-pulling-thrust-lever.jpg?s=2048x2048&w=is&k=20&c=l7HQE2a8pyeToPQ4bkuh1XO--WbuMUtTzu9DY9aFnqM=",
-      "https://media.istockphoto.com/id/520771462/photo/front-part-of-business-jet-cabin.jpg?s=2048x2048&w=is&k=20&c=6yz_OFqEhnd-g9bbhIuiBDUwBXWOs5wdeOUESssWo5Y=",
-    ],
+
     title: "Bombardier Global 6000",
     type: "Business Jets",
-    engineType: "Ultra Long-Range Jet",
     flightTime: "14 Hrs",
-    pax: 12,
     price: 8000000,
     additionalAmenities: {
       "Air Hostess / Escorts": {

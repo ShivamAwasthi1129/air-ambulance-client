@@ -70,11 +70,25 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
   };
 
   // Simple image slider
-  const ImageSlider = ({ images }) => {
+  // Updated ImageSlider component
+  const ImageSlider = ({ aircraftGallery }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
 
+    // Extract the first image from each category (interior, exterior, cockpit)
+    const images = [
+      aircraftGallery?.exterior
+        ? Object.values(aircraftGallery.exterior)[0]
+        : null,
+      aircraftGallery?.interior
+        ? Object.values(aircraftGallery.interior)[0]
+        : null,
+      aircraftGallery?.cockpit
+        ? Object.values(aircraftGallery.cockpit)[0]
+        : null,
+    ].filter(Boolean); // Remove null values if any category is missing
+
     useEffect(() => {
-      if (images && images.length > 1) {
+      if (images.length > 1) {
         const interval = setInterval(() => {
           setCurrentIndex((prev) =>
             prev === images.length - 1 ? 0 : prev + 1
@@ -84,10 +98,10 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
       }
     }, [images]);
 
-    if (!images || images.length === 0) {
+    if (images.length === 0) {
       return (
         <div className="w-full h-64 bg-gray-100 flex items-center justify-center">
-          <span className="text-gray-500">No image</span>
+          <span className="text-gray-500">No image available</span>
         </div>
       );
     }
@@ -102,7 +116,7 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
             <img
               key={i}
               src={image}
-              alt={`Flight image ${i}`}
+              alt={`Aircraft view ${i}`}
               className="w-full h-64 object-cover flex-shrink-0"
             />
           ))}
@@ -110,6 +124,7 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
       </div>
     );
   };
+
 
   // "See flight Experience ->" triggers the modal
   const handleExperienceClick = (flightId, e) => {
@@ -178,19 +193,19 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
           >
             {/* LEFT: Image (40% width) + "See flight Experience ->" */}
             <div className="relative w-full md:w-2/5">
-              <ImageSlider images={flight.images} />
+              <ImageSlider aircraftGallery={flight.aircraftGallery} />
+
               {/* BOTTOM LEFT: "See flight Experience ->" text */}
               <p
                 onClick={(e) => handleExperienceClick(flight.id, e)}
-                className="absolute bottom-2 left-2 text-white bg-black bg-opacity-50 px-2 py-1 
-                           text-sm cursor-pointer rounded"
+                className="absolute bottom-2 left-2 text-white text-md bg-black bg-opacity-50 font-bold italic px-2 py-1 cursor-pointer rounded"
               >
-                See flight Experience -&gt;
+                See Flight Experience -&gt;
               </p>
             </div>
 
             {/* RIGHT: flight details or amenities */}
-            <div className="w-full md:w-3/5  relative">
+            <div className="w-full md:w-3/5  relative  border border-gray-300">
               <AnimatePresence mode="wait">
                 {/* =========== FLIGHT DETAILS (default) =========== */}
                 {!isOpen && (
@@ -204,7 +219,7 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                     className="bg-white p-4 py-0 h-full"
                   >
                     {/* TOP ROW: Airline Logo / Title / Price + currency */}
-                    <div className="flex items-start justify-between border-b border-gray-300 pb-2">
+                    <div className="flex items-start justify-between border-b border-gray-300 py-2">
                       <div className="flex items-center space-x-2">
                         <img
                           src={
@@ -337,11 +352,10 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                       {/* SELECT FLIGHT BUTTON */}
                       <button
                         onClick={() => onSelectFleet(flight)}
-                        className={`${
-                          selectedFleet?.id === flight.id
+                        className={`${selectedFleet?.id === flight.id
                             ? "bg-green-600"
                             : "bg-gradient-to-r from-green-500 to-green-700"
-                        } text-white text-sm font-semibold px-4 py-2 rounded shadow-md focus:ring-2 focus:ring-green-300`}
+                          } text-white text-sm font-semibold px-4 py-2 rounded shadow-md focus:ring-2 focus:ring-green-300`}
                       >
                         {selectedFleet?.id === flight.id
                           ? "Fleet Selected"
@@ -434,11 +448,10 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                                         {amenityKey}
                                       </span>
                                       <span
-                                        className={`text-xs font-semibold ml-2 px-2 py-1 rounded ${
-                                          amenityData.value === "free"
+                                        className={`text-xs font-semibold ml-2 px-2 py-1 rounded ${amenityData.value === "free"
                                             ? "bg-green-100 text-green-600"
                                             : "bg-red-100 text-red-600"
-                                        }`}
+                                          }`}
                                       >
                                         {amenityData.value === "free"
                                           ? "Free"
@@ -465,79 +478,78 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
 
       {/* =========== EXPERIENCE MODAL =========== */}
       {showExperienceModal && (
-  <div
-    className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50"
-    onClick={closeExperienceModal}
-  >
-    <div
-      className="bg-white w-11/12 md:w-3/5 h-[70%] p-5 rounded-md relative"
-      onClick={(e) => e.stopPropagation()}
-    >
-      {/* Close Button */}
-      <button
-        onClick={closeExperienceModal}
-        className="absolute top-3 right-3 bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded"
-      >
-        X
-      </button>
-
-      {/* Tabs: interior, exterior, cockpit, aircraftLayout, video */}
-      <div className="flex space-x-4 border-b mb-4">
-        {["interior", "exterior", "cockpit", "aircraftLayout", "video"].map(
-          (tab) => (
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50"
+          onClick={closeExperienceModal}
+        >
+          <div
+            className="bg-white w-11/12 md:w-3/5 h-[70%] p-5 rounded-md relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`py-2 px-4 text-sm font-semibold ${
-                activeTab === tab
-                  ? "text-blue-600 border-b-2 border-blue-600"
-                  : "text-gray-500"
-              }`}
+              onClick={closeExperienceModal}
+              className="absolute top-3 right-3 bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded"
             >
-              {tab}
+              X
             </button>
-          )
-        )}
-      </div>
 
-      {/* Show images or video for the chosen flight's aircraftGallery */}
-      {filteredData.map((f) => {
-        if (f.id !== experienceModalFlightId) return null; // Only the chosen flight
-        const gallery = f.aircraftGallery || {};
+            {/* Tabs: interior, exterior, cockpit, aircraftLayout, video */}
+            <div className="flex space-x-4 border-b mb-4">
+              {["interior", "exterior", "cockpit", "aircraftLayout", "video"].map(
+                (tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`py-2 px-4 text-sm font-semibold ${activeTab === tab
+                        ? "text-blue-600 border-b-2 border-blue-600"
+                        : "text-gray-500"
+                      }`}
+                  >
+                    {tab}
+                  </button>
+                )
+              )}
+            </div>
 
-        return (
-          <div key={f.id} className="overflow-auto h-full">
-            {/* If tab is NOT "video", show images from that category */}
-            {activeTab !== "video" && gallery[activeTab] && (
-              <div className="flex flex-wrap gap-4">
-                {Object.entries(gallery[activeTab]).map(([view, url]) => (
-                  <img
-                    key={view}
-                    src={url}
-                    alt={view}
-                    className="w-60 h-40 object-cover rounded"
-                  />
-                ))}
-              </div>
-            )}
+            {/* Show images or video for the chosen flight's aircraftGallery */}
+            {filteredData.map((f) => {
+              if (f.id !== experienceModalFlightId) return null; // Only the chosen flight
+              const gallery = f.aircraftGallery || {};
 
-            {/* If tab is "video," show the flight's .video link */}
-            {activeTab === "video" && gallery.video && (
-              <div className="relative w-full h-[90%]">
-                <video
-                  autoPlay
-                  controls
-                  className="absolute inset-0 w-full h-full object-cover"
-                  src={gallery.video}
-                />
-              </div>
-            )}
+              return (
+                <div key={f.id} className="overflow-auto h-full">
+                  {/* If tab is NOT "video", show images from that category */}
+                  {activeTab !== "video" && gallery[activeTab] && (
+                    <div className="flex flex-wrap gap-4">
+                      {Object.entries(gallery[activeTab]).map(([view, url]) => (
+                        <img
+                          key={view}
+                          src={url}
+                          alt={view}
+                          className="w-60 h-40 object-cover rounded"
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* If tab is "video," show the flight's .video link */}
+                  {activeTab === "video" && gallery.video && (
+                    <div className="relative w-full h-[90%]">
+                      <video
+                        autoPlay
+                        controls
+                        className="absolute inset-0 w-full h-full object-cover"
+                        src={gallery.video}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        );
-      })}
-    </div>
-  </div>
-)}
+        </div>
+      )}
 
     </div>
   );
