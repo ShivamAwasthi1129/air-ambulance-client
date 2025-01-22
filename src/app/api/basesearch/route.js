@@ -1,4 +1,3 @@
-// app/api/search/route.js
 import { NextResponse } from "next/server";
 
 const OPENSEARCH_DOMAIN = "https://search-airbase-search-q5vzxvf7nu2vyeghdh6gqr5xyy.ap-south-1.es.amazonaws.com"; 
