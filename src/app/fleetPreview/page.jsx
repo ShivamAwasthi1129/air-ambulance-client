@@ -46,6 +46,10 @@ const fleetData = {
       "Rear View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/cockpitView/pexels-luis-peralta-58498002-29637932.jpg",
       "Right View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/cockpitView/pexels-rafael-cosquiere-1059286-2064123.jpg"
     },
+    "aircraftLayout":{
+      "Day": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/internal+view/istockphoto-1438630873-2048x2048.jpg",
+      "Night": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/internal+view/istockphoto-1413587508-2048x2048.jpg",
+    },
     "video": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/video/3657467-hd_1920_1080_30fps.mp4"
   },
   "additionalAmenities": {
