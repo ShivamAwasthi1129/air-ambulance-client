@@ -71,6 +71,31 @@ const fleetData = [
         "phone": "9958241284"
       }
     },
+    aircraftGallery: {
+      "interior": {
+        "Front View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/internal+view/istockphoto-1438630873-2048x2048.jpg",
+        "Left View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/internal+view/istockphoto-1413587508-2048x2048.jpg",
+        "Rear View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/internal+view/istockphoto-154191655-2048x2048.jpg",
+        "Right View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/internal+view/istockphoto-471884691-2048x2048.jpg"
+      },
+      "exterior": {
+        "Front View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/exterior+view/pexels-asadphoto-240524.jpg",
+        "Left View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/exterior+view/pexels-guskazi-13528331.jpg",
+        "Rear View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/exterior+view/pexels-joerg-mangelsen-337913024-15953920.jpg",
+        "Right View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/exterior+view/pexels-saturnus99-19766183.jpg"
+      },
+      "cockpit": {
+        "Front View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/cockpitView/pexels-joerg-mangelsen-337913024-15781287.jpg",
+        "Left View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/cockpitView/pexels-kelly-1179532-2898316.jpg",
+        "Rear View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/cockpitView/pexels-luis-peralta-58498002-29637932.jpg",
+        "Right View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/cockpitView/pexels-rafael-cosquiere-1059286-2064123.jpg"
+      },
+      "aircraftLayout":{
+        "Day": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/internal+view/istockphoto-1438630873-2048x2048.jpg",
+        "Night": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/internal+view/istockphoto-1413587508-2048x2048.jpg",
+      },
+      "video": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/video/3657467-hd_1920_1080_30fps.mp4"
+    },
   },
   {
     id: 2,
@@ -137,6 +162,31 @@ const fleetData = [
         "name": "shivam",
         "phone": "9958241284"
       }
+    },
+    aircraftGallery: {
+      "interior": {
+        "Front View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/internal+view/istockphoto-1438630873-2048x2048.jpg",
+        "Left View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/internal+view/istockphoto-1413587508-2048x2048.jpg",
+        "Rear View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/internal+view/istockphoto-154191655-2048x2048.jpg",
+        "Right View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/internal+view/istockphoto-471884691-2048x2048.jpg"
+      },
+      "exterior": {
+        "Front View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/exterior+view/pexels-asadphoto-240524.jpg",
+        "Left View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/exterior+view/pexels-guskazi-13528331.jpg",
+        "Rear View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/exterior+view/pexels-joerg-mangelsen-337913024-15953920.jpg",
+        "Right View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/exterior+view/pexels-saturnus99-19766183.jpg"
+      },
+      "cockpit": {
+        "Front View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/cockpitView/pexels-joerg-mangelsen-337913024-15781287.jpg",
+        "Left View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/cockpitView/pexels-kelly-1179532-2898316.jpg",
+        "Rear View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/cockpitView/pexels-luis-peralta-58498002-29637932.jpg",
+        "Right View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/cockpitView/pexels-rafael-cosquiere-1059286-2064123.jpg"
+      },
+      "aircraftLayout":{
+        "Day": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/internal+view/istockphoto-1438630873-2048x2048.jpg",
+        "Night": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/internal+view/istockphoto-1413587508-2048x2048.jpg",
+      },
+      "video": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/video/3657467-hd_1920_1080_30fps.mp4"
     },
 
   },
@@ -205,6 +255,31 @@ const fleetData = [
         "name": "shivam",
         "phone": "9958241284"
       }
+    },
+    aircraftGallery: {
+      "interior": {
+        "Front View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/internal+view/istockphoto-1438630873-2048x2048.jpg",
+        "Left View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/internal+view/istockphoto-1413587508-2048x2048.jpg",
+        "Rear View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/internal+view/istockphoto-154191655-2048x2048.jpg",
+        "Right View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/internal+view/istockphoto-471884691-2048x2048.jpg"
+      },
+      "exterior": {
+        "Front View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/exterior+view/pexels-asadphoto-240524.jpg",
+        "Left View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/exterior+view/pexels-guskazi-13528331.jpg",
+        "Rear View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/exterior+view/pexels-joerg-mangelsen-337913024-15953920.jpg",
+        "Right View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/exterior+view/pexels-saturnus99-19766183.jpg"
+      },
+      "cockpit": {
+        "Front View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/cockpitView/pexels-joerg-mangelsen-337913024-15781287.jpg",
+        "Left View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/cockpitView/pexels-kelly-1179532-2898316.jpg",
+        "Rear View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/cockpitView/pexels-luis-peralta-58498002-29637932.jpg",
+        "Right View": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/cockpitView/pexels-rafael-cosquiere-1059286-2064123.jpg"
+      },
+      "aircraftLayout":{
+        "Day": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/internal+view/istockphoto-1438630873-2048x2048.jpg",
+        "Night": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/internal+view/istockphoto-1413587508-2048x2048.jpg",
+      },
+      "video": "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/video/3657467-hd_1920_1080_30fps.mp4"
     },
   },
 ];

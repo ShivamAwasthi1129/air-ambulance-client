@@ -7,11 +7,29 @@ import { IoIosAirplane } from "react-icons/io";
 // Amenity-specific icons
 import { FaUserTie, FaCarSide, FaMusic, FaCoffee, FaSeedling } from "react-icons/fa";
 import { GiPaintRoller } from "react-icons/gi";
-import { MdMonitor, MdOutlineHomeRepairService , MdMicrowave } from "react-icons/md";
+import { MdMonitor, MdOutlineHomeRepairService, MdMicrowave } from "react-icons/md";
 import { BsFillLightningFill } from "react-icons/bs";
 import { AiOutlineCheckCircle } from "react-icons/ai"; // Fallback or tick icon
 
-// Map each amenity name to a specific icon component (must match the exact key from flight data)
+// 1) Currency data
+const currencyFlags = [
+  { code: "INR", label: "🇮🇳" },
+  { code: "USD", label: "🇺🇸" },
+  { code: "GBP", label: "🇬🇧" },
+];
+const currencySymbols = {
+  INR: "₹",
+  USD: "$",
+  GBP: "£",
+};
+// Example exchange rates (1 INR => x):
+const exchangeRates = {
+  INR: 1,
+  USD: 0.012,   // e.g. 1 INR = 0.012 USD
+  GBP: 0.0098,  // e.g. 1 INR = 0.0098 GBP
+};
+
+// 2) Amenity icons (unchanged)
 const amenityIcons = {
   "Air Hostess / Escorts": <FaUserTie className="text-blue-600" />,
   "Personal Bouquet": <FaSeedling className="text-pink-500" />,
@@ -25,7 +43,7 @@ const amenityIcons = {
   "Vvip car Pick & Drop": <FaCarSide className="text-orange-600" />,
 };
 
-// Helper function: chunk an array into sub-arrays of length `size`
+// Helper: chunk an array into sub-arrays of length `size`
 function chunkArray(array, size) {
   const result = [];
   for (let i = 0; i < array.length; i += size) {
@@ -37,7 +55,16 @@ function chunkArray(array, size) {
 const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
   const [activeDetailsId, setActiveDetailsId] = useState(null);
 
-  // Toggle which flight’s details are open
+  // ----- MODAL states for "See flight Experience ->"
+  const [showExperienceModal, setShowExperienceModal] = useState(false);
+  const [experienceModalFlightId, setExperienceModalFlightId] = useState(null);
+  const [activeTab, setActiveTab] = useState("interior");
+
+  // ----- Currency states
+  const [selectedCurrency, setSelectedCurrency] = useState("INR");
+  const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
+
+  // Toggle flight details on the right panel
   const toggleFlightDetails = (flightId) => {
     setActiveDetailsId((prevId) => (prevId === flightId ? null : flightId));
   };
@@ -84,6 +111,27 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
     );
   };
 
+  // "See flight Experience ->" triggers the modal
+  const handleExperienceClick = (flightId, e) => {
+    e.stopPropagation(); // to avoid also selecting the flight
+    setExperienceModalFlightId(flightId);
+    setShowExperienceModal(true);
+    setActiveTab("interior");
+  };
+
+  // Close the experience modal
+  const closeExperienceModal = () => {
+    setShowExperienceModal(false);
+    setExperienceModalFlightId(null);
+    setActiveTab("interior");
+  };
+
+  // Convert price from INR to selected currency
+  const convertPrice = (inrPrice, currency) => {
+    const rate = exchangeRates[currency] || 1;
+    return Math.round(inrPrice * rate);
+  };
+
   // If no flights match, show message
   if (filteredData.length === 0) {
     return (
@@ -93,14 +141,12 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
     );
   }
 
-  // Motion variants for flight details (slide left on exit)
+  // Framer-motion variants
   const flightDetailsVariants = {
     hidden: { x: 0, opacity: 1 },
     exit: { x: -50, opacity: 0 },
     show: { x: 0, opacity: 1 },
   };
-
-  // Motion variants for amenities (slide in from right)
   const amenitiesVariants = {
     hidden: { x: 50, opacity: 0 },
     show: { x: 0, opacity: 1 },
@@ -112,38 +158,48 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
       {filteredData.map((flight) => {
         const isOpen = activeDetailsId === flight.id;
 
-        // Grab FREE amenities for the flight (to show in default panel)
+        // 1) Top 4 free amenities
         const freeServicesAll = Object.entries(flight.additionalAmenities || {}).filter(
           ([, amenityData]) => amenityData.value === "free"
         );
-        // Show only up to 4 free amenities
         const freeServicesToShow = freeServicesAll.slice(0, 4);
 
-        // Prepare the entire list of amenities for the expanded panel
+        // 2) All amenities (for expanded panel)
         const allAmenitiesEntries = Object.entries(flight.additionalAmenities || {});
-        // Break them into columns of 4 items
         const chunkedAmenities = chunkArray(allAmenitiesEntries, 4);
+
+        // 3) Price in INR or fallback
+        const flightPriceINR = flight.price || 86404;
 
         return (
           <div
             key={flight.id}
             className="flex flex-col md:flex-row rounded-md shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden"
           >
-            {/* LEFT: Image (40% width) */}
+            {/* LEFT: Image (40% width) + "See flight Experience ->" */}
             <div className="relative w-full md:w-2/5">
               <ImageSlider images={flight.images} />
 
-              {/* Optional overlay text */}
+              {/* Example overlay text (optional) */}
               <div className="absolute top-4 left-4 text-white">
                 <h3 className="text-xl font-bold">Falcon Gold</h3>
                 <p className="text-sm">Experience our Airbus A321neo</p>
               </div>
+
+              {/* BOTTOM LEFT: "See flight Experience ->" text */}
+              <p
+                onClick={(e) => handleExperienceClick(flight.id, e)}
+                className="absolute bottom-2 left-2 text-white bg-black bg-opacity-50 px-2 py-1 
+                           text-sm cursor-pointer rounded"
+              >
+                See flight Experience -&gt;
+              </p>
             </div>
 
-            {/* RIGHT: AnimatePresence toggles between flight details and amenities */}
+            {/* RIGHT: flight details or amenities */}
             <div className="w-full md:w-3/5 relative">
               <AnimatePresence mode="wait">
-                {/* FLIGHT DETAILS (default view) */}
+                {/* =========== FLIGHT DETAILS (default) =========== */}
                 {!isOpen && (
                   <motion.div
                     key="flight-details"
@@ -154,7 +210,7 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                     transition={{ duration: 0.4 }}
                     className="bg-white p-4 pb-0 h-full"
                   >
-                    {/* TOP ROW: Airline Logo / Title / Price */}
+                    {/* TOP ROW: Airline Logo / Title / Price + currency */}
                     <div className="flex items-start justify-between border-b border-gray-300 pb-2">
                       <div className="flex items-center space-x-2">
                         <img
@@ -169,16 +225,55 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                           {flight.title || "Gulf Air"}
                         </h2>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xl md:text-2xl font-bold text-gray-700">
-                          ₹
-                          {flight.price ? flight.price.toLocaleString() : "86,404"}
-                          <span className="text-sm text-gray-500"> /adult</span>
-                        </p>
+
+                      {/* Price + currency dropdown */}
+                      <div className="text-right relative inline-block">
+                        <button
+                          className="flex items-center space-x-1 py-1 px-2 rounded"
+                          onClick={() => setShowCurrencyDropdown((val) => !val)}
+                        >
+                          {/* Current flag */}
+                          <span>
+                            {
+                              currencyFlags.find(
+                                (flag) => flag.code === selectedCurrency
+                              )?.label
+                            }
+                          </span>
+                          {/* Symbol + converted price */}
+                          <span className="text-xl md:text-2xl font-bold text-gray-700">
+                            {currencySymbols[selectedCurrency]}
+                            {convertPrice(flightPriceINR, selectedCurrency).toLocaleString()}
+                          </span>
+                        </button>
+
+                        {showCurrencyDropdown && (
+                          <div className="absolute right-0 top-full mt-1 bg-white border rounded shadow-md w-40 z-10">
+                            {currencyFlags.map(({ code, label }) => {
+                              const converted = convertPrice(flightPriceINR, code);
+                              return (
+                                <div
+                                  key={code}
+                                  onClick={() => {
+                                    setSelectedCurrency(code);
+                                    setShowCurrencyDropdown(false);
+                                  }}
+                                  className="cursor-pointer p-2 hover:bg-gray-100 flex items-center justify-between"
+                                >
+                                  <span className="mr-2">{label}</span>
+                                  <span className="text-sm font-bold text-gray-700">
+                                    {currencySymbols[code]}
+                                    {converted.toLocaleString()}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     </div>
 
-                    {/* Stops & total duration */}
+                    {/* Stops & total duration (if any) */}
                     <p className="text-sm text-gray-500 mt-1 mb-3">
                       {flight.stopsInfo || "Flight Duration • 14h 30m"}
                     </p>
@@ -216,7 +311,7 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                       </div>
                     </div>
 
-                    {/* Top 4 FREE amenities in place of "Fully flat-bed" */}
+                    {/* Top 4 FREE amenities */}
                     {freeServicesToShow.length > 0 ? (
                       <div className="mb-3">
                         <h4 className="text-sm font-semibold mb-2">In-Flight Amenities</h4>
@@ -231,11 +326,7 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                                 key={amenityKey}
                                 className="flex items-center text-sm ml-2 border-r-2 border-gray-300 pr-2"
                               >
-                                {/* Icon */}
-                                <span className="mr-2">
-                                  {IconComponent}
-                                </span>
-                                {/* Amenity Name */}
+                                <span className="mr-2">{IconComponent}</span>
                                 <span className="text-xs">{amenityKey}</span>
                               </li>
                             );
@@ -264,7 +355,7 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                           : "Select Flight"}
                       </button>
 
-                      {/* VIEW DETAILS => toggles amenities */}
+                      {/* VIEW DETAILS => toggles amenities panel */}
                       <button
                         onClick={() => toggleFlightDetails(flight.id)}
                         className="bg-gradient-to-r from-blue-500 to-blue-700 text-white text-sm font-semibold px-4 py-2 rounded shadow-md hover:from-blue-600 hover:to-blue-800 focus:ring-2 focus:ring-blue-300"
@@ -275,7 +366,7 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                   </motion.div>
                 )}
 
-                {/* AMENITIES PANEL (open view) */}
+                {/* =========== AMENITIES PANEL (open view) =========== */}
                 {isOpen && (
                   <motion.div
                     key="amenities"
@@ -286,7 +377,7 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                     transition={{ duration: 0.4 }}
                     className="bg-white p-4 pb-0 h-full"
                   >
-                    {/* Top row: flight info (optional) */}
+                    {/* Top row: flight info */}
                     <div className="flex items-start justify-between">
                       <div className="flex items-center space-x-2">
                         <img
@@ -302,33 +393,34 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                         </h2>
                       </div>
                       <div className="text-right">
+                        {/* Price with selected currency */}
                         <p className="text-xl md:text-2xl font-bold text-gray-700">
-                          ₹
-                          {flight.price ? flight.price.toLocaleString() : "86,404"}
-                          <span className="text-sm text-gray-500"> /adult</span>
+                          {currencyFlags.find(
+                            (flag) => flag.code === selectedCurrency
+                          )?.label}{" "}
+                          {currencySymbols[selectedCurrency]}
+                          {convertPrice(flightPriceINR, selectedCurrency).toLocaleString()}
+                          <span className="text-sm text-gray-500"></span>
                         </p>
                       </div>
                     </div>
 
-                    {/* Additional Amenities in columns of 4 items each, horizontally scrollable */}
+                    {/* Additional Amenities in columns of 4 items each (scrollable) */}
                     {allAmenitiesEntries.length > 0 ? (
                       <div>
-                     <div className="flex justify-between items-end my-1">
-                     <h3 className="text-md font-semibold">Additional Services</h3>
-                        {/* HIDE DETAILS button => returns to flight details */}
-                    <div className="flex items-center">
-                      <button
-                        onClick={() => toggleFlightDetails(flight.id)}
-                        className=" text-blue-500"
-                      >
-                        Hide Flight Details ^
-                      </button>
-                    </div>
-                     </div>
-                        
-                        {/* Fixed height & horizontal scroll container */}
+                        <div className="flex justify-between items-end my-1">
+                          <h3 className="text-md font-semibold">Additional Services</h3>
+                          <div className="flex items-center">
+                            <button
+                              onClick={() => toggleFlightDetails(flight.id)}
+                              className="text-blue-500"
+                            >
+                              Hide Flight Details ^
+                            </button>
+                          </div>
+                        </div>
+
                         <div className="w-full h-36 overflow-x-auto border border-gray-300 rounded p-2 mb-4">
-                          {/* No wrap => columns displayed side by side */}
                           <div className="flex flex-row flex-nowrap gap-8">
                             {chunkedAmenities.map((column, colIndex) => (
                               <div
@@ -336,7 +428,6 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                                 className="flex flex-col space-y-2 min-w-[250px]"
                               >
                                 {column.map(([amenityKey, amenityData]) => {
-                                  // If there's no matching icon, fall back to a check-circle
                                   const IconComponent =
                                     amenityIcons[amenityKey] ||
                                     <AiOutlineCheckCircle className="text-green-500" size={20} />;
@@ -345,13 +436,10 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                                       key={amenityKey}
                                       className="flex items-center space-x-2"
                                     >
-                                      {/* Icon */}
                                       <span>{IconComponent}</span>
-                                      {/* Amenity Name */}
                                       <span className="font-medium text-sm text-gray-800">
                                         {amenityKey}
                                       </span>
-                                      {/* Free or Chargeable Badge */}
                                       <span
                                         className={`text-xs font-semibold ml-2 px-2 py-1 rounded ${
                                           amenityData.value === "free"
@@ -372,12 +460,8 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                         </div>
                       </div>
                     ) : (
-                      <p className="text-sm text-gray-600">
-                        No additional amenities.
-                      </p>
+                      <p className="text-sm text-gray-600">No additional amenities.</p>
                     )}
-
-                    
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -385,6 +469,81 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
           </div>
         );
       })}
+
+      {/* =========== EXPERIENCE MODAL =========== */}
+      {showExperienceModal && (
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50"
+          onClick={closeExperienceModal}
+        >
+          <div
+            className="bg-white w-11/12 md:w-3/5 xl:w-1/2 p-5 rounded-md relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={closeExperienceModal}
+              className="absolute top-3 right-3 bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded"
+            >
+              X
+            </button>
+
+            {/* Tabs: interior, exterior, cockpit, aircraftLayout, video */}
+            <div className="flex space-x-4 border-b mb-4">
+              {["interior", "exterior", "cockpit", "aircraftLayout", "video"].map(
+                (tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`py-2 px-4 text-sm font-semibold ${
+                      activeTab === tab
+                        ? "text-blue-600 border-b-2 border-blue-600"
+                        : "text-gray-500"
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                )
+              )}
+            </div>
+
+            {/* Show images or video for the chosen flight's aircraftGallery */}
+            {filteredData.map((f) => {
+              if (f.id !== experienceModalFlightId) return null; // Only the chosen flight
+              const gallery = f.aircraftGallery || {};
+
+              return (
+                <div key={f.id} className="h-72 overflow-auto">
+                  {/* If tab is NOT "video", show images from that category */}
+                  {activeTab !== "video" && gallery[activeTab] && (
+                    <div className="flex flex-wrap gap-4">
+                      {Object.entries(gallery[activeTab]).map(([view, url]) => (
+                        <img
+                          key={view}
+                          src={url}
+                          alt={view}
+                          className="w-48 h-32 object-cover rounded"
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* If tab is "video," show the flight's .video link */}
+                  {activeTab === "video" && gallery.video && (
+                    <div>
+                      <video
+                        className="w-full"
+                        controls
+                        src={gallery.video}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
