@@ -1,8 +1,8 @@
 // app/api/search/route.js
 import { NextResponse } from "next/server";
 
-const OPENSEARCH_DOMAIN = "https://search-airbase-search-q5vzxvf7nu2vyeghdh6gqr5xyy.ap-south-1.es.amazonaws.com"; // Replace with your OpenSearch domain
-const INDEX_NAME = "id"; // Change based on your OpenSearch index
+const OPENSEARCH_DOMAIN = "https://search-airbase-search-q5vzxvf7nu2vyeghdh6gqr5xyy.ap-south-1.es.amazonaws.com"; 
+const INDEX_NAME = "id"; 
 
 export async function GET(req) {
     try {

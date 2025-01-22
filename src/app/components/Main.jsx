@@ -47,7 +47,7 @@ export const Main = () => {
         </div>
 
         {/* Booking Section */}
-        <div className="w-[80%] bg-white rounded-[10px] mx-auto mt-[50px] relative border-2 border-gray-300">
+        <div className="w-[90%] bg-white rounded-[10px] mx-auto mt-[50px] relative border-2 border-gray-300">
           {/* Icon Div */}
           <div className="relative -top-[40px]">
             <div className="flex justify-start">

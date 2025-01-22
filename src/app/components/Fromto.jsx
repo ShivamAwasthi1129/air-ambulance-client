@@ -5,53 +5,116 @@ import CloseIcon from "@mui/icons-material/Close";
 
 export const Fromto = ({ handleChange }) => {
   const [airports, setAirports] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showFromDropdown, setShowFromDropdown] = useState(false);
+  const [showToDropdown, setShowToDropdown] = useState(false);
   const [segments, setSegments] = useState([
     { from: "London (LON)", to: "Dubai (DXB)", departureDate: new Date().toISOString().split("T")[0] },
   ]);
-
-
   const [formData, setFormData] = useState({
-    flightType: "oneway", // Default flight type
-    from: "London (LON)", // Default value
-    to: "Dubai (DXB)", // Default value
-    departureDate: new Date().toISOString().split("T")[0], // Today's date
-    returnDate: "", // Empty by default
+    flightType: "oneway",
+    from: "Indira Gandhi International Airport (DEL)",
+    to: "Heathrow Airport (LHR)",
+    departureDate: new Date().toISOString().split("T")[0],
     travelerCount: 1,
+  });
+
+  // Set default selected airports
+  const [selectedAirport, setSelectedAirport] = useState({
+    city: "Delhi",
+    name: "Indira Gandhi International Airport",
+    iata_code: "DEL",
+  });
+
+  const [selectedToAirport, setSelectedToAirport] = useState({
+    city: "London",
+    name: "Heathrow Airport",
+    iata_code: "LHR",
   });
 
   useEffect(() => {
     const fetchAirports = async () => {
-      const data = await fetch(
-        "https://raw.githubusercontent.com/ashhadulislam/JSON-Airports-India/master/airports.json"
-      );
-      const ans = await data.json();
-      setAirports(ans.airports);
+      if (searchQuery.length > 1) {
+        try {
+          const response = await fetch(
+            `/api/basesearch?query=${searchQuery}`
+          );
+          const data = await response.json();
+          setAirports(data);
+        } catch (error) {
+          console.error("Error fetching airport data:", error);
+        }
+      } else {
+        setAirports([]); // Clear list if query is empty
+      }
     };
+
     fetchAirports();
-  }, []);
+  }, [searchQuery]); // Trigger fetch when searchQuery updates
+
 
   useEffect(() => {
     // Pass full form data and segments to the parent when they change
     handleChange && handleChange({ formData, segments });
   }, [formData, segments]);
-  
+
 
   // Handle change for all inputs dynamically
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-    handleChange && handleChange(e); // Pass changes to parent component if provided
+
+    if (name === "from") {
+      setSearchQuery(value);
+      setShowFromDropdown(true);
+      setShowToDropdown(false); // Close 'To' dropdown when typing in 'From'
+    } else if (name === "to") {
+      setSearchQuery(value);
+      setShowToDropdown(true);
+      setShowFromDropdown(false); // Close 'From' dropdown when typing in 'To'
+    }
   };
+
+  const handleSelectAirport = (airport, type) => {
+    if (type === "from") {
+      setFormData((prevState) => ({
+        ...prevState,
+        from: airport.name + " (" + airport.iata_code + ")",
+      }));
+      setSelectedAirport({
+        city: airport.city,
+        name: airport.name,
+        iata_code: airport.iata_code,
+      });
+      setShowFromDropdown(false);
+    } else if (type === "to") {
+      setFormData((prevState) => ({
+        ...prevState,
+        to: airport.name + " (" + airport.iata_code + ")",
+      }));
+      setSelectedToAirport({
+        city: airport.city,
+        name: airport.name,
+        iata_code: airport.iata_code,
+      });
+      setShowToDropdown(false);
+    }
+  };
+
+
   const addSegment = () => {
     setSegments((prevSegments) => [
       ...prevSegments,
       {
-        from: prevSegments[prevSegments.length - 1].to, // Set "From" to the previous segment's "To"
-        to: "",
-        departureDate: new Date().toISOString().split("T")[0], // Default date
+        from: prevSegments[prevSegments.length - 1].to, // Auto-set "From"
+        to: "", // Leave "To" empty for user input
+        departureDate: new Date().toISOString().split("T")[0],
+        travelerCount: 1, // Default passenger count per trip
       },
     ]);
+    setShowToDropdown(true); // Open the "To" dropdown automatically
   };
+
 
 
 
@@ -67,14 +130,24 @@ export const Fromto = ({ handleChange }) => {
         i === index ? { ...segment, [field]: value } : segment
       );
 
-      // Propagate changes to the next segment's "from" field if "to" changes
       if (field === "to" && index < updatedSegments.length - 1) {
         updatedSegments[index + 1].from = value;
       }
 
       return updatedSegments;
     });
+
+    if (field === "from") {
+      setSearchQuery(value);
+      setShowFromDropdown(true);
+      setShowToDropdown(false);
+    } else if (field === "to") {
+      setSearchQuery(value);
+      setShowToDropdown(true);
+      setShowFromDropdown(false);
+    }
   };
+
 
   const handleInterchange = () => {
     setFormData((prevData) => ({
@@ -82,40 +155,32 @@ export const Fromto = ({ handleChange }) => {
       from: prevData.to,
       to: prevData.from,
     }));
+
+    setSelectedAirport((prev) => selectedToAirport);
+    setSelectedToAirport((prev) => selectedAirport);
   };
+
 
   const handleFlightTypeChange = (flightType) => {
-    if (flightType === "round_trip") {
-      const today = new Date();
-      const tomorrow = new Date(today);
-      tomorrow.setDate(today.getDate() + 1);
-
-      setFormData((prevData) => ({
-        ...prevData,
-        flightType,
-        returnDate: tomorrow.toISOString().split("T")[0],
-        from: "London (LON)", // Default for "from"
-        to: "Dubai (DXB)", // Default for "to"
-        departureDate: today.toISOString().split("T")[0], // Set today's date
-      }));
-    } else {
-      setFormData((prevData) => ({
-        ...prevData,
-        flightType,
-        returnDate: "", // Clear return date
-      }));
+    if (flightType === "multicity") {
+      setSegments([
+        {
+          from: formData.from, // Use the main "From" value
+          to: formData.to, // Use the main "To" value
+          departureDate: formData.departureDate,
+          travelerCount: formData.travelerCount,
+        },
+        {
+          from: formData.to, // Auto-set "From" of second trip as the first trip's "To"
+          to: "", // Open "To" section for the second trip
+          departureDate: new Date().toISOString().split("T")[0],
+          travelerCount: 1,
+        },
+      ]);
     }
-  };
-
-  const handleClearRoundTrip = () => {
-    const today = new Date();
     setFormData((prevData) => ({
       ...prevData,
-      flightType: "oneway",
-      returnDate: "",
-      departureDate: today.toISOString().split("T")[0],
-      from: "London (LON)",
-      to: "Dubai (DXB)",
+      flightType,
     }));
   };
 
@@ -149,28 +214,7 @@ export const Fromto = ({ handleChange }) => {
             </span>
           </label>
 
-          {/* ROUNDTRIP */}
-          <label
-            htmlFor="round_trip"
-            className={`flex items-center space-x-2 cursor-pointer group px-4 py-2 rounded-lg transition-all duration-300 ${formData.flightType === "round_trip" ? "bg-blue-50" : "bg-white"
-              }`}
-          >
-            <input
-              type="radio"
-              name="flightType"
-              id="round_trip"
-              value="round_trip"
-              checked={formData.flightType === "round_trip"}
-              onChange={() => handleFlightTypeChange("round_trip")}
-              className="w-[16px] h-[16px] text-blue-500 rounded-full focus:ring-blue-500 transition-transform"
-            />
-            <span
-              className={`text-gray-700 transition-colors duration-300 ${formData.flightType === "round_trip" ? "text-blue-500 font-semibold" : ""
-                }`}
-            >
-              Round Trip
-            </span>
-          </label>
+
 
           {/* MULTI CITY */}
           <label
@@ -204,42 +248,49 @@ export const Fromto = ({ handleChange }) => {
             Book National and International Fleets
           </span>
         </div>
-
-
       </div>
 
-      {/* Main Search Container */}
-      <div className="bg-white shadow-md rounded-lg border border-gray-300 py-4 px-6 flex items-center relative">
-        <div className="flex flex-[3]">
-          {/* From Section */}
-          <div className="flex-[3] border-r border-gray-300 pr-4">
+      {/* Main Search Container - Hide if Multi-City is selected */}
+      {formData.flightType !== "multicity" && (
+        <div className="bg-white shadow-md rounded-lg border border-gray-300 py-4 px-6 flex items-center relative">
+          <div className="flex flex-[4]">
+            {/* "From" Section */}
+            <div className="flex-[5] border-r border-gray-300 pr-4 relative">
+              <p className="text-sm text-gray-500 mb-1">From</p>
+              {selectedAirport && (
+                <p className="text-2xl font-bold">{selectedAirport.city}</p>
+              )}
+              <input
+                type="text"
+                name="from"
+                value={formData.from}
+                onChange={handleInputChange}
+                placeholder="Enter city, airport name, IATA, ICAO, country"
+                className="w-full text-sm bg-transparent border-none focus:outline-none"
+              />
 
-            <p className="text-sm text-gray-500 mb-1">From</p>
-            <select
-              name="from"
-              value={formData.from} // The value is only the city name
-              onChange={handleInputChange}
-              className="w-full text-lg font-semibold bg-transparent border-none appearance-none focus:outline-none cursor-pointer"
-            >
-              <option value="" disabled>
-                Select Departure
-              </option>
-              {airports.map((airport) => (
-                <option
-                  value={airport.city_name} // Use only city_name as value
-                  key={airport.IATA_code}
-                >
-                  {airport.city_name} {/* Display only city_name */}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-gray-400 mt-1">
-              {formData.from || "Default: London"}
-            </p>
-          </div>
+              {/* Add Dropdown for FROM field */}
+              {showFromDropdown && airports.length > 0 && (
+                <ul className="absolute bg-white shadow-md border w-full mt-1 max-h-48 overflow-y-auto z-50">
+                  {airports.map((airport) => (
+                    <li
+                      key={airport.id}
+                      onClick={() => handleSelectAirport(airport, "from")}
+                      className="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-200"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold">{airport.city}, {airport.country}</p>
+                        <p className="text-xs text-gray-500">{airport.name}</p>
+                      </div>
+                      <p className="text-sm font-semibold text-gray-600">{airport.iata_code}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
 
-          {/* Interchange Icon */}
-          {formData.flightType !== "multicity" && (
+
+            {/* Interchange Icon */}
             <div className="relative transform translate-y-[40%] -translate-x-1/2 z-10 bg-white rounded-full shadow-[0_0_10px_#93c5fd,0_0_20px_#bfdbfe] flex items-center justify-center w-[40px] h-[40px]">
               <button
                 onClick={handleInterchange}
@@ -248,104 +299,83 @@ export const Fromto = ({ handleChange }) => {
                 <SwapHorizIcon className="text-blue-500 text-2xl" />
               </button>
             </div>
-          )}
 
-          {/* To Section */}
-          <div className="flex-[3] border-r border-gray-300 px-4">
-            <p className="text-sm text-gray-500 mb-1">To</p>
-            <select
-              name="to"
-              value={formData.to} // The value is only the city name
+            {/* "To" Section */}
+            <div className="flex-[5] border-r border-gray-300 px-4 relative">
+              <p className="text-sm text-gray-500 mb-1">To</p>
+              {selectedToAirport && (
+                <p className="text-2xl font-bold">{selectedToAirport.city}</p>
+              )}
+              <input
+                type="text"
+                name="to"
+                value={formData.to}
+                onChange={handleInputChange}
+                placeholder="Enter city, airport name, IATA, ICAO, country"
+                className="w-full text-sm bg-transparent border-none focus:outline-none"
+              />
+
+              {/* Add Dropdown for TO field */}
+              {showToDropdown && airports.length > 0 && (
+                <ul className="absolute bg-white shadow-md border w-full mt-1 max-h-48 overflow-y-auto z-50">
+                  {airports.map((airport) => (
+                    <li
+                      key={airport.id}
+                      onClick={() => handleSelectAirport(airport, "to")}
+                      className="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-200"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold">{airport.city}, {airport.country}</p>
+                        <p className="text-xs text-gray-500">{airport.name}</p>
+                      </div>
+                      <p className="text-sm font-semibold text-gray-600">{airport.iata_code}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+          </div>
+
+          {/* Departure Section */}
+          <div className=" border-r border-gray-300 px-4">
+            <p className="text-sm text-gray-500 mb-1">Departure</p>
+            <input
+              type="date"
+              name="departureDate"
+              value={formData.departureDate}
               onChange={handleInputChange}
               className="w-full text-lg font-semibold bg-transparent border-none appearance-none focus:outline-none cursor-pointer"
+              min={new Date().toISOString().split("T")[0]}
+              onKeyDown={(e) => e.preventDefault()}
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              {formData.departureDate &&
+                new Date(formData.departureDate).toLocaleDateString("en-US", {
+                  weekday: "long",
+                })}
+            </p>
+          </div>
+
+          {/* Passengers Section */}
+          <div className="flex-1 px-4">
+            <p className="text-sm text-gray-500 mb-4">Passengers</p>
+            <select
+              name="travelerCount"
+              value={formData.travelerCount}
+              onChange={handleInputChange}
+              className=" text-lg font-semibold bg-transparent border border-gray-300 rounded-lg focus:outline-none cursor-pointer"
             >
-              <option value="" disabled>
-                Select Destination
-              </option>
-              {airports.map((airport) => (
-                <option
-                  value={airport.city_name} // Use only city_name as value
-                  key={airport.IATA_code}
-                >
-                  {airport.city_name} {/* Display only city_name */}
+              {[...Array(20)].map((_, index) => (
+                <option key={index + 1} value={index + 1}>
+                  {index + 1} Passenger{index > 0 ? "s" : ""}
                 </option>
               ))}
             </select>
-            <p className="text-xs text-gray-400 mt-1">
-              {formData.to || "Default: Dubai"}
-            </p>
           </div>
         </div>
+      )}
 
-        {/* Departure Section */}
-        <div className=" border-r border-gray-300 px-4">
-          <p className="text-sm text-gray-500 mb-1">Departure</p>
-          <input
-            type="date"
-            name="departureDate"
-            value={formData.departureDate}
-            onChange={handleInputChange}
-            className="w-full text-lg font-semibold bg-transparent border-none appearance-none focus:outline-none cursor-pointer"
-            min={new Date().toISOString().split("T")[0]} // Disable past dates
-            onKeyDown={(e) => e.preventDefault()} // Prevent manual input
-          />
-          <p className="text-xs text-gray-400 mt-1">
-            {formData.departureDate &&
-              new Date(formData.departureDate).toLocaleDateString("en-US", {
-                weekday: "long", // Get the full name of the weekday
-              })}
-          </p>
-        </div>
-
-        {/* Return Section */}
-        {formData.flightType !== "multicity" && (
-          <div className="flex-1 border-r border-gray-300 pl-4  relative">
-            <span className="text-sm text-gray-500 mb-1 flex items-center justify-between">
-              Return
-              {formData.flightType === "round_trip" && (
-                <button onClick={handleClearRoundTrip} className="text-gray-500">
-                  <CloseIcon />
-                </button>
-              )}
-            </span>
-            <input
-              type="date"
-              name="returnDate"
-              value={formData.returnDate}
-              onChange={handleInputChange}
-              className=" text-lg font-semibold bg-transparent border-none appearance-none focus:outline-none cursor-pointer"
-              min={new Date().toISOString().split("T")[0]} // Disable past dates
-              onKeyDown={(e) => e.preventDefault()} // Prevent manual input
-            />
-            <p className="text-xs text-gray-400 mt-1">
-              {formData.returnDate
-                ? new Date(formData.returnDate).toLocaleDateString("en-US", {
-                  weekday: "long", // Get the full name of the weekday
-                })
-                : "Tap to add a return date for bigger discounts"}
-            </p>
-          </div>
-        )}
-        {/* Passengers Section */}
-        <div className="flex-1 px-4">
-          <p className="text-sm text-gray-500 mb-4">Passengers</p>
-          <select
-            name="travelerCount"
-            value={formData.travelerCount}
-            onChange={handleInputChange} // Updates formData.travelerCount dynamically
-            className=" text-lg font-semibold bg-transparent border border-gray-300 rounded-lg focus:outline-none cursor-pointer"
-          >
-            {[...Array(20)].map((_, index) => (
-              <option key={index + 1} value={index + 1}>
-                {index + 1} Passenger{index > 0 ? "s" : ""}
-              </option>
-            ))}
-          </select>
-          <p className="text-xs text-gray-400 mt-1">
-            {formData.travelerCount} Passenger{formData.travelerCount > 1 ? "s" : ""}
-          </p>
-        </div>
-      </div>
 
 
       {/* Multi-City Segments */}
@@ -358,55 +388,68 @@ export const Fromto = ({ handleChange }) => {
             >
               <div className="flex items-center justify-between gap-4">
                 {/* From Section */}
-                <div className="flex-1 border-r border-gray-300 px-6">
+                <div className="flex-[5] border-r border-gray-300 pr-4 relative">
                   <p className="text-sm text-gray-500 mb-1">From</p>
-                  <select
-                    name="from"
+                  <p className="text-2xl font-bold">{segment.from}</p>
+                  <input
+                    type="text"
                     value={segment.from}
-                    onChange={(e) =>
-                      handleSegmentChange(index, "from", e.target.value)
-                    }
-                    className="w-full text-lg font-semibold bg-transparent border-none appearance-none focus:outline-none cursor-pointer"
-                  >
-                    <option value="" disabled>
-                      Select Departure
-                    </option>
-                    {airports.map((airport) => (
-                      <option value={airport.city_name} key={airport.IATA_code}>
-                        {airport.city_name}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {segment.from ? airports.find((a) => a.city_name === segment.from)?.country_name : "Select a city"}
-                  </p>
+                    onChange={(e) => handleSegmentChange(index, "from", e.target.value)}
+                    placeholder="Enter city, airport name, IATA, ICAO, country"
+                    className="w-full text-sm bg-transparent border-none focus:outline-none"
+                  />
+                  {showFromDropdown && airports.length > 0 && (
+                    <ul className="absolute bg-white shadow-md border w-full mt-1 max-h-48 overflow-y-auto z-50">
+                      {airports.map((airport) => (
+                        <li
+                          key={airport.id}
+                          onClick={() =>
+                            handleSegmentChange(index, "from", `${airport.name} (${airport.iata_code})`)
+                          }
+                          className="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-200"
+                        >
+                          <div>
+                            <p className="text-sm font-semibold">{airport.city}, {airport.country}</p>
+                            <p className="text-xs text-gray-500">{airport.name}</p>
+                          </div>
+                          <p className="text-sm font-semibold text-gray-600">{airport.iata_code}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
 
                 {/* To Section */}
-                <div className="flex-1 border-r border-gray-300 px-6">
+                <div className="flex-[5] border-r border-gray-300 px-4 relative">
                   <p className="text-sm text-gray-500 mb-1">To</p>
-                  <select
-                    name="to"
+                  <p className="text-2xl font-bold">{segment.to}</p>
+                  <input
+                    type="text"
                     value={segment.to}
-                    onChange={(e) =>
-                      handleSegmentChange(index, "to", e.target.value)
-                    }
-                    className="w-full text-lg font-semibold bg-transparent border-none appearance-none focus:outline-none cursor-pointer"
-                  >
-                    <option value="" disabled>
-                      Select Destination
-                    </option>
-                    {airports.map((airport) => (
-                      <option value={airport.city_name} key={airport.IATA_code}>
-                        {airport.city_name}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {segment.to ? airports.find((a) => a.city_name === segment.to)?.country_name : "Select a city"}
-                  </p>
+                    onChange={(e) => handleSegmentChange(index, "to", e.target.value)}
+                    placeholder="Enter city, airport name, IATA, ICAO, country"
+                    className="w-full text-sm bg-transparent border-none focus:outline-none"
+                  />
+                  {showToDropdown && airports.length > 0 && (
+                    <ul className="absolute bg-white shadow-md border w-full mt-1 max-h-48 overflow-y-auto z-50">
+                      {airports.map((airport) => (
+                        <li
+                          key={airport.id}
+                          onClick={() =>
+                            handleSegmentChange(index, "to", `${airport.name} (${airport.iata_code})`)
+                          }
+                          className="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-200"
+                        >
+                          <div>
+                            <p className="text-sm font-semibold">{airport.city}, {airport.country}</p>
+                            <p className="text-xs text-gray-500">{airport.name}</p>
+                          </div>
+                          <p className="text-sm font-semibold text-gray-600">{airport.iata_code}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
-
 
                 {/* Departure Section */}
                 <div className="flex-1 border-r border-gray-300 px-4">
@@ -424,14 +467,30 @@ export const Fromto = ({ handleChange }) => {
                   <p className="text-xs text-gray-400 mt-1">
                     {segment.departureDate &&
                       new Date(segment.departureDate).toLocaleDateString("en-US", {
-                        weekday: "long", // Get the full name of the weekday
+                        weekday: "long",
                       })}
                   </p>
                 </div>
 
-                {/* Add Another City Button and Remove Segment Button */}
+                {/* Passenger Section - INDIVIDUAL for EACH TRIP */}
+                <div className="flex-1 px-4">
+                  <p className="text-sm text-gray-500 mb-1">Passengers</p>
+                  <select
+                    name="travelerCount"
+                    value={segment.travelerCount}
+                    onChange={(e) => handleSegmentChange(index, "travelerCount", e.target.value)}
+                    className="text-lg font-semibold bg-transparent border border-gray-300 rounded-lg focus:outline-none cursor-pointer"
+                  >
+                    {[...Array(20)].map((_, i) => (
+                      <option key={i + 1} value={i + 1}>
+                        {i + 1} Passenger{i > 0 ? "s" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Add/Remove Trip Buttons */}
                 <div className="flex items-center gap-4">
-                  {/* Add Another City Button */}
                   {index === segments.length - 1 && (
                     <button
                       onClick={addSegment}
@@ -441,12 +500,10 @@ export const Fromto = ({ handleChange }) => {
                     </button>
                   )}
 
-                  {/* Border Divider */}
                   {index > 0 && index === segments.length - 1 && (
                     <div className="h-6 w-[1px] bg-gray-300" />
                   )}
 
-                  {/* Remove Segment Button */}
                   {index > 0 && (
                     <button
                       onClick={() => removeSegment(index)}
@@ -459,6 +516,7 @@ export const Fromto = ({ handleChange }) => {
               </div>
             </div>
           ))}
+
         </div>
       )}
 
