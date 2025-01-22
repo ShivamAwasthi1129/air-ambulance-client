@@ -13,8 +13,8 @@ export const Fromto = ({ handleChange }) => {
   ]);
   const [formData, setFormData] = useState({
     flightType: "oneway",
-    from: "Indira Gandhi International Airport (DEL)",
-    to: "Heathrow Airport (LHR)",
+    from: "Indira Gandhi International Airport",
+    to: "Heathrow Airport",
     departureDate: new Date().toISOString().split("T")[0],
     travelerCount: 1,
   });
@@ -79,7 +79,8 @@ export const Fromto = ({ handleChange }) => {
     if (type === "from") {
       setFormData((prevState) => ({
         ...prevState,
-        from: airport.name + " (" + airport.iata_code + ")",
+        from: airport.name,
+        // from: airport.name + " (" + airport.iata_code + ")",
       }));
       setSelectedAirport({
         city: airport.city,
@@ -90,7 +91,8 @@ export const Fromto = ({ handleChange }) => {
     } else if (type === "to") {
       setFormData((prevState) => ({
         ...prevState,
-        to: airport.name + " (" + airport.iata_code + ")",
+        // to: airport.name + " (" + airport.iata_code + ")",
+        to: airport.name,
       }));
       setSelectedToAirport({
         city: airport.city,
