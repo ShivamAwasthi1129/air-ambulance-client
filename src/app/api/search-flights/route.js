@@ -65,9 +65,7 @@ export async function GET(req) {
         { status: 400 }
       );
     }
-
     console.log("Search Params:", { from, to, departureDate, travelerCount });
-
 
     // Scan records with specific filter conditions
     const scanParams = {
