@@ -1,55 +1,9 @@
 import { NextResponse } from "next/server";
 import { ScanCommand } from "@aws-sdk/lib-dynamodb";
 import { ddbDocClient } from "@/config/docClient";
+import { haversine, searchStation, convertToHoursMinutes } from "@/utils/helperFunction";
 
 const TABLE_NAME = "AIR_FLEET";
-
-// export async function GET() {
-//   try {
-//     // Step 1: Scan all records in the table
-//     const scanParams = {
-//       TableName: TABLE_NAME,
-//       ProjectionExpression: "serialNumber",
-//     };
-
-//     const scanResult = await ddbDocClient.send(new ScanCommand(scanParams));
-//     const records = scanResult.Items;
-
-//     if (records.length === 0) {
-//       return NextResponse.json(
-//         { message: "No records found in the table." },
-//         { status: 200 }
-//       );
-//     }
-
-//     // Step 2: Iterate through records and update them with the new field
-//     const updatePromises = records.map((record) => {
-//       const updateParams = {
-//         TableName: TABLE_NAME,
-//         Key: { serialNumber: record.serialNumber },
-//         UpdateExpression: "SET fleetDetails.seatCapacity = :seatCapacity",
-//         ExpressionAttributeValues: {
-//           ":seatCapacity": Math.floor(Math.random(10) * 8) + 2, // Default seat capacity value (modify as needed)
-//         },
-//       };
-
-//       return ddbDocClient.send(new UpdateCommand(updateParams));
-//     });
-
-//     await Promise.all(updatePromises);
-
-//     return NextResponse.json({
-//       message: `Added 'seatCapacity' to ${records.length} records successfully.`,
-//       updatedRecords: records.length,
-//     });
-//   } catch (error) {
-//     console.error("Error updating records:", error);
-//     return NextResponse.json(
-//       { error: "Internal Server Error" },
-//       { status: 500 }
-//     );
-//   }
-// }
 
 export async function GET(req) {
   try {
@@ -68,7 +22,6 @@ export async function GET(req) {
 
     console.log("Search Params:", { from, to, departureDate, travelerCount });
 
-
     // Scan records with specific filter conditions
     const scanParams = {
       TableName: TABLE_NAME,
@@ -84,18 +37,41 @@ export async function GET(req) {
 
     const scanResult = await ddbDocClient.send(new ScanCommand(scanParams));
 
-    const availableFleets = scanResult.Items;
-
+    let availableFleets = scanResult.Items;
     if (availableFleets.length === 0) {
       return NextResponse.json(
         { message: "No available fleets match the criteria." },
         { status: 404 }
       );
     }
+    const arrival = await searchStation(from.trim());
+    const destination = await searchStation(to.trim());
+
+    const finalFleet = [];
+    // Calculate distance, flight time, and total price for each fleet
+    for (const fleet of availableFleets) {
+      const { maxSpeed, pricing } = fleet.fleetDetails;
+      // Convert knots to km/h (1 knot = 1.852 km/h)
+      const cruisingSpeed = parseFloat(maxSpeed) * 1.852;
+      // Calculate distance in km
+      const distance = haversine(
+        arrival[0].latitude,
+        arrival[0].longitude,
+        destination[0].latitude,
+        destination[0].longitude
+      ).toFixed(2);
+      // Calculate time (time = distance / speed)
+      const flightTime = distance / cruisingSpeed; // in hours
+
+      // Calculate total price
+      const totalPrice = (flightTime * parseFloat(pricing)).toFixed(0);
+
+      finalFleet.push({ ...fleet, distance: `${distance} km`, flightTime: convertToHoursMinutes(flightTime), totalPrice: `$${totalPrice}` });
+    }
 
     return NextResponse.json({
       message: "Available fleets retrieved successfully.",
-      availableFleets,
+      finalFleet,
     });
   } catch (error) {
     console.error("Error updating records:", error);
