@@ -65,7 +65,7 @@ export async function GET(req) {
       // Calculate total price
       const totalPrice = (flightTime * parseFloat(pricing)).toFixed(0);
 
-      finalFleet.push({ ...fleet, distance: `${distance} km`, flightTime: convertToHoursMinutes(flightTime), totalPrice: `$${totalPrice}` });
+      finalFleet.push({ ...fleet, distance: `${distance} km`, flightTime: convertToHoursMinutes(flightTime), totalPrice: `${totalPrice}` });
     }
 
     return NextResponse.json({

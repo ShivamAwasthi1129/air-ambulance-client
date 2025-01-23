@@ -189,6 +189,41 @@ export const SearchBar = () => {
     setFocusedField(null);
     setSearchQuery("");
   };
+  // (C) Selecting an airport from dropdown
+  // const handleSelectAirport = (airport) => {
+  //   if (focusedSegmentIndex === null) return;
+  
+  //   const updatedSegments = [...segments];
+  //   updatedSegments[focusedSegmentIndex] = {
+  //     ...updatedSegments[focusedSegmentIndex],
+  //     from: `${airport.name} (${airport.iata_code})`,
+  //     fromCity: airport.city,
+  //     fromIATA: airport.iata_code,
+  //     fromICAO: airport.icao_code,
+  //     to: `${airport.name} (${airport.iata_code})`,
+  //     toCity: airport.city,
+  //     toIATA: airport.iata_code,
+  //     toICAO: airport.icao_code,
+  //   };
+  
+  //   // Update state and session storage
+  //   setSegments(updatedSegments);
+  //   setShowDropdown(false);
+  //   setFocusedSegmentIndex(null);
+  //   setFocusedField(null);
+  //   setSearchQuery("");
+  
+  //   // Save updated segments to sessionStorage
+  //   sessionStorage.setItem(
+  //     "searchData",
+  //     JSON.stringify({
+  //       tripType,
+  //       segments: updatedSegments,
+  //     })
+  //   );
+  
+  //   console.log("Updated segments saved to sessionStorage:", updatedSegments);
+  // };
 
   // (D) Swap from/to (only relevant for one-way)
   const handleSwap = (index) => {

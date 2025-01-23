@@ -68,5 +68,5 @@ export async function searchStation(query) {
 export function convertToHoursMinutes(decimalHours) {
   const hours = Math.floor(decimalHours);
   const minutes = Math.round((decimalHours - hours) * 60);
-  return `${hours} hours and ${minutes} minutes`;
+  return `${hours}h ${minutes}m`;
 }
