@@ -29,7 +29,7 @@ const exchangeRates = {
   GBP: 0.0098,  // e.g. 1 INR = 0.0098 GBP
 };
 
-// 2) Amenity icons (unchanged)
+// 2) Amenity icons
 const amenityIcons = {
   "Air Hostess / Escorts": <FaUserTie className="text-blue-600" />,
   "Personal Bouquet": <FaSeedling className="text-pink-500" />,
@@ -69,7 +69,6 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
     setActiveDetailsId((prevId) => (prevId === flightId ? null : flightId));
   };
 
-  // Simple image slider
   // Updated ImageSlider component
   const ImageSlider = ({ aircraftGallery }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -85,20 +84,18 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
       aircraftGallery?.cockpit
         ? Object.values(aircraftGallery.cockpit)[0]
         : null,
-    ].filter(Boolean); // Remove null values if any category is missing
+    ].filter(Boolean); // Remove null if category is missing
 
     useEffect(() => {
       if (images.length > 1) {
         const interval = setInterval(() => {
-          setCurrentIndex((prev) =>
-            prev === images.length - 1 ? 0 : prev + 1
-          );
+          setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
         }, 4000);
         return () => clearInterval(interval);
       }
     }, [images]);
 
-    if (images.length === 0) {
+    if (!images.length) {
       return (
         <div className="w-full h-64 bg-gray-100 flex items-center justify-center">
           <span className="text-gray-500">No image available</span>
@@ -112,10 +109,10 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
           className="flex transition-transform duration-700"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
         >
-          {images.map((image, i) => (
+          {images.map((imgSrc, i) => (
             <img
               key={i}
-              src={image}
+              src={imgSrc}
               alt={`Aircraft view ${i}`}
               className="w-full h-64 object-cover flex-shrink-0"
             />
@@ -125,10 +122,9 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
     );
   };
 
-
   // "See flight Experience ->" triggers the modal
   const handleExperienceClick = (flightId, e) => {
-    e.stopPropagation(); // to avoid also selecting the flight
+    e.stopPropagation(); // Avoid also selecting the flight
     setExperienceModalFlightId(flightId);
     setShowExperienceModal(true);
     setActiveTab("interior");
@@ -148,7 +144,7 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
   };
 
   // If no flights match, show message
-  if (filteredData.length === 0) {
+  if (!filteredData.length) {
     return (
       <div className="text-center py-8 text-gray-500">
         No flights match the selected criteria.
@@ -173,17 +169,21 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
       {filteredData.map((flight) => {
         const isOpen = activeDetailsId === flight.id;
 
-        // 1) Top 4 free amenities
+        // 1) Grab all free amenities
         const freeServicesAll = Object.entries(flight.additionalAmenities || {}).filter(
           ([, amenityData]) => amenityData.value === "free"
         );
-        const freeServicesToShow = freeServicesAll.slice(0, 4);
+        // 2) Show up to 7
+        const freeServicesToShow = freeServicesAll.slice(0, 7);
+        // Split into two lines: first 4, next 3
+        const firstLineServices = freeServicesToShow.slice(0, 4);
+        const secondLineServices = freeServicesToShow.slice(4, 7);
 
-        // 2) All amenities (for expanded panel)
+        // All amenities (for expanded panel)
         const allAmenitiesEntries = Object.entries(flight.additionalAmenities || {});
         const chunkedAmenities = chunkArray(allAmenitiesEntries, 4);
 
-        // 3) Price in INR or fallback
+        // Price in INR or fallback
         const flightPriceINR = flight.price || 86404;
 
         return (
@@ -205,9 +205,9 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
             </div>
 
             {/* RIGHT: flight details or amenities */}
-            <div className="w-full md:w-3/5  relative  border border-gray-300">
+            <div className="w-full md:w-3/5 relative border border-gray-300">
               <AnimatePresence mode="wait">
-                {/* =========== FLIGHT DETAILS (default) =========== */}
+                {/* =========== FLIGHT DETAILS (default collapsed) =========== */}
                 {!isOpen && (
                   <motion.div
                     key="flight-details"
@@ -219,7 +219,7 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                     className="bg-white p-4 py-0 h-full"
                   >
                     {/* TOP ROW: Airline Logo / Title / Price + currency */}
-                    <div className="flex items-start justify-between border-b border-gray-300 py-2">
+                    <div className="flex items-center justify-between border-b border-gray-300 py-2">
                       <div className="flex items-center space-x-2">
                         <img
                           src={
@@ -227,34 +227,26 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                             "https://imgak.mmtcdn.com/flights/assets/media/dt/common/icons/GF.png?v=19"
                           }
                           alt={flight.title || "Gulf Air"}
-                          className="w-8 h-8 md:w-10 md:h-10 object-contain"
+                          className="w-10 h-10 md:w-10 md:h-10 object-contain"
                         />
-                        <h2 className="text-lg md:text-xl font-bold text-gray-800">
+                        <h2 className="text-lg md:text-2xl font-bold text-gray-800">
                           {flight.title || "Gulf Air"}
                         </h2>
                       </div>
 
-                      {/* Price + currency dropdown */}
+                      {/* PRICE + "other currencies" */}
                       <div className="text-right relative inline-block">
-                        <button
-                          className="flex items-center space-x-1 py-1 px-2 rounded"
+                        <p className="text-xs text-gray-500">From</p>
+                        <p className="text-xl md:text-2xl font-bold text-gray-700">
+                          {currencySymbols[selectedCurrency]}
+                          {convertPrice(flightPriceINR, selectedCurrency).toLocaleString()}
+                        </p>
+                        <p
                           onClick={() => setShowCurrencyDropdown((val) => !val)}
+                          className="text-sm text-blue-500 cursor-pointer"
                         >
-                          {/* Current flag */}
-                          <span>
-                            {
-                              currencyFlags.find(
-                                (flag) => flag.code === selectedCurrency
-                              )?.label
-                            }
-                          </span>
-                          {/* Symbol + converted price */}
-                          <span className="text-xl md:text-2xl font-bold text-gray-700">
-                            {currencySymbols[selectedCurrency]}
-                            {convertPrice(flightPriceINR, selectedCurrency).toLocaleString()}
-                          </span>
-                        </button>
-
+                          &gt; other currencies
+                        </p>
                         {showCurrencyDropdown && (
                           <div className="absolute right-0 top-full mt-1 bg-white border rounded shadow-md w-40 z-10">
                             {currencyFlags.map(({ code, label }) => {
@@ -280,11 +272,6 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                         )}
                       </div>
                     </div>
-
-                    {/* Stops & total duration (if any) */}
-                    <p className="text-sm text-gray-500 mt-1 mb-3">
-                      {flight.stopsInfo || "Flight Duration • 14h 30m"}
-                    </p>
 
                     {/* Flight timings row */}
                     <div className="flex items-center space-x-3 md:space-x-8 text-sm text-gray-800 mb-2">
@@ -317,14 +304,22 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                           {flight.arrivalCity || "London - Heathrow Apt"}
                         </p>
                       </div>
+                      {/* Stops & total duration (if any) */}
+                      <p className="text-sm text-gray-500 mt-1 mb-3">
+                        {flight.stopsInfo || "Flight Duration • 14h 30m"}
+                      </p>
                     </div>
 
-                    {/* Top 4 FREE amenities */}
+
+
+                    {/* Top free amenities (up to 7, splitted as 4 + 3) */}
                     {freeServicesToShow.length > 0 ? (
                       <div className="mb-3">
                         <h4 className="text-sm font-semibold mb-2">In-Flight Amenities</h4>
-                        <ul className="space-y-1 flex">
-                          {freeServicesToShow.map(([amenityKey]) => {
+
+                        {/* First row (4 items or fewer) */}
+                        <ul className="flex space-x-1 mb-1">
+                          {firstLineServices.map(([amenityKey]) => {
                             const IconComponent =
                               amenityIcons[amenityKey] || (
                                 <AiOutlineCheckCircle className="text-green-500 mr-2" />
@@ -332,7 +327,7 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                             return (
                               <li
                                 key={amenityKey}
-                                className="flex items-center text-sm ml-2 border-r-2 border-gray-300 pr-2"
+                                className="flex items-center text-sm ml-2 border-r-2 border-gray-300 pr-1"
                               >
                                 <span className="mr-2">{IconComponent}</span>
                                 <span className="text-xs">{amenityKey}</span>
@@ -340,6 +335,27 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                             );
                           })}
                         </ul>
+
+                        {/* Second row (remaining 3 items if available) */}
+                        {secondLineServices.length > 0 && (
+                          <ul className="flex space-x-1">
+                            {secondLineServices.map(([amenityKey]) => {
+                              const IconComponent =
+                                amenityIcons[amenityKey] || (
+                                  <AiOutlineCheckCircle className="text-green-500 mr-2" />
+                                );
+                              return (
+                                <li
+                                  key={amenityKey}
+                                  className="flex items-center text-sm ml-2 border-r-2 border-gray-300 pr-1"
+                                >
+                                  <span className="mr-2">{IconComponent}</span>
+                                  <span className="text-xs">{amenityKey}</span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
                       </div>
                     ) : (
                       <p className="text-xs md:text-sm text-gray-600 mb-3">
@@ -348,7 +364,7 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                     )}
 
                     {/* Action buttons */}
-                    <div className="flex items-center space-x-4 mb-3">
+                    <div className="flex items-center space-x-4 mb-1">
                       {/* SELECT FLIGHT BUTTON */}
                       <button
                         onClick={() => onSelectFleet(flight)}
@@ -373,7 +389,7 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                   </motion.div>
                 )}
 
-                {/* =========== AMENITIES PANEL (open view) =========== */}
+                {/* =========== AMENITIES PANEL (expanded view) =========== */}
                 {isOpen && (
                   <motion.div
                     key="amenities"
@@ -399,16 +415,43 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                           {flight.title || "Gulf Air"}
                         </h2>
                       </div>
-                      <div className="text-right">
-                        {/* Price with selected currency */}
+
+                      {/* Price block */}
+                      <div className="text-right relative inline-block">
+                        <p className="text-xs text-gray-500">From</p>
                         <p className="text-xl md:text-2xl font-bold text-gray-700">
-                          {currencyFlags.find(
-                            (flag) => flag.code === selectedCurrency
-                          )?.label}{" "}
                           {currencySymbols[selectedCurrency]}
                           {convertPrice(flightPriceINR, selectedCurrency).toLocaleString()}
-                          <span className="text-sm text-gray-500"></span>
                         </p>
+                        <p
+                          onClick={() => setShowCurrencyDropdown((val) => !val)}
+                          className="text-sm text-blue-500 cursor-pointer"
+                        >
+                          &gt; other currencies
+                        </p>
+                        {showCurrencyDropdown && (
+                          <div className="absolute right-0 top-full mt-1 bg-white border rounded shadow-md w-40 z-10">
+                            {currencyFlags.map(({ code, label }) => {
+                              const converted = convertPrice(flightPriceINR, code);
+                              return (
+                                <div
+                                  key={code}
+                                  onClick={() => {
+                                    setSelectedCurrency(code);
+                                    setShowCurrencyDropdown(false);
+                                  }}
+                                  className="cursor-pointer p-2 hover:bg-gray-100 flex items-center justify-between"
+                                >
+                                  <span className="mr-2">{label}</span>
+                                  <span className="text-sm font-bold text-gray-700">
+                                    {currencySymbols[code]}
+                                    {converted.toLocaleString()}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -483,7 +526,7 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
           onClick={closeExperienceModal}
         >
           <div
-            className="bg-white w-11/12 md:w-3/5 h-[70%] p-5 rounded-md relative"
+            className="bg-white w-11/12 md:w-4/5 h-[80%] p-5 rounded-md relative"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
@@ -496,20 +539,18 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
 
             {/* Tabs: interior, exterior, cockpit, aircraftLayout, video */}
             <div className="flex space-x-4 border-b mb-4">
-              {["interior", "exterior", "cockpit", "aircraftLayout", "video"].map(
-                (tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`py-2 px-4 text-sm font-semibold ${activeTab === tab
-                        ? "text-blue-600 border-b-2 border-blue-600"
-                        : "text-gray-500"
-                      }`}
-                  >
-                    {tab}
-                  </button>
-                )
-              )}
+              {["interior", "exterior", "cockpit", "aircraftLayout", "video"].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`py-2 px-4 text-sm font-semibold ${activeTab === tab
+                      ? "text-blue-600 border-b-2 border-blue-600"
+                      : "text-gray-500"
+                    }`}
+                >
+                  {tab}
+                </button>
+              ))}
             </div>
 
             {/* Show images or video for the chosen flight's aircraftGallery */}
@@ -527,7 +568,7 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                           key={view}
                           src={url}
                           alt={view}
-                          className="w-60 h-40 object-cover rounded"
+                          className="w-80 h-56 object-cover rounded"
                         />
                       ))}
                     </div>
@@ -550,7 +591,6 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
           </div>
         </div>
       )}
-
     </div>
   );
 };
