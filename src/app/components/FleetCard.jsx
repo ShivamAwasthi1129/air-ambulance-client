@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { IoIosAirplane } from "react-icons/io";
+import { IoIosAirplane, IoMdSpeedometer } from "react-icons/io";
 import { FaUserTie, FaCarSide, FaMusic, FaCoffee, FaSeedling } from "react-icons/fa";
 import { GiPaintRoller } from "react-icons/gi";
-import { MdMonitor, MdOutlineHomeRepairService, MdMicrowave,MdAirlineSeatReclineExtra } from "react-icons/md";
+import { MdMonitor, MdOutlineHomeRepairService, MdMicrowave, MdAirlineSeatReclineExtra } from "react-icons/md";
 import { BsFillLightningFill } from "react-icons/bs";
 import { AiOutlineCheckCircle } from "react-icons/ai"; // Fallback or tick icon
 
@@ -79,7 +79,7 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
     if (data) {
       const parsed = JSON.parse(data);
       console.log("Fetched Search Data:", parsed);
-      setParsedData(parsed); 
+      setParsedData(parsed);
     } else {
       console.log("No data found in sessionStorage for 'searchData'");
     }
@@ -258,10 +258,10 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                           alt={flight.title || "Airline"}
                           className="w-10 h-10 md:w-10 md:h-10 object-contain"
                         />
-                          <h2 className="text-lg md:text-xl font-bold text-gray-800 flex flex-col items-end">
-                            {flight.fleetDetails.selectedModel || "Gulf Air"}
+                        <h2 className="text-lg md:text-xl font-bold text-gray-800 flex flex-col items-end">
+                          {flight.fleetDetails.selectedModel || "Gulf Air"}
                           <p className="text-sm text-gray-800 font-medium">
-                               {flight.fleetDetails.registrationNo || "Gulf Air"}
+                            {flight.fleetDetails.registrationNo || "Gulf Air"}
                           </p>
                         </h2>
                       </div>
@@ -314,9 +314,9 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                     <div className="flex items-center space-x-3 md:space-x-8 text-sm text-gray-800 mb-2">
                       <div>
                         <p className="text-base font-semibold flex ">
-                         
-                          <span>{parsedData?.segments?.[0]?.fromIATA } </span>
-                          <span>( {parsedData?.segments?.[0]?.departureTime} )</span>
+
+                          <span>{parsedData?.segments?.[0]?.fromIATA} </span>
+                          <span>-{parsedData?.segments?.[0]?.departureTime}</span>
                           {/* {parsedData?.segments?.[0]?.fromIATA || "DEL 21:35"} */}
                         </p>
                         <p className="text-xs text-gray-500">
@@ -334,7 +334,7 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                         </p>
                       </div>
 
-                      <div className=""> 
+                      <div className="">
                         <p className="text-base font-semibold">
                           {parsedData?.segments?.[0]?.toIATA || "LHR 06:35"}
                         </p>
@@ -343,10 +343,18 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                         </p>
                       </div>
                       <div className="flex items-center">
-                      <p className="text-sm text-gray-500 ">
-                        Flight Duration • {flight.flightTime || "not found"}
-                      </p>
-                        {"   "}<span className="text-md font-bold text-gray-500 flex items-center ml-4"><MdAirlineSeatReclineExtra size={28} /> : {flight.fleetDetails.seatCapacity} Seat</span>
+                        <p className="text-sm text-gray-500 flex flex-col items-center">
+                        <span>Flight Duration</span>
+                          <span>{flight.flightTime || "not found"}</span>
+                        </p>
+                        {"   "}<span className="text-md font-bold text-gray-500 flex items-center ml-4">
+                          <MdAirlineSeatReclineExtra size={20} />
+                          : {flight.fleetDetails.seatCapacity}
+                        </span>
+                        {"   "}<span className="text-md font-bold text-gray-500 flex items-center ml-4">
+                          <IoMdSpeedometer size={20} />
+                          : {flight.fleetDetails.maxSpeed}NM
+                        </span>
                       </div>
                     </div>
 
@@ -403,11 +411,10 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                     <div className="flex items-center space-x-4 mb-1">
                       <button
                         onClick={() => onSelectFleet(flight)}
-                        className={`${
-                          selectedFleet?.serialNumber === flight.serialNumber
+                        className={`${selectedFleet?.serialNumber === flight.serialNumber
                             ? "bg-green-600"
                             : "bg-gradient-to-r from-green-500 to-green-700"
-                        } text-white text-sm font-semibold px-4 py-2 rounded shadow-md focus:ring-2 focus:ring-green-300`}
+                          } text-white text-sm font-semibold px-4 py-2 rounded shadow-md focus:ring-2 focus:ring-green-300`}
                       >
                         {selectedFleet?.serialNumber === flight.serialNumber
                           ? "Fleet Selected"
@@ -538,11 +545,10 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                                         {amenityKey}
                                       </span>
                                       <span
-                                        className={`text-xs font-semibold ml-2 px-2 py-1 rounded ${
-                                          amenityData.value === "free"
+                                        className={`text-xs font-semibold ml-2 px-2 py-1 rounded ${amenityData.value === "free"
                                             ? "bg-green-100 text-green-600"
                                             : "bg-red-100 text-red-600"
-                                        }`}
+                                          }`}
                                       >
                                         {amenityData.value === "free"
                                           ? "Free"
@@ -592,11 +598,10 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`py-2 px-4 text-sm font-semibold ${
-                      activeTab === tab
+                    className={`py-2 px-4 text-sm font-semibold ${activeTab === tab
                         ? "text-blue-600 border-b-2 border-blue-600"
                         : "text-gray-500"
-                    }`}
+                      }`}
                   >
                     {tab}
                   </button>

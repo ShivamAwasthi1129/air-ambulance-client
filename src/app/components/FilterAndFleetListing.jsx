@@ -118,20 +118,20 @@ const FilterAndFleetListing = ({ refreshKey }) => {
     return [...new Set(types)];
   }, [fleetData]);
 
- // NEW: Filter only available amenities
-const allAmenities = useMemo(() => {
-  const amenitySet = new Set();
-  fleetData.forEach((flight) => {
-    if (flight.additionalAmenities) {
-      Object.entries(flight.additionalAmenities).forEach(([amenity, details]) => {
-        if (details?.value !== "not_available") {
-          amenitySet.add(amenity);
-        }
-      });
-    }
-  });
-  return [...amenitySet];
-}, [fleetData]);
+  // NEW: Filter only available amenities
+  const allAmenities = useMemo(() => {
+    const amenitySet = new Set();
+    fleetData.forEach((flight) => {
+      if (flight.additionalAmenities) {
+        Object.entries(flight.additionalAmenities).forEach(([amenity, details]) => {
+          if (details?.value !== "not_available") {
+            amenitySet.add(amenity);
+          }
+        });
+      }
+    });
+    return [...amenitySet];
+  }, [fleetData]);
 
 
   const handleClearFilters = () => {
@@ -180,18 +180,57 @@ const allAmenities = useMemo(() => {
   };
 
   if (!searchData) {
-    return <div>Loading session data...</div>;
+    return <div className="p-4 space-y-6 animate-pulse w-full">
+      {/* Top Headings Row */}
+      <div className="flex flex-col md:flex-row justify-between space-y-2 md:space-y-0 md:items-center">
+        <div className="bg-gray-300 rounded h-6 w-48" />
+        <div className="bg-gray-300 rounded h-6 w-60" />
+        <div className="bg-gray-300 rounded h-8 w-32" />
+      </div>
+      <div className="bg-gray-300 rounded h-6 w-72" />
+      <div className="flex flex-col md:flex-row gap-6">
+        <div className="w-full md:w-1/4 space-y-4">
+          <div className="bg-gray-300 rounded h-6 w-32" />
+          <div className="bg-gray-300 rounded h-4 w-full" />
+          <div className="bg-gray-300 rounded h-4 w-3/4" />
+          <div className="bg-gray-300 rounded h-4 w-2/3" />
+          <div className="bg-gray-300 rounded h-4 w-3/4" />
+          <div className="bg-gray-300 rounded h-4 w-1/2" />
+        </div>
+        <div className="flex-1 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="bg-gray-300 rounded h-20 w-32" />
+            <div className="flex-1 space-y-2 ml-4">
+              <div className="bg-gray-300 rounded h-4 w-1/2" />
+              <div className="bg-gray-300 rounded h-4 w-1/3" />
+              <div className="bg-gray-300 rounded h-4 w-1/4" />
+            </div>
+            <div className="bg-gray-300 rounded h-6 w-16 ml-4" />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <div className="bg-gray-300 rounded h-4 w-24" />
+            <div className="bg-gray-300 rounded h-4 w-32" />
+            <div className="bg-gray-300 rounded h-4 w-20" />
+            <div className="bg-gray-300 rounded h-4 w-28" />
+          </div>
+          <div className="flex gap-4">
+            <div className="bg-gray-300 rounded h-8 w-24" />
+            <div className="bg-gray-300 rounded h-8 w-32" />
+          </div>
+        </div>
+      </div>
+    </div>;
   }
 
   return (
-    <div className="relative w-[90%] mx-auto flex flex-col items-start overflow-hidden rounded-lg shadow-lg mt-4">
+    <div className="relative w-[90%] mx-auto flex flex-col items-start overflow-hidden shadow-lg">
       {/* Top Panel */}
-      <div className="w-full p-6 bg-gray-50 border rounded-lg shadow-lg space-y-6">
+      <div className="w-full p-6 pt-2 bg-gray-50 border  shadow-lg ">
         <h1 className="text-2xl font-bold text-center text-blue-700">
           Fleet Selection Panel
         </h1>
 
-        <div className="flex">
+        <div className="flex mt-2">
           {/* Selected Fleets */}
           <div className="bg-white p-5 border border-blue-100 rounded-lg shadow-sm w-[35%]">
             <h2 className="text-xl font-bold mb-4 text-gray-800">

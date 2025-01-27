@@ -376,7 +376,7 @@ export const SearchBar = () => {
           </div>
         ) : (
           /* ---------------------- FULL BAR (ONEWAY or MULTICITY expanded) ---------------------- */
-          <div className="bg-[#041422] px-6 py-2 rounded-lg shadow-md flex flex-col gap-2 relative w-full">
+          <div className="bg-[#041422] px-6 py-2  flex flex-col gap-2 relative w-full">
             {/* 
               ================== TOP ROW ==================
               Different layout if oneway vs. multicity
