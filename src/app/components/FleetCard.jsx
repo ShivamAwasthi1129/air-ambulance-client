@@ -3,13 +3,12 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoIosAirplane } from "react-icons/io";
-
-// Amenity-specific icons
 import { FaUserTie, FaCarSide, FaMusic, FaCoffee, FaSeedling } from "react-icons/fa";
 import { GiPaintRoller } from "react-icons/gi";
-import { MdMonitor, MdOutlineHomeRepairService, MdMicrowave } from "react-icons/md";
+import { MdMonitor, MdOutlineHomeRepairService, MdMicrowave,MdAirlineSeatReclineExtra } from "react-icons/md";
 import { BsFillLightningFill } from "react-icons/bs";
 import { AiOutlineCheckCircle } from "react-icons/ai"; // Fallback or tick icon
+
 
 // 1) Currency data
 const currencyFlags = [
@@ -73,6 +72,18 @@ function chunkArray(array, size) {
 
 const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
   const [activeDetailsId, setActiveDetailsId] = useState(null);
+  const [parsedData, setParsedData] = useState(null);
+  useEffect(() => {
+    // 2) Fetch and set your state
+    const data = sessionStorage.getItem("searchData");
+    if (data) {
+      const parsed = JSON.parse(data);
+      console.log("Fetched Search Data:", parsed);
+      setParsedData(parsed); 
+    } else {
+      console.log("No data found in sessionStorage for 'searchData'");
+    }
+  }, []);
 
   // For "See flight Experience ->" modal
   const [showExperienceModal, setShowExperienceModal] = useState(false);
@@ -302,11 +313,14 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                     {/* Flight Timings */}
                     <div className="flex items-center space-x-3 md:space-x-8 text-sm text-gray-800 mb-2">
                       <div>
-                        <p className="text-base font-semibold">
-                          {flight.departureTime || "DEL 21:35"}
+                        <p className="text-base font-semibold flex ">
+                         
+                          <span>{parsedData?.segments?.[0]?.fromIATA } </span>
+                          <span>( {parsedData?.segments?.[0]?.departureTime} )</span>
+                          {/* {parsedData?.segments?.[0]?.fromIATA || "DEL 21:35"} */}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {flight.departureCity || "New Delhi"}
+                          {parsedData?.segments?.[0]?.fromCity || "New Delhi"}
                         </p>
                       </div>
 
@@ -320,17 +334,20 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                         </p>
                       </div>
 
-                      <div>
+                      <div className=""> 
                         <p className="text-base font-semibold">
-                          {flight.arrivalTime || "LHR 06:35"}
+                          {parsedData?.segments?.[0]?.toIATA || "LHR 06:35"}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {flight.arrivalCity || "London - Heathrow Apt"}
+                          {parsedData?.segments?.[0]?.toCity || "not found"}
                         </p>
                       </div>
-                      <p className="text-sm text-gray-500 mt-1 mb-3">
+                      <div className="flex items-center">
+                      <p className="text-sm text-gray-500 ">
                         Flight Duration • {flight.flightTime || "not found"}
                       </p>
+                        {"   "}<span className="text-md font-bold text-gray-500 flex items-center ml-4"><MdAirlineSeatReclineExtra size={28} /> : {flight.fleetDetails.seatCapacity} Seat</span>
+                      </div>
                     </div>
 
                     {/* Some free amenities */}

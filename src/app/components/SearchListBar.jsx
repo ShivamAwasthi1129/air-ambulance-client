@@ -11,19 +11,18 @@ export const SearchBar = () => {
   const [focusedSegmentIndex, setFocusedSegmentIndex] = useState(null);
   const [focusedField, setFocusedField] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
-
+  // Whether the user has accepted Terms & Conditions
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  // Whether we are currently loading data
+  const [isLoading, setIsLoading] = useState(false);
   // Flight type, default oneway
   const [tripType, setTripType] = useState("oneway");
-
   // Trigger re-render of FilterAndFleetListing
   const [refreshKey, setRefreshKey] = useState(0);
-
   // Show/hide multi-city form
   const [showMultiCityDetails, setShowMultiCityDetails] = useState(false);
-
   // Collapse multi-city after confirm (click outside or after searching)
   const [isMultiCityCollapsed, setIsMultiCityCollapsed] = useState(false);
-
   // Flight segments
   const [segments, setSegments] = useState([
     {
@@ -34,10 +33,8 @@ export const SearchBar = () => {
       passengers: 1,
     },
   ]);
-
   // "Global" passenger data if needed
   const [formData, setFormData] = useState({ passengers: 1 });
-
   // We'll store user contact info & IP data here
   const [userInfo, setUserInfo] = useState({
     name: "",
@@ -71,7 +68,6 @@ export const SearchBar = () => {
         }
       }
     }
-
     document.addEventListener("mousedown", handleDocClick);
     return () => {
       document.removeEventListener("mousedown", handleDocClick);
@@ -180,50 +176,55 @@ export const SearchBar = () => {
   };
 
   // (C) Selecting an airport from dropdown
-  const handleSelectAirport = (airport) => {
-    if (focusedSegmentIndex === null || !focusedField) return;
-    const label = `${airport.name} (${airport.iata_code})`;
-    handleSegmentChange(focusedSegmentIndex, focusedField, label);
-    setShowDropdown(false);
-    setFocusedSegmentIndex(null);
-    setFocusedField(null);
-    setSearchQuery("");
-  };
-  // (C) Selecting an airport from dropdown
   // const handleSelectAirport = (airport) => {
-  //   if (focusedSegmentIndex === null) return;
-  
-  //   const updatedSegments = [...segments];
-  //   updatedSegments[focusedSegmentIndex] = {
-  //     ...updatedSegments[focusedSegmentIndex],
-  //     from: `${airport.name} (${airport.iata_code})`,
-  //     fromCity: airport.city,
-  //     fromIATA: airport.iata_code,
-  //     fromICAO: airport.icao_code,
-  //     to: `${airport.name} (${airport.iata_code})`,
-  //     toCity: airport.city,
-  //     toIATA: airport.iata_code,
-  //     toICAO: airport.icao_code,
-  //   };
-  
-  //   // Update state and session storage
-  //   setSegments(updatedSegments);
+  //   if (focusedSegmentIndex === null || !focusedField) return;
+  //   const label = `${airport.name} (${airport.iata_code})`;
+  //   handleSegmentChange(focusedSegmentIndex, focusedField, label);
   //   setShowDropdown(false);
   //   setFocusedSegmentIndex(null);
   //   setFocusedField(null);
   //   setSearchQuery("");
-  
-  //   // Save updated segments to sessionStorage
-  //   sessionStorage.setItem(
-  //     "searchData",
-  //     JSON.stringify({
-  //       tripType,
-  //       segments: updatedSegments,
-  //     })
-  //   );
-  
-  //   console.log("Updated segments saved to sessionStorage:", updatedSegments);
   // };
+  const handleSelectAirport = (airport) => {
+    if (focusedSegmentIndex === null || !focusedField) return;
+
+    const updatedSegments = [...segments];
+
+    // Always update both 'from' and 'to' based on the focused field
+    updatedSegments[focusedSegmentIndex] = {
+      ...updatedSegments[focusedSegmentIndex],
+      ...(focusedField === "from" && {
+        from: `${airport.name} (${airport.iata_code})`,
+        fromCity: airport.city,
+        fromIATA: airport.iata_code,
+        fromICAO: airport.icao_code,
+      }),
+      ...(focusedField === "to" && {
+        to: `${airport.name} (${airport.iata_code})`,
+        toCity: airport.city,
+        toIATA: airport.iata_code,
+        toICAO: airport.icao_code,
+      }),
+    };
+
+    // Update state
+    setSegments(updatedSegments);
+    setShowDropdown(false);
+    setFocusedSegmentIndex(null);
+    setFocusedField(null);
+    setSearchQuery("");
+
+    // Save updated segments to sessionStorage
+    sessionStorage.setItem(
+      "searchData",
+      JSON.stringify({
+        tripType,
+        segments: updatedSegments,
+      })
+    );
+
+    console.log("Updated segments saved to sessionStorage:", updatedSegments);
+  };
 
   // (D) Swap from/to (only relevant for one-way)
   const handleSwap = (index) => {
@@ -260,6 +261,7 @@ export const SearchBar = () => {
       alert("Please fill out Name, Email, and Phone before searching.");
       return;
     }
+    setIsLoading(true);
 
     try {
       // 1) Fetch IP data
@@ -310,6 +312,8 @@ export const SearchBar = () => {
       }
     } catch (err) {
       console.error("Error fetching IP data or sending data:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -504,9 +508,8 @@ export const SearchBar = () => {
                     </label>
                     <input
                       type="datetime-local"
-                      value={`${segments[0].departureDate}T${
-                        segments[0].departureTime || "12:00"
-                      }`}
+                      value={`${segments[0].departureDate}T${segments[0].departureTime || "12:00"
+                        }`}
                       onChange={(e) => {
                         const [date, time] = e.target.value.split("T");
                         handleSegmentChange(0, "departureDate", date);
@@ -520,7 +523,7 @@ export const SearchBar = () => {
                   {/* Passengers */}
                   <div className="flex-1">
                     <label className="text-md text-[#008cff] mb-1">
-                      Passengers
+                      Seat
                     </label>
                     <select
                       value={segments[0].passengers}
@@ -531,7 +534,7 @@ export const SearchBar = () => {
                     >
                       {[...Array(10).keys()].map((num) => (
                         <option className="text-black" key={num + 1} value={num + 1}>
-                          {num + 1} Passenger{num > 0 ? "s" : ""}
+                          {num + 1} Seat{num > 0 ? "s" : ""}
                         </option>
                       ))}
                     </select>
@@ -563,7 +566,7 @@ export const SearchBar = () => {
                     </label>
                     <input
                       type="email"
-                      placeholder="Enter your email..."
+                      placeholder="Enter your email for OTP..."
                       className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 rounded-md shadow-md focus:outline-none w-full"
                       value={userInfo.email}
                       onChange={(e) =>
@@ -579,7 +582,7 @@ export const SearchBar = () => {
                     </label>
                     <input
                       type="tel"
-                      placeholder="Enter your phone..."
+                      placeholder="Enter your phone for OTP..."
                       className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 rounded-md shadow-md focus:outline-none w-full"
                       value={userInfo.phone}
                       onChange={(e) =>
@@ -588,15 +591,39 @@ export const SearchBar = () => {
                     />
                   </div>
 
+                  {/* Terms & Conditions Checkbox */}
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={termsAccepted}
+                      onChange={(e) => setTermsAccepted(e.target.checked)}
+                      className="mr-2"
+                    />
+                    <label className="text-white text-xs">I agree to the Terms & Conditions</label>
+                  </div>
+
+
                   {/* SEARCH Button */}
                   <div className="flex items-end">
                     <motion.button
                       onClick={handleSearch}
                       whileHover={{ scale: 1.05 }}
-                      className="bg-gradient-to-r from-blue-700 to-blue-500 text-white px-6 py-2 rounded-md shadow-md hover:from-blue-600 hover:to-blue-400 transition-all"
+                      className="bg-gradient-to-r from-blue-700 to-blue-500 text-white px-6 py-2 
+             rounded-md shadow-md hover:from-blue-600 hover:to-blue-400 
+             transition-all disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={!termsAccepted || isLoading}
                     >
-                      SEARCH
+                      {isLoading ? (
+                        <div className="flex items-center">
+                          {/* A simple spinner (Tailwind example): */}
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                          Loading...
+                        </div>
+                      ) : (
+                        "SEARCH"
+                      )}
                     </motion.button>
+
                   </div>
                 </div>
               </>
@@ -672,15 +699,38 @@ export const SearchBar = () => {
                     />
                   </div>
 
+                  {/* Terms & Conditions Checkbox */}
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={termsAccepted}
+                      onChange={(e) => setTermsAccepted(e.target.checked)}
+                      className="mr-2"
+                    />
+                    <label className="text-white text-xs">I agree to the Terms & Conditions</label>
+                  </div>
+
+
                   {/* SEARCH Button */}
                   <div className="flex items-end">
                     <motion.button
                       onClick={handleSearch}
                       whileHover={{ scale: 1.05 }}
-                      className="bg-gradient-to-r from-blue-700 to-blue-500 text-white px-6 py-2 rounded-md shadow-md hover:from-blue-600 hover:to-blue-400 transition-all"
+                      className="bg-gradient-to-r from-blue-700 to-blue-500 text-white px-6 py-2
+             rounded-md shadow-md hover:from-blue-600 hover:to-blue-400 
+             transition-all disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={!termsAccepted || isLoading}
                     >
-                      SEARCH
+                      {isLoading ? (
+                        <div className="flex items-center">
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                          Loading...
+                        </div>
+                      ) : (
+                        "SEARCH"
+                      )}
                     </motion.button>
+
                   </div>
                 </div>
 
@@ -803,7 +853,7 @@ export const SearchBar = () => {
                         {/* Passengers */}
                         <div className="flex-1">
                           <label className="text-md text-[#008cff] mb-1">
-                            Passengers
+                            Seat
                           </label>
                           <select
                             value={segment.passengers}
@@ -814,7 +864,7 @@ export const SearchBar = () => {
                           >
                             {[...Array(10).keys()].map((num) => (
                               <option key={num + 1} value={num + 1} className="text-black">
-                                {num + 1} Passenger{num > 0 ? "s" : ""}
+                                {num + 1} Seat{num > 0 ? "s" : ""}
                               </option>
                             ))}
                           </select>

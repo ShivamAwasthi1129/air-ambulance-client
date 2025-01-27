@@ -12,6 +12,10 @@ const FilterAndFleetListing = ({ refreshKey }) => {
   const [priceRange, setPriceRange] = useState(0);
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(0);
+
+  // NEW: Add 'selectedAmenities' to track user-selected amenities
+  const [selectedAmenities, setSelectedAmenities] = useState([]);
+
   const [selectedFleets, setSelectedFleets] = useState([]);
 
   // 1. Get 'searchData' from Session
@@ -76,32 +80,81 @@ const FilterAndFleetListing = ({ refreshKey }) => {
     fetchFleets();
   }, [searchData]);
 
-  // 3. Re-filter whenever user moves slider or toggles flight types
+  // 3. Re-filter whenever user moves slider, toggles flight types, or toggles amenities
   useEffect(() => {
     if (!fleetData.length) return;
 
     const newFiltered = fleetData.filter((flight) => {
-      const matchesPrice = flight._numericPrice <= priceRange;
-      if (!selectedTypes.length) return matchesPrice; // no type filter
-      return (
-        matchesPrice &&
-        selectedTypes.includes(flight.fleetDetails?.flightType || "")
-      );
+      // Check Price
+      const withinPrice = flight._numericPrice <= priceRange;
+
+      // Check Flight Type
+      const matchesType =
+        selectedTypes.length === 0 ||
+        selectedTypes.includes(flight.fleetDetails?.flightType || "");
+
+      // NEW: Check Amenities
+      // If no amenities are selected, automatically pass. Otherwise, ensure
+      // *every* selected amenity is present and not "not_available".
+      const hasAmenities =
+        selectedAmenities.length === 0 ||
+        selectedAmenities.every((amenity) => {
+          const amenityValue =
+            flight.additionalAmenities?.[amenity]?.value || "not_available";
+          return amenityValue !== "not_available";
+        });
+
+      return withinPrice && matchesType && hasAmenities;
     });
 
     setFilteredData(newFiltered);
-  }, [priceRange, selectedTypes, fleetData]);
+  }, [priceRange, selectedTypes, selectedAmenities, fleetData]);
 
   // 4. All flight types
   const allFlightTypes = useMemo(() => {
-    const types = fleetData.map((f) => f.fleetDetails?.flightType).filter(Boolean);
+    const types = fleetData
+      .map((f) => f.fleetDetails?.flightType)
+      .filter(Boolean);
     return [...new Set(types)];
   }, [fleetData]);
+
+ // NEW: Filter only available amenities
+const allAmenities = useMemo(() => {
+  const amenitySet = new Set();
+  fleetData.forEach((flight) => {
+    if (flight.additionalAmenities) {
+      Object.entries(flight.additionalAmenities).forEach(([amenity, details]) => {
+        if (details?.value !== "not_available") {
+          amenitySet.add(amenity);
+        }
+      });
+    }
+  });
+  return [...amenitySet];
+}, [fleetData]);
+
+
+  const handleClearFilters = () => {
+    setSelectedTypes([]);
+    setSelectedAmenities([]);
+    // If you want the slider to go back to its max value:
+    setPriceRange(maxPrice);
+  };
+
 
   // 5. Check/uncheck flight type
   const handleTypeChange = (type) => {
     setSelectedTypes((prev) =>
       prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    );
+  };
+
+  // NEW: Check/uncheck amenities
+  const handleAmenityChange = (amenity) => {
+    setSelectedAmenities((prevSelected) =>
+      prevSelected.includes(amenity)
+        ? prevSelected.filter((a) => a !== amenity)
+        : [...prevSelected, amenity]
     );
   };
 
@@ -141,7 +194,9 @@ const FilterAndFleetListing = ({ refreshKey }) => {
         <div className="flex">
           {/* Selected Fleets */}
           <div className="bg-white p-5 border border-blue-100 rounded-lg shadow-sm w-[35%]">
-            <h2 className="text-xl font-bold mb-4 text-gray-800">Selected Fleets</h2>
+            <h2 className="text-xl font-bold mb-4 text-gray-800">
+              Selected Fleets
+            </h2>
             {selectedFleets.map((fleet, index) =>
               fleet ? (
                 <p
@@ -158,7 +213,8 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                   key={index}
                   className="text-sm text-red-500 mb-2 border-l-4 border-red-500 pl-2"
                 >
-                  Trip {index + 1}: <span className="font-medium">No Fleet Selected</span>
+                  Trip {index + 1}:{" "}
+                  <span className="font-medium">No Fleet Selected</span>
                 </p>
               )
             )}
@@ -169,7 +225,9 @@ const FilterAndFleetListing = ({ refreshKey }) => {
             {/* Oneway Trip */}
             {searchData.tripType === "oneway" && (
               <div>
-                <h3 className="text-lg font-bold text-blue-600 mb-2">Oneway Trip</h3>
+                <h3 className="text-lg font-bold text-blue-600 mb-2">
+                  Oneway Trip
+                </h3>
                 <div className="flex justify-between">
                   <p className="text-sm text-gray-700 mb-2 flex items-center">
                     {searchData.segments[0]?.from} ------
@@ -185,10 +243,9 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                     className={`
                       py-2 px-4 rounded-md shadow-md text-sm font-medium 
                       focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition-all
-                      ${
-                        !!selectedFleets[0]
-                          ? "bg-gray-400 text-white cursor-not-allowed"
-                          : "bg-blue-600 hover:bg-blue-500 text-white"
+                      ${!!selectedFleets[0]
+                        ? "bg-gray-400 text-white cursor-not-allowed"
+                        : "bg-blue-600 hover:bg-blue-500 text-white"
                       }
                     `}
                   >
@@ -212,27 +269,30 @@ const FilterAndFleetListing = ({ refreshKey }) => {
             {/* Multi City */}
             {searchData.tripType === "multicity" && (
               <div>
-                <h3 className="text-lg font-bold text-blue-600 mb-2">Multicity Trip</h3>
+                <h3 className="text-lg font-bold text-blue-600 mb-2">
+                  Multicity Trip
+                </h3>
                 {searchData.segments.map((segment, index) => (
                   <div key={index} className="mb-5 flex justify-between">
                     <p className="text-md text-gray-700 mb-2 flex items-center">
-                      <span className="font-medium">Trip {index + 1}:-</span>&nbsp;
-                      {segment.from} ------
+                      <span className="font-medium">Trip {index + 1}:-</span>
+                      &nbsp;{segment.from} ------
                       <span className="inline-block mx-1">
                         <IoIosAirplane size={34} />
                       </span>
                       ----- {segment.to}
                     </p>
                     <button
-                      onClick={() => handleFleetSelection(index, filteredData[0] || null)}
+                      onClick={() =>
+                        handleFleetSelection(index, filteredData[0] || null)
+                      }
                       disabled={!!selectedFleets[index] || !filteredData.length}
                       className={`
                         py-2 px-4 rounded-md shadow-md text-sm font-medium 
                         focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition-all
-                        ${
-                          !!selectedFleets[index]
-                            ? "bg-gray-400 text-white cursor-not-allowed"
-                            : "bg-blue-600 hover:bg-blue-500 text-white"
+                        ${!!selectedFleets[index]
+                          ? "bg-gray-400 text-white cursor-not-allowed"
+                          : "bg-blue-600 hover:bg-blue-500 text-white"
                         }
                       `}
                     >
@@ -266,14 +326,25 @@ const FilterAndFleetListing = ({ refreshKey }) => {
           className="w-[30%] bg-gray-100 p-4 border-r border-gray-300"
         >
           {/* Filter Header */}
-          <motion.h2
-            initial={{ y: -10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="text-xl font-bold text-gray-700 mb-4"
-          >
-            Filter Options
-          </motion.h2>
+          <div className="flex items-center justify-between mb-4">
+            <motion.h2
+              initial={{ y: -10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              className="text-xl font-bold text-gray-700"
+            >
+              Filter Options
+            </motion.h2>
+
+            {/* NEW Clear Button */}
+            <button
+              onClick={handleClearFilters}
+              className="text-red-600 text-sm underline hover:text-red-800 transition-colors"
+            >
+              Clear Filters
+            </button>
+          </div>
+
 
           {/* Dynamic Flight Type Checkboxes */}
           <div className="space-y-4">
@@ -322,21 +393,43 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                 onChange={(e) => setPriceRange(Number(e.target.value))}
                 className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
                 style={{
-                  background: `linear-gradient(to right, #3b82f6 ${
-                    ((priceRange - minPrice) / (maxPrice - minPrice)) * 100
-                  }%, #e5e7eb ${
-                    ((priceRange - minPrice) / (maxPrice - minPrice)) * 100
-                  }%)`,
+                  background: `linear-gradient(to right, #3b82f6 ${((priceRange - minPrice) / (maxPrice - minPrice)) * 100
+                    }%, #e5e7eb ${((priceRange - minPrice) / (maxPrice - minPrice)) * 100
+                    }%)`,
                 }}
               />
             </div>
 
-            {/* Show current Price Selection (if not max) */}
             {priceRange !== maxPrice && (
               <div className="mt-4 p-2 bg-blue-100 text-blue-800 rounded-lg shadow-md text-sm font-medium">
                 Selected Price: ${priceRange.toLocaleString()}
               </div>
             )}
+          </div>
+
+          {/* NEW: Amenities Filter Section */}
+          <div className="mt-6">
+            <h3 className="text-md font-semibold mb-2">Available Services</h3>
+            {allAmenities.map((amenity) => {
+              const isChecked = selectedAmenities.includes(amenity);
+              return (
+                <motion.div
+                  key={amenity}
+                  whileHover={{ scale: 1.05 }}
+                  className="flex items-center space-x-2"
+                >
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => handleAmenityChange(amenity)}
+                    className="h-4 w-4 text-blue-500 border-gray-300 rounded focus:ring-blue-400"
+                  />
+                  <label className="text-gray-600 cursor-pointer">
+                    {amenity}
+                  </label>
+                </motion.div>
+              );
+            })}
           </div>
         </motion.div>
 
