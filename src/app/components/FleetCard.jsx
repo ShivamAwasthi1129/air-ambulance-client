@@ -16,7 +16,6 @@ const currencyFlags = [
   { code: "INR", label: "🇮🇳" },
   { code: "GBP", label: "🇬🇧" },
 ];
-
 // Change the symbols to your liking
 const currencySymbols = {
   USD: "$",
@@ -260,15 +259,28 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                         />
                         <h2 className="text-lg md:text-xl font-bold text-gray-800 flex flex-col items-end">
                           {flight.fleetDetails.selectedModel || "Gulf Air"}
-                          <p className="text-sm text-gray-800 font-medium">
-                            {flight.fleetDetails.registrationNo || "Gulf Air"}
+                          <p className="text-xs text-gray-800 font-medium">
+                            Reg. No:-{flight.fleetDetails.registrationNo || "Gulf Air"}
                           </p>
+
                         </h2>
+
+                      </div>
+
+                      <div className="flex">
+                        <span className="text-md font-bold text-gray-500 flex items-center ml-4">
+                          <MdAirlineSeatReclineExtra size={20} />
+                          : {flight.fleetDetails.seatCapacity}
+                        </span>
+                        <span className="text-md font-bold text-gray-500 flex items-center ml-4">
+                          <IoMdSpeedometer size={20} />
+                          : {flight.fleetDetails.maxSpeed}NM
+                        </span>
                       </div>
 
                       {/* Price + Currency */}
                       <div className="text-right relative inline-block">
-                        <p className="text-xs text-gray-500">From</p>
+                        <p className="text-xs text-gray-500">~approx</p>
                         <p className="text-xl md:text-2xl font-bold text-gray-700">
                           {currencySymbols[selectedCurrency]}
                           {convertPrice(flightPriceUSD, selectedCurrency).toLocaleString()}
@@ -344,17 +356,10 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                       </div>
                       <div className="flex items-center">
                         <p className="text-sm text-gray-500 flex flex-col items-center">
-                        <span>Flight Duration</span>
+                          <span>Flight Duration</span>
                           <span>{flight.flightTime || "not found"}</span>
                         </p>
-                        {"   "}<span className="text-md font-bold text-gray-500 flex items-center ml-4">
-                          <MdAirlineSeatReclineExtra size={20} />
-                          : {flight.fleetDetails.seatCapacity}
-                        </span>
-                        {"   "}<span className="text-md font-bold text-gray-500 flex items-center ml-4">
-                          <IoMdSpeedometer size={20} />
-                          : {flight.fleetDetails.maxSpeed}NM
-                        </span>
+
                       </div>
                     </div>
 
@@ -398,7 +403,17 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                                 </li>
                               );
                             })}
+                            <button
+                              onClick={() =>
+                                toggleFlightDetails(flight.serialNumber)
+                              }
+                              className=" text-blue-700 text-sm font-semibold  hover:underline"
+                            >
+                              See more...
+                            </button>
+
                           </ul>
+
                         )}
                       </div>
                     ) : (
@@ -408,26 +423,22 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                     )}
 
                     {/* Actions */}
-                    <div className="flex items-center space-x-4 mb-1">
+                    <div className="flex items-center space-x-4 mb-1 justify-between">
+                      <button
+                        className="bg-gradient-to-r from-blue-500 to-blue-700 text-white text-sm font-semibold px-4 py-2 rounded shadow-md hover:from-blue-600 hover:to-blue-800 focus:ring-2 focus:ring-blue-300"
+                      >Compare Flights
+                      </button>
+
                       <button
                         onClick={() => onSelectFleet(flight)}
                         className={`${selectedFleet?.serialNumber === flight.serialNumber
-                            ? "bg-green-600"
-                            : "bg-gradient-to-r from-green-500 to-green-700"
+                          ? "bg-red-500 focus:ring-2 focus:ring-red-300"
+                          : "bg-gradient-to-r from-green-500 to-green-700"
                           } text-white text-sm font-semibold px-4 py-2 rounded shadow-md focus:ring-2 focus:ring-green-300`}
                       >
                         {selectedFleet?.serialNumber === flight.serialNumber
                           ? "Fleet Selected"
                           : "Select Flight"}
-                      </button>
-
-                      <button
-                        onClick={() =>
-                          toggleFlightDetails(flight.serialNumber)
-                        }
-                        className="bg-gradient-to-r from-blue-500 to-blue-700 text-white text-sm font-semibold px-4 py-2 rounded shadow-md hover:from-blue-600 hover:to-blue-800 focus:ring-2 focus:ring-blue-300"
-                      >
-                        View Flight Details
                       </button>
                     </div>
                   </motion.div>
@@ -520,7 +531,7 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                           </div>
                         </div>
 
-                        <div className="max-w-[36rem] h-36 overflow-x-auto border border-gray-300 rounded p-2 mb-4">
+                        <div className="max-w-[40rem] h-32 overflow-x-auto border border-gray-300 rounded p-2  ">
                           <div className="flex flex-row flex-nowrap gap-8">
                             {chunkedAmenities.map((column, colIndex) => (
                               <div
@@ -546,8 +557,8 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                                       </span>
                                       <span
                                         className={`text-xs font-semibold ml-2 px-2 py-1 rounded ${amenityData.value === "free"
-                                            ? "bg-green-100 text-green-600"
-                                            : "bg-red-100 text-red-600"
+                                          ? "bg-green-100 text-green-600"
+                                          : "bg-red-100 text-red-600"
                                           }`}
                                       >
                                         {amenityData.value === "free"
@@ -599,8 +610,8 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                     key={tab}
                     onClick={() => setActiveTab(tab)}
                     className={`py-2 px-4 text-sm font-semibold ${activeTab === tab
-                        ? "text-blue-600 border-b-2 border-blue-600"
-                        : "text-gray-500"
+                      ? "text-blue-600 border-b-2 border-blue-600"
+                      : "text-gray-500"
                       }`}
                   >
                     {tab}

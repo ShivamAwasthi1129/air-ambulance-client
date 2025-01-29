@@ -11,19 +11,12 @@ export const SearchBar = () => {
   const [focusedSegmentIndex, setFocusedSegmentIndex] = useState(null);
   const [focusedField, setFocusedField] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
-  // Whether the user has accepted Terms & Conditions
   const [termsAccepted, setTermsAccepted] = useState(false);
-  // Whether we are currently loading data
   const [isLoading, setIsLoading] = useState(false);
-  // Flight type, default oneway
   const [tripType, setTripType] = useState("oneway");
-  // Trigger re-render of FilterAndFleetListing
   const [refreshKey, setRefreshKey] = useState(0);
-  // Show/hide multi-city form
   const [showMultiCityDetails, setShowMultiCityDetails] = useState(false);
-  // Collapse multi-city after confirm (click outside or after searching)
   const [isMultiCityCollapsed, setIsMultiCityCollapsed] = useState(false);
-  // Flight segments
   const [segments, setSegments] = useState([
     {
       from: "Indira Gandhi International Airport (DEL)",
@@ -33,19 +26,13 @@ export const SearchBar = () => {
       passengers: 1,
     },
   ]);
-  // "Global" passenger data if needed
   const [formData, setFormData] = useState({ passengers: 1 });
-  // We'll store user contact info & IP data here
   const [userInfo, setUserInfo] = useState({
     name: "",
     email: "",
     phone: "",
   });
-
-  // IP data
   const [ipData, setIpData] = useState(null);
-
-  // containerRef for entire search bar
   const containerRef = useRef(null);
 
   // ========== 1) Outside Click to Collapse or Expand (Multicity) ==========
@@ -323,7 +310,7 @@ export const SearchBar = () => {
       <div className="w-full mb-8 sticky top-0 z-30" ref={containerRef}>
         {tripType === "multicity" && isMultiCityCollapsed ? (
           /* ---------------------- COLLAPSED MULTI-CITY ---------------------- */
-          <div className="bg-[#041422] p-4 rounded-lg shadow-md flex flex-col gap-4 w-full relative">
+          <div className="bg-[#041422] p-4 rounded-lg shadow-md flex flex-col gap-2 w-full relative">
             <div className="flex flex-wrap items-center justify-start gap-4 w-full">
               {/* Trip Type */}
               <div className="relative w-1/4 min-w-[150px]">

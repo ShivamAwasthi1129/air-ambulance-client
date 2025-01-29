@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { IoIosAirplane } from "react-icons/io";
 import FlightCard from "./FleetCard";
@@ -223,7 +224,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
   }
 
   return (
-    <div className="relative w-[90%] mx-auto flex flex-col items-start overflow-hidden shadow-lg">
+    <div className="relative w-full mx-auto flex flex-col items-start overflow-hidden shadow-lg">
       {/* Top Panel */}
       <div className="w-full p-6 pt-2 bg-gray-50 border  shadow-lg ">
         <h1 className="text-2xl font-bold text-center text-blue-700">
@@ -244,7 +245,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                 >
                   Trip {index + 1}:{" "}
                   <span className="font-medium">
-                    {fleet?.fleetDetails?.registrationNo}
+                    {fleet?.fleetDetails?.registrationNo}-{fleet?.fleetDetails?.selectedModel}
                   </span>
                 </p>
               ) : (
@@ -290,18 +291,23 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                   >
                     {selectedFleets[0] ? "Fleet Selected" : "Select Fleet"}
                   </button>
-                </div>
-
-                {selectedFleets[0] && (
+                  {selectedFleets[0] && (
+                    <Link href={"/finalEnquiry"}>
                   <button
                     onClick={navigateToEnquiryPage}
-                    className="bg-green-600 text-white py-2 px-4 mt-3 rounded-md shadow-md 
+                    className="bg-green-600 text-white py-2 px-4 rounded-md shadow-md 
                       hover:bg-green-500 focus:outline-none focus:ring-2 
                       focus:ring-green-400 focus:ring-offset-2 transition-all text-sm font-medium"
                   >
+                    
                     Proceed to Enquiry
+                    
                   </button>
+                  </Link>
                 )}
+                </div>
+
+               
               </div>
             )}
 
@@ -340,14 +346,16 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                   </div>
                 ))}
                 {selectedFleets.every((fleet) => fleet) && (
+                  <Link href={"/finalEnquiry"}>
                   <button
                     onClick={navigateToEnquiryPage}
                     className="bg-green-600 text-white py-2 px-4 rounded-md shadow-md 
                       hover:bg-green-500 focus:outline-none focus:ring-2 
-                      focus:ring-green-400 focus:ring-offset-2 transition-all text-sm font-medium"
+                      focus:ring-green-400 focus:ring-offset-2 transition-all text-sm font-medium "
                   >
                     Proceed to Enquiry
                   </button>
+                  </Link>
                 )}
               </div>
             )}
