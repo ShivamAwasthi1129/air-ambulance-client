@@ -1,106 +1,126 @@
-"use client"; // For Next.js App Router
+'use client' // For Next.js App Router
 
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { IoIosAirplane, IoMdSpeedometer } from "react-icons/io";
-import { FaUserTie, FaCarSide, FaMusic, FaCoffee, FaSeedling } from "react-icons/fa";
-import { GiPaintRoller } from "react-icons/gi";
-import { MdMonitor, MdOutlineHomeRepairService, MdMicrowave, MdAirlineSeatReclineExtra } from "react-icons/md";
-import { BsFillLightningFill } from "react-icons/bs";
-import { AiOutlineCheckCircle } from "react-icons/ai"; // Fallback or tick icon
-
+import React, { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { IoIosAirplane, IoMdSpeedometer } from 'react-icons/io'
+import {
+  FaUserTie,
+  FaCarSide,
+  FaMusic,
+  FaCoffee,
+  FaSeedling
+} from 'react-icons/fa'
+import { GiPaintRoller } from 'react-icons/gi'
+import {
+  MdMonitor,
+  MdOutlineHomeRepairService,
+  MdMicrowave,
+  MdAirlineSeatReclineExtra
+} from 'react-icons/md'
+import { BsFillLightningFill } from 'react-icons/bs'
+import { AiOutlineCheckCircle } from 'react-icons/ai' // Fallback or tick icon
 
 // 1) Currency data
 const currencyFlags = [
-  { code: "USD", label: "🇺🇸" },
-  { code: "INR", label: "🇮🇳" },
-  { code: "GBP", label: "🇬🇧" },
-];
+  { code: 'USD', label: '🇺🇸' },
+  { code: 'INR', label: '🇮🇳' },
+  { code: 'GBP', label: '🇬🇧' }
+]
 // Change the symbols to your liking
 const currencySymbols = {
-  USD: "$",
-  INR: "₹",
-  GBP: "£",
-};
+  USD: '$',
+  INR: '₹',
+  GBP: '£'
+}
 
 // Now base is USD => 1
 // Example: 1 USD = ~82 INR, 1 USD = ~0.80 GBP
 const exchangeRates = {
   USD: 1,
-  INR: 82,   // one USD = 82 INR (approx)
-  GBP: 0.80, // one USD = 0.80 GBP (approx)
-};
+  INR: 82, // one USD = 82 INR (approx)
+  GBP: 0.8 // one USD = 0.80 GBP (approx)
+}
 
 // 2) Amenity icons
 const amenityIcons = {
-  "Life Jacket": <AiOutlineCheckCircle className="text-gray-600" />,
-  "Brand new Paint": <GiPaintRoller className="text-red-500" />,
-  "Brand new Interior": <MdOutlineHomeRepairService className="text-green-600" />,
-  "Secret Service": <FaUserTie className="text-blue-600" />,
-  "Microwave": <MdMicrowave className="text-indigo-500" />,
-  "Vip Cab Pick & Drop": <FaCarSide className="text-orange-600" />,
-  "Vvip car Pick & Drop": <FaCarSide className="text-orange-600" />,
-  "Espresso Coffee Machine": <FaCoffee className="text-amber-600" />,
-  "Security": <AiOutlineCheckCircle className="text-gray-600" />,
-  "Vvip Car inside Airport": <FaCarSide className="text-orange-600" />,
-  "Bouquet": <FaSeedling className="text-pink-500" />,
-  "Air Hostess / Escorts": <FaUserTie className="text-blue-600" />,
-  "New FHD Monitor": <MdMonitor className="text-teal-600" />,
-  "Full Bar": <AiOutlineCheckCircle className="text-gray-600" />,
-  "Personal Gate": <AiOutlineCheckCircle className="text-gray-600" />,
-  "Red Carpet": <AiOutlineCheckCircle className="text-gray-600" />,
-  "Cafe": <FaCoffee className="text-amber-600" />,
-  "Airport Pickup": <FaCarSide className="text-orange-600" />,
-  "Music System Surround Sound": <FaMusic className="text-purple-600" />,
-  "Emergency Evacuation": <AiOutlineCheckCircle className="text-gray-600" />,
-  "Hot and Cold Stations": <AiOutlineCheckCircle className="text-gray-600" />,
-  "Airport DropOff": <FaCarSide className="text-orange-600" />,
-  "Private Security": <AiOutlineCheckCircle className="text-gray-600" />,
-  "Power Supply 110V": <BsFillLightningFill className="text-yellow-600" />,
-  "Lounge Access": <AiOutlineCheckCircle className="text-gray-600" />,
-};
-
-// Helper: chunk array
-function chunkArray(array, size) {
-  const result = [];
-  for (let i = 0; i < array.length; i += size) {
-    result.push(array.slice(i, i + size));
-  }
-  return result;
+  'Life Jacket': <AiOutlineCheckCircle className='text-gray-600' />,
+  'Brand new Paint': <GiPaintRoller className='text-red-500' />,
+  'Brand new Interior': (
+    <MdOutlineHomeRepairService className='text-green-600' />
+  ),
+  'Secret Service': <FaUserTie className='text-blue-600' />,
+  Microwave: <MdMicrowave className='text-indigo-500' />,
+  'Vip Cab Pick & Drop': <FaCarSide className='text-orange-600' />,
+  'Vvip car Pick & Drop': <FaCarSide className='text-orange-600' />,
+  'Espresso Coffee Machine': <FaCoffee className='text-amber-600' />,
+  Security: <AiOutlineCheckCircle className='text-gray-600' />,
+  'Vvip Car inside Airport': <FaCarSide className='text-orange-600' />,
+  Bouquet: <FaSeedling className='text-pink-500' />,
+  'Air Hostess / Escorts': <FaUserTie className='text-blue-600' />,
+  'New FHD Monitor': <MdMonitor className='text-teal-600' />,
+  'Full Bar': <AiOutlineCheckCircle className='text-gray-600' />,
+  'Personal Gate': <AiOutlineCheckCircle className='text-gray-600' />,
+  'Red Carpet': <AiOutlineCheckCircle className='text-gray-600' />,
+  Cafe: <FaCoffee className='text-amber-600' />,
+  'Airport Pickup': <FaCarSide className='text-orange-600' />,
+  'Music System Surround Sound': <FaMusic className='text-purple-600' />,
+  'Emergency Evacuation': <AiOutlineCheckCircle className='text-gray-600' />,
+  'Hot and Cold Stations': <AiOutlineCheckCircle className='text-gray-600' />,
+  'Airport DropOff': <FaCarSide className='text-orange-600' />,
+  'Private Security': <AiOutlineCheckCircle className='text-gray-600' />,
+  'Power Supply 110V': <BsFillLightningFill className='text-yellow-600' />,
+  'Lounge Access': <AiOutlineCheckCircle className='text-gray-600' />
 }
 
-const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
-  const [activeDetailsId, setActiveDetailsId] = useState(null);
-  const [parsedData, setParsedData] = useState(null);
+// Helper: chunk array
+function chunkArray (array, size) {
+  const result = []
+  for (let i = 0; i < array.length; i += size) {
+    result.push(array.slice(i, i + size))
+  }
+  return result
+}
+
+const FlightCard = ({
+  filteredData = [],
+  onSelectFleet,
+  selectedFleet,
+  onNextSegment,
+  currentTripIndex,
+  tripCount,
+  isMultiCity
+}) => {
+  const [activeDetailsId, setActiveDetailsId] = useState(null)
+  const [parsedData, setParsedData] = useState(null)
   useEffect(() => {
     // 2) Fetch and set your state
-    const data = sessionStorage.getItem("searchData");
+    const data = sessionStorage.getItem('searchData')
     if (data) {
-      const parsed = JSON.parse(data);
-      console.log("Fetched Search Data:", parsed);
-      setParsedData(parsed);
+      const parsed = JSON.parse(data)
+      console.log('Fetched Search Data:', parsed)
+      setParsedData(parsed)
     } else {
-      console.log("No data found in sessionStorage for 'searchData'");
+      console.log("No data found in sessionStorage for 'searchData'")
     }
-  }, []);
+  }, [])
 
   // For "See flight Experience ->" modal
-  const [showExperienceModal, setShowExperienceModal] = useState(false);
-  const [experienceModalFlightId, setExperienceModalFlightId] = useState(null);
-  const [activeTab, setActiveTab] = useState("interior");
+  const [showExperienceModal, setShowExperienceModal] = useState(false)
+  const [experienceModalFlightId, setExperienceModalFlightId] = useState(null)
+  const [activeTab, setActiveTab] = useState('interior')
 
   // Currency
-  const [selectedCurrency, setSelectedCurrency] = useState("USD");
-  const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState('USD')
+  const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false)
 
   // Toggle flight details
-  const toggleFlightDetails = (flightId) => {
-    setActiveDetailsId((prevId) => (prevId === flightId ? null : flightId));
-  };
+  const toggleFlightDetails = flightId => {
+    setActiveDetailsId(prevId => (prevId === flightId ? null : flightId))
+  }
 
   // Simple Image Slider
   const ImageSlider = ({ aircraftGallery }) => {
-    const [currentIndex, setCurrentIndex] = useState(0);
+    const [currentIndex, setCurrentIndex] = useState(0)
     const images = [
       aircraftGallery?.exterior
         ? Object.values(aircraftGallery.exterior)[0]
@@ -110,32 +130,30 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
         : null,
       aircraftGallery?.cockpit
         ? Object.values(aircraftGallery.cockpit)[0]
-        : null,
-    ].filter(Boolean);
+        : null
+    ].filter(Boolean)
 
     useEffect(() => {
       if (images.length > 1) {
         const interval = setInterval(() => {
-          setCurrentIndex((prev) =>
-            prev === images.length - 1 ? 0 : prev + 1
-          );
-        }, 4000);
-        return () => clearInterval(interval);
+          setCurrentIndex(prev => (prev === images.length - 1 ? 0 : prev + 1))
+        }, 4000)
+        return () => clearInterval(interval)
       }
-    }, [images]);
+    }, [images])
 
     if (!images.length) {
       return (
-        <div className="w-full h-64 bg-gray-100 flex items-center justify-center">
-          <span className="text-gray-500">No image available</span>
+        <div className='w-full h-64 bg-gray-100 flex items-center justify-center'>
+          <span className='text-gray-500'>No image available</span>
         </div>
-      );
+      )
     }
 
     return (
-      <div className="relative w-full h-64 overflow-hidden">
+      <div className='relative w-full h-80 overflow-hidden rounded-2xl'>
         <div
-          className="flex transition-transform duration-700"
+          className='flex transition-transform duration-700'
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
         >
           {images.map((imgSrc, i) => (
@@ -143,179 +161,185 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
               key={i}
               src={imgSrc}
               alt={`Aircraft view ${i}`}
-              className="w-full h-64 object-cover flex-shrink-0"
+              className=' h-80 object-cover flex-shrink-0'
             />
           ))}
         </div>
       </div>
-    );
-  };
+    )
+  }
 
   // Experience Modal
   const handleExperienceClick = (flightId, e) => {
-    e.stopPropagation();
-    setExperienceModalFlightId(flightId);
-    setShowExperienceModal(true);
-    setActiveTab("interior");
-  };
+    e.stopPropagation()
+    setExperienceModalFlightId(flightId)
+    setShowExperienceModal(true)
+    setActiveTab('interior')
+  }
 
   const closeExperienceModal = () => {
-    setShowExperienceModal(false);
-    setExperienceModalFlightId(null);
-    setActiveTab("interior");
-  };
+    setShowExperienceModal(false)
+    setExperienceModalFlightId(null)
+    setActiveTab('interior')
+  }
 
   // Convert from USD to chosen currency
   const convertPrice = (usdPrice, currency) => {
-    const rate = exchangeRates[currency] || 1;
-    return Math.round(usdPrice * rate);
-  };
+    const rate = exchangeRates[currency] || 1
+    return Math.round(usdPrice * rate)
+  }
 
   if (!filteredData.length) {
     return (
-      <div className="text-center py-8 text-gray-500">
+      <div className='text-center py-8 text-gray-500'>
         No flights match the selected criteria.
       </div>
-    );
+    )
   }
 
   // Motion variants
   const flightDetailsVariants = {
     hidden: { x: 0, opacity: 1 },
     exit: { x: -50, opacity: 0 },
-    show: { x: 0, opacity: 1 },
-  };
+    show: { x: 0, opacity: 1 }
+  }
   const amenitiesVariants = {
     hidden: { x: 50, opacity: 0 },
     show: { x: 0, opacity: 1 },
-    exit: { x: 50, opacity: 0 },
-  };
+    exit: { x: 50, opacity: 0 }
+  }
 
   return (
-    <div className="space-y-6 mb-11">
-      {filteredData.map((flight) => {
-        const isOpen = activeDetailsId === flight.serialNumber;
+    <div className='space-y-6 mb-11'>
+      {filteredData.map(flight => {
+        const isOpen = activeDetailsId === flight.serialNumber
 
         // free amenities
         const freeServicesAll = Object.entries(
           flight.additionalAmenities || {}
-        ).filter(([, amenityData]) => amenityData.value === "free");
+        ).filter(([, amenityData]) => amenityData.value === 'free')
 
-        const freeServicesToShow = freeServicesAll.slice(0, 7);
-        const firstLineServices = freeServicesToShow.slice(0, 4);
-        const secondLineServices = freeServicesToShow.slice(4, 7);
+        const freeServicesToShow = freeServicesAll.slice(0, 7)
+        const firstLineServices = freeServicesToShow.slice(0, 4)
+        const secondLineServices = freeServicesToShow.slice(4, 7)
 
         const allAmenitiesEntries = Object.entries(
           flight.additionalAmenities || {}
-        );
-        const chunkedAmenities = chunkArray(allAmenitiesEntries, 4);
+        )
+        const chunkedAmenities = chunkArray(allAmenitiesEntries, 4)
 
         // flightPrice is already in USD
         const flightPriceUSD = flight.totalPrice
-          ? parseInt(flight.totalPrice.replace(/\D/g, ""), 10)
-          : 0;
+          ? parseInt(flight.totalPrice.replace(/\D/g, ''), 10)
+          : 0
 
         return (
           <div
             key={flight.serialNumber}
-            className="flex flex-col md:flex-row rounded-md shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden"
+            className='flex flex-col md:flex-row items-center rounded-2xl p-4 relative overflow-hidden hover:shadow-[0_0_8px_rgba(0,0,0,0.25)] transition-shadow duration-300
+  '
           >
             {/* LEFT: Image */}
-            <div className="relative w-full md:w-2/5">
+            <div className='relative w-full md:w-2/5 '>
               <ImageSlider aircraftGallery={flight.aircraftGallery} />
               {/* "See flight Experience ->" */}
               <p
-                onClick={(e) => handleExperienceClick(flight.serialNumber, e)}
-                className="absolute bottom-2 left-2 text-white text-md bg-black bg-opacity-50 font-bold italic px-2 py-1 cursor-pointer rounded"
+                onClick={e => handleExperienceClick(flight.serialNumber, e)}
+                className='absolute bottom-2 left-2 text-white text-md bg-black bg-opacity-50 font-bold italic px-2 py-1 cursor-pointer rounded'
               >
                 See Flight Experience -&gt;
               </p>
             </div>
 
             {/* RIGHT: flight details or amenities */}
-            <div className="w-full md:w-3/5 relative border border-gray-300">
-              <AnimatePresence mode="wait">
+            <div className='w-full md:w-3/5 h-[80%] absolute right-10 rounded-xl bg-stone-50'>
+              <AnimatePresence mode='wait'>
                 {/* Collapsed Details */}
                 {!isOpen && (
                   <motion.div
-                    key="flight-details"
+                    key='flight-details'
                     variants={flightDetailsVariants}
-                    initial="hidden"
-                    animate="show"
-                    exit="exit"
+                    initial='hidden'
+                    animate='show'
+                    exit='exit'
                     transition={{ duration: 0.4 }}
-                    className="bg-white p-4 py-0 h-full"
+                    className='p-4 py-0 h-full rounded-xl'
                   >
                     {/* Top Row */}
-                    <div className="flex items-center justify-between border-b border-gray-300 py-2">
-                      <div className="flex items-center space-x-2">
+                    <div className='flex items-center justify-between border-b border-gray-300 pb-2'>
+                      <div className='flex items-center space-x-2'>
                         <img
                           src={
                             flight.logo ||
-                            "https://imgak.mmtcdn.com/flights/assets/media/dt/common/icons/GF.png?v=19"
+                            'https://imgak.mmtcdn.com/flights/assets/media/dt/common/icons/GF.png?v=19'
                           }
-                          alt={flight.title || "Airline"}
-                          className="w-10 h-10 md:w-10 md:h-10 object-contain"
+                          alt={flight.title || 'Airline'}
+                          className='w-10 h-10 md:w-10 md:h-10 object-contain'
                         />
-                        <h2 className="text-lg md:text-xl font-bold text-gray-800 flex flex-col items-end">
-                          {flight.fleetDetails.selectedModel || "Gulf Air"}
-                          <p className="text-xs text-gray-800 font-medium">
-                            Reg. No:-{flight.fleetDetails.registrationNo || "Gulf Air"}
+                        <div className='flex flex-col items-end '>
+                          <h2 className='text-xl md:text-2xl font-bold text-gray-800 '>
+                            {flight.fleetDetails.selectedModel || 'Gulf Air'}
+                          </h2>
+                          <p className='text-sm text-gray-700 font-medium'>
+                            Reg. No:{' '}
+                            {flight.fleetDetails.registrationNo || 'Gulf Air'}
                           </p>
-
-                        </h2>
-
+                        </div>
                       </div>
 
-                      <div className="flex">
-                        <span className="text-md font-bold text-gray-500 flex items-center ml-4">
-                          <MdAirlineSeatReclineExtra size={20} />
-                          : {flight.fleetDetails.seatCapacity}
+                      <div className='flex'>
+                        <span className='text-base md:text-lg font-bold text-gray-600 flex items-center ml-4'>
+                          <MdAirlineSeatReclineExtra
+                            size={20}
+                            className='mr-1'
+                          />
+                          {flight.fleetDetails.seatCapacity}
                         </span>
-                        <span className="text-md font-bold text-gray-500 flex items-center ml-4">
-                          <IoMdSpeedometer size={20} />
-                          : {flight.fleetDetails.maxSpeed}NM
+                        <span className='text-base md:text-lg font-bold text-gray-600 flex items-center ml-4'>
+                          <IoMdSpeedometer size={20} className='mr-1' />
+                          {flight.fleetDetails.maxSpeed}NM
                         </span>
                       </div>
 
                       {/* Price + Currency */}
-                      <div className="text-right relative inline-block">
-                        <p className="text-xs text-gray-500">~approx</p>
-                        <p className="text-xl md:text-2xl font-bold text-gray-700">
+                      <div className='text-right relative inline-block'>
+                        <p className='text-sm text-gray-500'>~approx</p>
+                        <p className='text-2xl font-bold text-gray-700'>
                           {currencySymbols[selectedCurrency]}
-                          {convertPrice(flightPriceUSD, selectedCurrency).toLocaleString()}
+                          {convertPrice(
+                            flightPriceUSD,
+                            selectedCurrency
+                          ).toLocaleString()}
                         </p>
                         <p
-                          onClick={() =>
-                            setShowCurrencyDropdown((val) => !val)
-                          }
-                          className="text-sm text-blue-500 cursor-pointer"
+                          onClick={() => setShowCurrencyDropdown(val => !val)}
+                          className='text-base text-blue-500 cursor-pointer'
                         >
                           &gt; other currencies
                         </p>
                         {showCurrencyDropdown && (
-                          <div className="absolute right-0 top-full mt-1 bg-white border rounded shadow-md w-40 z-10">
+                          <div className='absolute right-0 top-full mt-1 bg-white border rounded shadow-md w-40 z-10'>
                             {currencyFlags.map(({ code, label }) => {
                               const converted = convertPrice(
                                 flightPriceUSD,
                                 code
-                              );
+                              )
                               return (
                                 <div
                                   key={code}
                                   onClick={() => {
-                                    setSelectedCurrency(code);
-                                    setShowCurrencyDropdown(false);
+                                    setSelectedCurrency(code)
+                                    setShowCurrencyDropdown(false)
                                   }}
-                                  className="cursor-pointer p-2 hover:bg-gray-100 flex items-center justify-between"
+                                  className='cursor-pointer p-2 hover:bg-gray-100 flex items-center justify-between'
                                 >
-                                  <span className="mr-2">{label}</span>
-                                  <span className="text-sm font-bold text-gray-700">
+                                  <span className='mr-2'>{label}</span>
+                                  <span className='text-sm font-bold text-gray-700'>
                                     {currencySymbols[code]}
                                     {converted.toLocaleString()}
                                   </span>
                                 </div>
-                              );
+                              )
                             })}
                           </div>
                         )}
@@ -323,123 +347,145 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                     </div>
 
                     {/* Flight Timings */}
-                    <div className="flex items-center space-x-3 md:space-x-8 text-sm text-gray-800 mb-2">
+                    <div className='flex items-center space-x-4 md:space-x-8 text-base text-gray-800 mt-2 mb-3'>
                       <div>
-                        <p className="text-base font-semibold flex ">
-
-                          <span>{parsedData?.segments?.[0]?.fromIATA} </span>
-                          <span>-{parsedData?.segments?.[0]?.departureTime}</span>
-                          {/* {parsedData?.segments?.[0]?.fromIATA || "DEL 21:35"} */}
+                        <p className='font-semibold'>
+                          {parsedData?.segments?.[0]?.fromIATA || 'DEL'}
+                          {' - '}
+                          {parsedData?.segments?.[0]?.departureTime || '21:35'}
                         </p>
-                        <p className="text-xs text-gray-500">
-                          {parsedData?.segments?.[0]?.fromCity || "New Delhi"}
-                        </p>
-                      </div>
-
-                      <div className="text-xs text-gray-500 text-center">
-                        <p className="text-md text-gray-700 mb-2 flex items-center">
-                          ------{" "}
-                          <span className="inline-block mx-1">
-                            <IoIosAirplane size={34} />
-                          </span>{" "}
-                          -----
+                        <p className='text-sm text-gray-500'>
+                          {parsedData?.segments?.[0]?.fromCity || 'New Delhi'}
                         </p>
                       </div>
 
-                      <div className="">
-                        <p className="text-base font-semibold">
-                          {parsedData?.segments?.[0]?.toIATA || "LHR 06:35"}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {parsedData?.segments?.[0]?.toCity || "not found"}
+                      <div className='text-sm text-gray-500 text-center'>
+                        <p className='text-lg text-gray-700 mb-2 flex items-center'>
+                          ----{' '}
+                          <span className='inline-block mx-1'>
+                            <IoIosAirplane size={32} />
+                          </span>{' '}
+                          ----
                         </p>
                       </div>
-                      <div className="flex items-center">
-                        <p className="text-sm text-gray-500 flex flex-col items-center">
+
+                      <div>
+                        <p className='font-semibold'>
+                          {parsedData?.segments?.[0]?.toIATA || 'LHR'}{' '}
+                          {parsedData?.segments?.[0]?.arrivalTime || '06:35'}
+                        </p>
+                        <p className='text-sm text-gray-500'>
+                          {parsedData?.segments?.[0]?.toCity || 'Not found'}
+                        </p>
+                      </div>
+
+                      <div className='flex items-center'>
+                        <p className='text-sm text-gray-500 flex flex-col items-center'>
                           <span>Flight Duration</span>
-                          <span>{flight.flightTime || "not found"}</span>
+                          <span>{flight.flightTime || 'n/a'}</span>
                         </p>
-
                       </div>
                     </div>
 
                     {/* Some free amenities */}
                     {freeServicesToShow.length > 0 ? (
-                      <div className="mb-3">
-                        <h4 className="text-sm font-semibold mb-2">
+                      <div className='mb-3'>
+                        <h4 className='text-base font-semibold mb-2'>
                           In-Flight Amenities
                         </h4>
-                        <ul className="flex space-x-1 mb-1">
+                        <ul className='flex space-x-1 mb-1 flex-wrap'>
                           {firstLineServices.map(([amenityKey]) => {
-                            const IconComponent =
-                              amenityIcons[amenityKey] || (
-                                <AiOutlineCheckCircle className="text-green-500 mr-2" />
-                              );
+                            const IconComponent = amenityIcons[amenityKey] || (
+                              <AiOutlineCheckCircle className='text-green-500 mr-2' />
+                            )
                             return (
                               <li
                                 key={amenityKey}
-                                className="flex items-center text-sm ml-2 border-r-2 border-gray-300 pr-1"
+                                className='flex items-center text-base border-r-2 border-gray-300 pr-2 mr-2'
                               >
-                                <span className="mr-2">{IconComponent}</span>
-                                <span className="text-xs">{amenityKey}</span>
+                                <span className='mr-1'>{IconComponent}</span>
+                                <span>{amenityKey}</span>
                               </li>
-                            );
+                            )
                           })}
                         </ul>
                         {secondLineServices.length > 0 && (
-                          <ul className="flex space-x-1">
+                          <ul className='flex space-x-1 flex-wrap'>
                             {secondLineServices.map(([amenityKey]) => {
-                              const IconComponent =
-                                amenityIcons[amenityKey] || (
-                                  <AiOutlineCheckCircle className="text-green-500 mr-2" />
-                                );
+                              const IconComponent = amenityIcons[
+                                amenityKey
+                              ] || (
+                                <AiOutlineCheckCircle className='text-green-500 mr-2' />
+                              )
                               return (
                                 <li
                                   key={amenityKey}
-                                  className="flex items-center text-sm ml-2 border-r-2 border-gray-300 pr-1"
+                                  className='flex items-center text-base border-r-2 border-gray-300 pr-2 mr-2'
                                 >
-                                  <span className="mr-2">{IconComponent}</span>
-                                  <span className="text-xs">{amenityKey}</span>
+                                  <span className='mr-1'>{IconComponent}</span>
+                                  <span>{amenityKey}</span>
                                 </li>
-                              );
+                              )
                             })}
                             <button
                               onClick={() =>
                                 toggleFlightDetails(flight.serialNumber)
                               }
-                              className=" text-blue-700 text-sm font-semibold  hover:underline"
+                              className='text-base text-blue-700 font-semibold hover:underline'
                             >
                               See more...
                             </button>
-
                           </ul>
-
                         )}
                       </div>
                     ) : (
-                      <p className="text-xs md:text-sm text-gray-600 mb-3">
+                      <p className='text-base text-gray-600 mb-3'>
                         No free services available
                       </p>
                     )}
 
                     {/* Actions */}
-                    <div className="flex items-center space-x-4 mb-1 justify-between">
-                      <button
-                        className="bg-gradient-to-r from-blue-500 to-blue-700 text-white text-sm font-semibold px-4 py-2 rounded shadow-md hover:from-blue-600 hover:to-blue-800 focus:ring-2 focus:ring-blue-300"
-                      >Compare Flights
-                      </button>
-
+                    <div className='flex items-center space-x-4 mb-1 justify-end'>
                       <button
                         onClick={() => onSelectFleet(flight)}
-                        className={`${selectedFleet?.serialNumber === flight.serialNumber
-                          ? "bg-red-500 focus:ring-2 focus:ring-red-300"
-                          : "bg-gradient-to-r from-green-500 to-green-700"
-                          } text-white text-sm font-semibold px-4 py-2 rounded shadow-md focus:ring-2 focus:ring-green-300`}
+                        className={`  ${
+                          selectedFleet?.serialNumber === flight.serialNumber
+                            ? 'bg-red-500 focus:ring-2 focus:ring-red-300'
+                            : 'bg-gradient-to-r from-green-500 to-green-700'
+                        } text-white text-base font-semibold px-4 py-2 rounded shadow-md focus:ring-2 focus:ring-green-300`}
                       >
                         {selectedFleet?.serialNumber === flight.serialNumber
-                          ? "Fleet Selected"
-                          : "Select Flight"}
+                          ? 'Fleet Selected'
+                          : 'Select Flight'}
                       </button>
+                      {selectedFleet?.serialNumber === flight.serialNumber && (
+                        <>
+                          {isMultiCity ? (
+                            currentTripIndex < tripCount - 1 ? (
+                              <button
+                                onClick={onNextSegment}
+                                className='bg-blue-600 text-white px-4 py-2 rounded shadow-md'
+                              >
+                                Select Next Fleet
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => {}}
+                                className='bg-green-600 text-white px-4 py-2 rounded shadow-md'
+                              >
+                                Proceed to Enquiry
+                              </button>
+                            )
+                          ) : (
+                            <button
+                              onClick={() => {}}
+                              className='bg-green-600 text-white px-4 py-2 rounded shadow-md'
+                            >
+                              Proceed to Enquiry
+                            </button>
+                          )}
+                        </>
+                      )}
                     </div>
                   </motion.div>
                 )}
@@ -447,66 +493,67 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                 {/* Expanded Amenities */}
                 {isOpen && (
                   <motion.div
-                    key="amenities"
+                    key='amenities'
                     variants={amenitiesVariants}
-                    initial="hidden"
-                    animate="show"
-                    exit="exit"
+                    initial='hidden'
+                    animate='show'
+                    exit='exit'
                     transition={{ duration: 0.4 }}
-                    className="bg-white p-4 pb-0 h-full"
+                    className='bg-white p-4 pb-0 h-full rounded-xl'
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center space-x-2">
+                    <div className='flex items-start justify-between'>
+                      <div className='flex items-center space-x-2'>
                         <img
                           src={
                             flight.logo ||
-                            "https://imgak.mmtcdn.com/flights/assets/media/dt/common/icons/GF.png?v=19"
+                            'https://imgak.mmtcdn.com/flights/assets/media/dt/common/icons/GF.png?v=19'
                           }
-                          alt={flight.title || "Gulf Air"}
-                          className="w-8 h-8 md:w-10 md:h-10 object-contain"
+                          alt={flight.title || 'Gulf Air'}
+                          className='w-8 h-8 md:w-10 md:h-10 object-contain'
                         />
-                        <h2 className="text-lg md:text-xl font-bold text-gray-800">
-                          {flight.fleetDetails.registrationNo || "Gulf Air"}
+                        <h2 className='text-xl md:text-2xl font-bold text-gray-800'>
+                          {flight.fleetDetails.registrationNo || 'Gulf Air'}
                         </h2>
                       </div>
 
-                      <div className="text-right relative inline-block">
-                        <p className="text-xs text-gray-500">From</p>
-                        <p className="text-xl md:text-2xl font-bold text-gray-700">
+                      <div className='text-right relative inline-block'>
+                        <p className='text-sm text-gray-500'>From</p>
+                        <p className='text-2xl font-bold text-gray-700'>
                           {currencySymbols[selectedCurrency]}
-                          {convertPrice(flightPriceUSD, selectedCurrency).toLocaleString()}
+                          {convertPrice(
+                            flightPriceUSD,
+                            selectedCurrency
+                          ).toLocaleString()}
                         </p>
                         <p
-                          onClick={() =>
-                            setShowCurrencyDropdown((val) => !val)
-                          }
-                          className="text-sm text-blue-500 cursor-pointer"
+                          onClick={() => setShowCurrencyDropdown(val => !val)}
+                          className='text-base text-blue-500 cursor-pointer'
                         >
                           &gt; other currencies
                         </p>
                         {showCurrencyDropdown && (
-                          <div className="absolute right-0 top-full mt-1 bg-white border rounded shadow-md w-40 z-10">
+                          <div className='absolute right-0 top-full mt-1 bg-white border rounded shadow-md w-40 z-10'>
                             {currencyFlags.map(({ code, label }) => {
                               const converted = convertPrice(
                                 flightPriceUSD,
                                 code
-                              );
+                              )
                               return (
                                 <div
                                   key={code}
                                   onClick={() => {
-                                    setSelectedCurrency(code);
-                                    setShowCurrencyDropdown(false);
+                                    setSelectedCurrency(code)
+                                    setShowCurrencyDropdown(false)
                                   }}
-                                  className="cursor-pointer p-2 hover:bg-gray-100 flex items-center justify-between"
+                                  className='cursor-pointer p-2 hover:bg-gray-100 flex items-center justify-between'
                                 >
-                                  <span className="mr-2">{label}</span>
-                                  <span className="text-sm font-bold text-gray-700">
+                                  <span className='mr-2'>{label}</span>
+                                  <span className='text-sm font-bold text-gray-700'>
                                     {currencySymbols[code]}
                                     {converted.toLocaleString()}
                                   </span>
                                 </div>
-                              );
+                              )
                             })}
                           </div>
                         )}
@@ -514,59 +561,98 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                     </div>
 
                     {allAmenitiesEntries.length > 0 ? (
-                      <div>
-                        <div className="flex justify-between items-end my-1">
-                          <h3 className="text-md font-semibold">
+                      <div className='mt-3'>
+                        <div className='flex justify-between items-center mb-2'>
+                          <h3 className='text-lg font-semibold'>
                             Additional Services
                           </h3>
-                          <div className="flex items-center">
-                            <button
-                              onClick={() =>
-                                toggleFlightDetails(flight.serialNumber)
-                              }
-                              className="text-blue-500"
-                            >
-                              Hide Flight Details ^
-                            </button>
-                          </div>
+                          <button
+                            onClick={() =>
+                              toggleFlightDetails(flight.serialNumber)
+                            }
+                            className='text-base text-blue-500'
+                          >
+                            Hide Flight Details ^
+                          </button>
                         </div>
 
-                        <div className="max-w-[40rem] h-32 overflow-x-auto border border-gray-300 rounded p-2  ">
-                          <div className="flex flex-row flex-nowrap gap-8">
+                        {/* SCROLL CONTAINER */}
+                        <div
+                          className='max-w-[40rem] h-32 relative border border-gray-300 rounded p-2 group'
+                          // Basic inline styles for Firefox:
+                          style={{
+                            overflowX: 'auto',
+                            scrollbarWidth: 'thin', // for Firefox
+                            scrollbarColor: '#bfbfbf #f0f0f0' // thumb color | track color
+                          }}
+                        >
+                          {/* 
+        For WebKit-based browsers (Chrome, Safari, Edge):
+        We must use a <style> block. Inline style alone can't target
+        ::-webkit-scrollbar pseudo-elements.
+      */}
+                          <style>
+                            {`
+          /* Only affect *this* container. We'll scope it by .group. */
+          .group::-webkit-scrollbar {
+            width: 6px;  /* scrollbar track thickness */
+            height: 6px; /* horizontal scrollbar height, if needed */
+          }
+          .group::-webkit-scrollbar-track {
+            background: #f0f0f0;
+            border-radius: 6px;
+          }
+          .group::-webkit-scrollbar-thumb {
+            background-color: #bfbfbf;
+            border-radius: 6px;
+          }
+          /* Darken the thumb on hover over the .group container */
+          .group:hover::-webkit-scrollbar-thumb {
+            background-color: #999;
+          }
+        `}
+                          </style>
+
+                          <div className='flex flex-row flex-nowrap gap-8'>
                             {chunkedAmenities.map((column, colIndex) => (
                               <div
                                 key={colIndex}
-                                className="flex flex-col space-y-2 min-w-[250px]"
+                                className='flex flex-col space-y-2 min-w-[250px]'
                               >
                                 {column.map(([amenityKey, amenityData]) => {
-                                  const IconComponent =
-                                    amenityIcons[amenityKey] || (
-                                      <AiOutlineCheckCircle
-                                        className="text-green-500"
-                                        size={20}
-                                      />
-                                    );
+                                  const IconComponent = amenityIcons[
+                                    amenityKey
+                                  ] || (
+                                    <AiOutlineCheckCircle
+                                      className='text-green-500'
+                                      size={20}
+                                    />
+                                  )
                                   return (
                                     <div
                                       key={amenityKey}
-                                      className="flex items-center space-x-2"
+                                      className='flex items-center space-x-2'
                                     >
                                       <span>{IconComponent}</span>
-                                      <span className="font-medium text-sm text-gray-800">
+                                      <span className='font-medium text-base text-gray-800'>
                                         {amenityKey}
                                       </span>
                                       <span
-                                        className={`text-xs font-semibold ml-2 px-2 py-1 rounded ${amenityData.value === "free"
-                                          ? "bg-green-100 text-green-600"
-                                          : "bg-red-100 text-red-600"
-                                          }`}
+                                        className={`
+                      text-sm font-semibold ml-2 px-2 py-1 rounded 
+                      ${
+                        amenityData.value === 'free'
+                          ? 'bg-green-100 text-green-600'
+                          : 'bg-red-100 text-red-600'
+                      }
+                    `}
                                       >
-                                        {amenityData.value === "free"
-                                          ? "Free"
-                                          : "Chargeable"}
+                                        {amenityData.value === 'free'
+                                          ? 'Free'
+                                          : 'Chargeable'}
                                       </span>
                                     </div>
-                                  );
+                                  )
                                 })}
                               </div>
                             ))}
@@ -574,7 +660,7 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
                         </div>
                       </div>
                     ) : (
-                      <p className="text-sm text-gray-600">
+                      <p className='text-base text-gray-600 mt-3'>
                         No additional amenities.
                       </p>
                     )}
@@ -583,80 +669,85 @@ const FlightCard = ({ filteredData = [], onSelectFleet, selectedFleet }) => {
               </AnimatePresence>
             </div>
           </div>
-        );
+        )
       })}
 
       {/* EXPERIENCE MODAL */}
       {showExperienceModal && (
         <div
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50"
+          className='fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50'
           onClick={closeExperienceModal}
         >
           <div
-            className="bg-white w-11/12 md:w-4/5 h-[80%] p-5 rounded-md relative"
-            onClick={(e) => e.stopPropagation()}
+            className='bg-white w-11/12 md:w-4/5 h-[80%] p-5 rounded-md relative'
+            onClick={e => e.stopPropagation()}
           >
             <button
               onClick={closeExperienceModal}
-              className="absolute top-3 right-3 bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded"
+              className='absolute top-3 right-3 bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded'
             >
               X
             </button>
 
-            <div className="flex space-x-4 border-b mb-4">
-              {["interior", "exterior", "cockpit", "aircraftLayout", "video"].map(
-                (tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`py-2 px-4 text-sm font-semibold ${activeTab === tab
-                      ? "text-blue-600 border-b-2 border-blue-600"
-                      : "text-gray-500"
-                      }`}
-                  >
-                    {tab}
-                  </button>
-                )
-              )}
+            <div className='flex space-x-4 border-b mb-4'>
+              {[
+                'interior',
+                'exterior',
+                'cockpit',
+                'aircraftLayout',
+                'video'
+              ].map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`py-2 px-4 text-sm font-semibold ${
+                    activeTab === tab
+                      ? 'text-blue-600 border-b-2 border-blue-600'
+                      : 'text-gray-500'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
             </div>
 
-            {filteredData.map((f) => {
-              if (f.serialNumber !== experienceModalFlightId) return null;
-              const gallery = f.aircraftGallery || {};
+            {filteredData.map(f => {
+              if (f.serialNumber !== experienceModalFlightId) return null
+              const gallery = f.aircraftGallery || {}
 
               return (
-                <div key={f.serialNumber} className="overflow-auto h-full">
-                  {activeTab !== "video" && gallery[activeTab] && (
-                    <div className="flex flex-wrap gap-4">
+                <div key={f.serialNumber} className='overflow-auto h-full'>
+                  {activeTab !== 'video' && gallery[activeTab] && (
+                    <div className='flex flex-wrap gap-4'>
                       {Object.entries(gallery[activeTab]).map(([view, url]) => (
                         <img
                           key={view}
                           src={url}
                           alt={view}
-                          className="w-80 h-56 object-cover rounded"
+                          className='w-80 h-56 object-cover rounded'
                         />
                       ))}
                     </div>
                   )}
 
-                  {activeTab === "video" && gallery.video && (
-                    <div className="relative w-full h-[90%]">
+                  {activeTab === 'video' && gallery.video && (
+                    <div className='relative w-full h-[90%]'>
                       <video
                         autoPlay
                         controls
-                        className="absolute inset-0 w-full h-full object-cover"
+                        className='absolute inset-0 w-full h-full object-cover'
                         src={gallery.video}
                       />
                     </div>
                   )}
                 </div>
-              );
+              )
             })}
           </div>
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default FlightCard;
+export default FlightCard

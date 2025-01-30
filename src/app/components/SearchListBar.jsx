@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FilterAndFleetListing from "../components/FilterAndFleetListing";
+import BannerSection from "./Banner";
 
 export const SearchBar = () => {
   const [airports, setAirports] = useState([]);
@@ -307,7 +308,7 @@ export const SearchBar = () => {
   // ================== RENDER ==================
   return (
     <div className="flex flex-col items-center w-full">
-      <div className="w-full mb-8 sticky top-0 z-30" ref={containerRef}>
+      <div className="w-full  sticky top-0 z-30" ref={containerRef}>
         {tripType === "multicity" && isMultiCityCollapsed ? (
           /* ---------------------- COLLAPSED MULTI-CITY ---------------------- */
           <div className="bg-[#041422] p-4 rounded-lg shadow-md flex flex-col gap-2 w-full relative">
@@ -887,6 +888,8 @@ export const SearchBar = () => {
           </div>
         )}
       </div>
+
+      <BannerSection/>
 
       {/* Rerender listing when refreshKey changes */}
       <FilterAndFleetListing key={refreshKey} />

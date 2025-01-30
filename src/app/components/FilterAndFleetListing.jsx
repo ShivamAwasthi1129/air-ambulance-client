@@ -242,64 +242,86 @@ const FilterAndFleetListing = ({ refreshKey }) => {
   };
 
   // --------------------------------------------------
-  // 6. Return the appropriate UI
+  // 6. Returning the appropriate UI
   // --------------------------------------------------
-
   // If no searchData yet, show a loading skeleton. The Hook order is preserved.
   if (!searchData) {
     return (
-      <div className="p-4 space-y-6 animate-pulse w-full">
-        <div className="flex flex-col md:flex-row justify-between space-y-2 md:space-y-0 md:items-center">
-          <div className="bg-gray-300 rounded h-6 w-48" />
-          <div className="bg-gray-300 rounded h-6 w-60" />
-          <div className="bg-gray-300 rounded h-8 w-32" />
+      <div className="p-4 space-y-6 animate-pulse w-full max-w-[100rem]">
+      {/* Top Bar */}
+      <div className="flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
+        {/* "Selected Fleets" skeleton */}
+        <div className="bg-gray-300 rounded h-6 w-48" />
+        {/* "Oneway Trip" skeleton */}
+        <div className="bg-gray-300 rounded h-6 w-60" />
+        {/* "Select Fleet" button skeleton */}
+        <div className="bg-gray-300 rounded h-8 w-32" />
+      </div>
+
+      {/* Trip Heading & Subheading */}
+      <div className="bg-gray-300 rounded h-6 w-3/4" />
+      <div className="bg-gray-300 rounded h-4 w-1/2" />
+
+      <div className="flex flex-col md:flex-row gap-6">
+        {/* Left Filter Panel */}
+        <div className="w-full md:w-1/4 space-y-4">
+          {/* "Filter Options for" heading */}
+          <div className="bg-gray-300 rounded h-6 w-36" />
+          {/* Sample filter items */}
+          <div className="bg-gray-300 rounded h-4 w-1/2" />
+          <div className="bg-gray-300 rounded h-4 w-3/4" />
+          <div className="bg-gray-300 rounded h-4 w-2/3" />
+          <div className="bg-gray-300 rounded h-4 w-3/4" />
+          <div className="bg-gray-300 rounded h-4 w-1/2" />
+          <div className="bg-gray-300 rounded h-4 w-3/4" />
+          <div className="bg-gray-300 rounded h-4 w-2/3" />
         </div>
-        <div className="bg-gray-300 rounded h-6 w-72" />
-        <div className="flex flex-col md:flex-row gap-6">
-          <div className="w-full md:w-1/4 space-y-4">
-            <div className="bg-gray-300 rounded h-6 w-32" />
-            <div className="bg-gray-300 rounded h-4 w-full" />
-            <div className="bg-gray-300 rounded h-4 w-3/4" />
-            <div className="bg-gray-300 rounded h-4 w-2/3" />
-            <div className="bg-gray-300 rounded h-4 w-3/4" />
-            <div className="bg-gray-300 rounded h-4 w-1/2" />
-          </div>
-          <div className="flex-1 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="bg-gray-300 rounded h-20 w-32" />
-              <div className="flex-1 space-y-2 ml-4">
-                <div className="bg-gray-300 rounded h-4 w-1/2" />
-                <div className="bg-gray-300 rounded h-4 w-1/3" />
-                <div className="bg-gray-300 rounded h-4 w-1/4" />
+
+        {/* Right Flight Card Section */}
+        <div className="flex-1 space-y-4">
+          {/* "Trip 1: ..." heading skeleton */}
+          <div className="bg-gray-300 rounded h-6 w-1/2" />
+          {/* "Recommending flights..." subheading skeleton */}
+          <div className="bg-gray-300 rounded h-4 w-1/3" />
+
+          {/* Main flight card layout */}
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Cockpit image area */}
+            <div className="bg-gray-300 rounded h-40 w-full lg:w-64" />
+
+            {/* Flight details info */}
+            <div className="flex-1 space-y-4">
+              <div className="bg-gray-300 rounded h-4 w-1/2" />
+              <div className="bg-gray-300 rounded h-4 w-1/4" />
+              {/* Price / Duration / etc. */}
+              <div className="bg-gray-300 rounded h-4 w-1/3" />
+              {/* Amenities row */}
+              <div className="flex flex-wrap gap-2">
+                <div className="bg-gray-300 rounded h-4 w-20" />
+                <div className="bg-gray-300 rounded h-4 w-24" />
+                <div className="bg-gray-300 rounded h-4 w-16" />
+                <div className="bg-gray-300 rounded h-4 w-28" />
               </div>
-              <div className="bg-gray-300 rounded h-6 w-16 ml-4" />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <div className="bg-gray-300 rounded h-4 w-24" />
-              <div className="bg-gray-300 rounded h-4 w-32" />
-              <div className="bg-gray-300 rounded h-4 w-20" />
-              <div className="bg-gray-300 rounded h-4 w-28" />
-            </div>
-            <div className="flex gap-4">
-              <div className="bg-gray-300 rounded h-8 w-24" />
-              <div className="bg-gray-300 rounded h-8 w-32" />
             </div>
           </div>
+
+          {/* "Select Flight" button skeleton */}
+          <div className="bg-gray-300 rounded h-8 w-28" />
         </div>
       </div>
+    </div>
     );
   }
 
   // Main UI
   return (
-    <div className="relative w-full mx-auto flex flex-col items-start overflow-hidden shadow-lg">
+    <div className="relative w-full mx-auto flex flex-col items-start overflow-hidden shadow-lg max-w-[100rem]">
       {/* Top Panel */}
-      <div className="w-full p-6 pt-2 bg-gray-50 border shadow-lg">
+      <div className="w-full p-6 pt-2 px-10">
         <h1 className="text-2xl font-bold text-center text-blue-700">
           Fleet Selection Panel
         </h1>
-
-        <div className="flex mt-2">
+        <div className="flex mt-2 ">
           {/* Selected Fleets */}
           <div className="bg-white p-5 border border-blue-100 rounded-lg shadow-sm w-[35%]">
             <h2 className="text-xl font-bold mb-4 text-gray-800">
@@ -314,7 +336,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                   Trip {idx + 1}:{" "}
                   <span className="font-medium">
                     {fleet?.fleetDetails?.registrationNo} - (
-                    {fleet?.fleetDetails?.flightType})
+                    {fleet?.fleetDetails?.selectedModel})
                   </span>
                 </p>
               ) : (
@@ -450,57 +472,58 @@ const FilterAndFleetListing = ({ refreshKey }) => {
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
-          className="w-[30%] bg-gray-100 p-4 border-r border-gray-300"
+          className="w-[30%] p-6 bg-white shadow-lg rounded-r-md border-r border-gray-200 px-10"
         >
-          {/* Filter Header */}
-          <div className="flex items-center justify-between mb-4">
+          {/* Heading row */}
+          <div className="flex items-center justify-between mb-6 border-b pb-2">
             <motion.h2
               initial={{ y: -10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.5 }}
-              className="text-xl font-bold text-gray-700"
+              className="text-2xl font-bold text-gray-800"
             >
-              Filter Options
-              {isMultiCity && ` (Trip ${currentTripIndex + 1})`}
+              <p>Filter Options for</p>
+              {isMultiCity && ` Trip ${currentTripIndex + 1}`}
             </motion.h2>
-
             <button
               onClick={() => handleClearFilters(segmentIndex)}
-              className="text-red-600 text-sm underline hover:text-red-800 transition-colors"
+              className="text-red-500 text-sm hover:text-red-600 transition-colors"
             >
               Clear Filters
             </button>
           </div>
 
-          {/* Flight Type Checkboxes */}
-          <div className="space-y-4">
-            {allFlightTypes.map((type) => {
-              const count = fleetData.filter(
-                (f) => f.fleetDetails?.flightType === type
-              ).length;
-              return (
-                <motion.div
-                  key={type}
-                  whileHover={{ scale: 1.05 }}
-                  className="flex items-center space-x-2"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedTypes.includes(type)}
-                    onChange={() => onToggleType(type)}
-                    className="h-4 w-4 text-blue-500 border-gray-300 rounded focus:ring-blue-400"
-                  />
-                  <label className="text-gray-600 cursor-pointer">
-                    {type} ({count})
+          {/* Flight Type */}
+          <div className="mb-6">
+            <p className="font-semibold text-gray-700 mb-3">Flight Type</p>
+            <div className="space-y-2">
+              {allFlightTypes.map((type) => {
+                const count = fleetData.filter(
+                  (f) => f.fleetDetails?.flightType === type
+                ).length;
+                return (
+                  <label
+                    key={type}
+                    className="inline-flex items-center space-x-2 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedTypes.includes(type)}
+                      onChange={() => onToggleType(type)}
+                      className="h-4 w-4 text-blue-500 border-gray-300 rounded focus:ring-blue-400"
+                    />
+                    <span className="text-sm text-gray-600">
+                      {type} ({count})
+                    </span>
                   </label>
-                </motion.div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
 
-          {/* Price Range Slider */}
-          <div className="mt-6">
-            <label className="block text-gray-600 font-semibold mb-4">
+          {/* Price Range */}
+          <div className="mb-6">
+            <p className="font-semibold text-gray-700 mb-3">
               Price Range:{" "}
               <span className="text-blue-600 font-bold">
                 ${minPrice.toLocaleString()}
@@ -509,59 +532,59 @@ const FilterAndFleetListing = ({ refreshKey }) => {
               <span className="text-blue-600 font-bold">
                 ${priceRange.toLocaleString()}
               </span>
-            </label>
-            <div className="relative w-full">
-              <input
-                type="range"
-                min={minPrice}
-                max={maxPrice}
-                value={priceRange}
-                onChange={(e) => onPriceChange(e.target.value)}
-                className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
-                style={{
-                  background: `linear-gradient(to right, #3b82f6 ${((priceRange - minPrice) / (maxPrice - minPrice)) * 100
-                    }%, #e5e7eb ${((priceRange - minPrice) / (maxPrice - minPrice)) * 100
-                    }%)`,
-                }}
-              />
-            </div>
+            </p>
+            <input
+              type="range"
+              min={minPrice}
+              max={maxPrice}
+              value={priceRange}
+              onChange={(e) => onPriceChange(e.target.value)}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer
+                 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+              style={{
+                background: `linear-gradient(to right, #3b82f6 ${((priceRange - minPrice) / (maxPrice - minPrice)) * 100
+                  }%, #e5e7eb ${((priceRange - minPrice) / (maxPrice - minPrice)) * 100
+                  }%)`,
+              }}
+            />
             {priceRange !== maxPrice && (
-              <div className="mt-4 p-2 bg-blue-100 text-blue-800 rounded-lg shadow-md text-sm font-medium">
+              <div className="mt-2 text-sm text-blue-700 font-medium">
                 Selected Price: ${priceRange.toLocaleString()}
               </div>
             )}
           </div>
 
-          {/* Amenities Filter */}
-          <div className="mt-6">
-            <h3 className="text-md font-semibold mb-2">Available Services</h3>
-            {allAmenities.map((amenity) => {
-              const checked = selectedAmenities.includes(amenity);
-              return (
-                <motion.div
-                  key={amenity}
-                  whileHover={{ scale: 1.05 }}
-                  className="flex items-center space-x-2"
-                >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => onToggleAmenity(amenity)}
-                    className="h-4 w-4 text-blue-500 border-gray-300 rounded focus:ring-blue-400"
-                  />
-                  <label className="text-gray-600 cursor-pointer">
-                    {amenity}
+          {/* Amenities */}
+          <div>
+            <p className="font-semibold text-gray-700 mb-3">Available Services</p>
+            <div className="flex flex-wrap gap-4 items-center">
+              {allAmenities.map((amenity) => {
+                const checked = selectedAmenities.includes(amenity);
+                return (
+                  <label
+                    key={amenity}
+                    className="inline-flex items-center space-x-2 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => onToggleAmenity(amenity)}
+                      className="h-4 w-4 text-blue-500 border-gray-300 rounded focus:ring-blue-400"
+                    />
+                    <span className="text-sm text-gray-600">{amenity}</span>
                   </label>
-                </motion.div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
+
         </motion.div>
 
+
         {/* Fleet Listing Section */}
-        <div className="w-full bg-white flex flex-col items-center p-4">
+        <div className="w-full bg-white flex flex-col items-center p-4 px-12">
           <div className="mb-10 w-full">
-            <h3 className="text-lg font-bold mb-2 flex">
+            <h3 className="text-lg font-bold  flex">
               Trip {segmentIndex + 1}: {searchData.segments[segmentIndex].from}
               ------
               <span className="inline-block mx-1">
@@ -570,6 +593,8 @@ const FilterAndFleetListing = ({ refreshKey }) => {
               ------
               {searchData.segments[segmentIndex].to}
             </h3>
+
+            <p className="text-neutral-800 text-xl mb-4">Recommending flights based on convenience and fare</p>
 
             {filteredData.length === 0 ? (
               // This is the "empty card" or message
@@ -584,11 +609,12 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                   key={flight.serialNumber}
                   filteredData={[flight]}
                   onSelectFleet={(selectedFleet) =>
-                    handleFleetSelection(segmentIndex, selectedFleet)
-                  }
+                    handleFleetSelection(segmentIndex, selectedFleet)}
                   selectedFleet={selectedFleets[segmentIndex]}
-                  tripType={searchData.tripType}
-                  segment={searchData.segments[segmentIndex]}
+                  onNextSegment={handleNextSegment}
+                  currentTripIndex={currentTripIndex}
+                  tripCount={tripCount}
+                  isMultiCity={isMultiCity}
                 />
               ))
             )}
