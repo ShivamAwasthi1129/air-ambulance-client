@@ -306,7 +306,7 @@ export const SearchBar = () => {
 
   // ================== RENDER ==================
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center w-full">
       <div className="w-full mb-8 sticky top-0 z-30" ref={containerRef}>
         {tripType === "multicity" && isMultiCityCollapsed ? (
           /* ---------------------- COLLAPSED MULTI-CITY ---------------------- */

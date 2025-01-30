@@ -4,30 +4,40 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { IoIosAirplane } from "react-icons/io";
 import FlightCard from "./FleetCard";
+import { BsExclamationTriangle } from "react-icons/bs";
+
 
 const FilterAndFleetListing = ({ refreshKey }) => {
   const [searchData, setSearchData] = useState(null);
-  const [fleetData, setFleetData] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
-  const [selectedTypes, setSelectedTypes] = useState([]);
-  const [priceRange, setPriceRange] = useState(0);
-  const [minPrice, setMinPrice] = useState(0);
-  const [maxPrice, setMaxPrice] = useState(0);
-
-  // NEW: Add 'selectedAmenities' to track user-selected amenities
-  const [selectedAmenities, setSelectedAmenities] = useState([]);
-
+  const [segmentStates, setSegmentStates] = useState([]);
+  const [currentTripIndex, setCurrentTripIndex] = useState(0);
   const [selectedFleets, setSelectedFleets] = useState([]);
 
-  // 1. Get 'searchData' from Session
+  // --------------------------------------------------
+  // 1. Load session data at top level (unconditional)
+  // --------------------------------------------------
   useEffect(() => {
     try {
       const sessionData = JSON.parse(sessionStorage.getItem("searchData"));
       if (sessionData) {
         setSearchData(sessionData);
-        setSelectedFleets(Array(sessionData?.segments?.length || 0).fill(null));
-      } else {
-        console.warn("No session data found in sessionStorage.");
+
+        // Initialize segment states
+        if (sessionData?.segments?.length) {
+          const initialSegmentStates = sessionData.segments.map(() => ({
+            fleetData: [],
+            filteredData: [],
+            selectedTypes: [],
+            selectedAmenities: [],
+            minPrice: 0,
+            maxPrice: 0,
+            priceRange: 0,
+          }));
+          setSegmentStates(initialSegmentStates);
+
+          // Prepare "selected fleets" array
+          setSelectedFleets(Array(sessionData.segments.length).fill(null));
+        }
       }
     } catch (error) {
       console.error("Error parsing session data:", error);
@@ -38,135 +48,110 @@ const FilterAndFleetListing = ({ refreshKey }) => {
     return str.replace(/\s*\(.*?\)\s*/, "").trim();
   }
 
-  // 2. Fetch data from API (and parse prices) once we have valid 'searchData'
+  // --------------------------------------------------
+  // 2. Fetch data for each segment (unconditional)
+  // --------------------------------------------------
   useEffect(() => {
     if (!searchData?.segments?.length) return;
 
-    const { from, to, departureDate, passengers } = searchData.segments[0];
-    const cleanedFrom = cleanAirportName(from);
-    const cleanedTo = cleanAirportName(to);
-    const url = `/api/search-flights?from=${cleanedFrom}&to=${cleanedTo}&departureDate=${departureDate}&travelerCount=${passengers}`;
+    const fetchSegmentFleets = async (segmentIndex) => {
+      const segment = searchData.segments[segmentIndex];
+      const cleanedFrom = cleanAirportName(segment.from);
+      const cleanedTo = cleanAirportName(segment.to);
+      const url = `/api/search-flights?from=${cleanedFrom}&to=${cleanedTo}&departureDate=${segment.departureDate}&travelerCount=${segment.passengers}`;
 
-    const fetchFleets = async () => {
       try {
         const response = await fetch(url);
         const data = await response.json();
         if (data?.finalFleet) {
-          // Parse numeric price just once
           const withParsedPrices = data.finalFleet.map((flight) => {
-            let numeric = 0;
-            if (flight.totalPrice) {
-              numeric = parseInt(flight.totalPrice.replace(/\D/g, ""), 10) || 0;
-            }
+            const numeric = parseInt(flight.totalPrice.replace(/\D/g, ""), 10) || 0;
             return { ...flight, _numericPrice: numeric };
           });
-
-          // Compute min & max
           const prices = withParsedPrices.map((f) => f._numericPrice);
           const minP = Math.min(...prices);
           const maxP = Math.max(...prices);
 
-          // Set state just once
-          setFleetData(withParsedPrices);
-          setMinPrice(minP);
-          setMaxPrice(maxP);
-          setPriceRange(maxP);
-          setFilteredData(withParsedPrices);
+          setSegmentStates((prev) => {
+            const newState = [...prev];
+            newState[segmentIndex] = {
+              ...newState[segmentIndex],
+              fleetData: withParsedPrices,
+              filteredData: withParsedPrices,
+              minPrice: minP,
+              maxPrice: maxP,
+              priceRange: maxP,
+            };
+            return newState;
+          });
         }
       } catch (error) {
-        console.error("Error fetching fleet data:", error);
+        console.error(`Error fetching data for segment ${segmentIndex}:`, error);
       }
     };
 
-    fetchFleets();
+    searchData.segments.forEach((_, i) => fetchSegmentFleets(i));
   }, [searchData]);
 
-  // 3. Re-filter whenever user moves slider, toggles flight types, or toggles amenities
-  useEffect(() => {
-    if (!fleetData.length) return;
+  // --------------------------------------------------
+  // 3. Filter logic for the current segment
+  // --------------------------------------------------
+  const handleFilterChange = (segmentIndex, newStates) => {
+    setSegmentStates((prev) => {
+      const updatedStates = [...prev];
+      const currentSegment = updatedStates[segmentIndex];
+      const { fleetData } = currentSegment;
 
-    const newFiltered = fleetData.filter((flight) => {
-      // Check Price
-      const withinPrice = flight._numericPrice <= priceRange;
+      const { selectedTypes, selectedAmenities, priceRange } = newStates;
 
-      // Check Flight Type
-      const matchesType =
-        selectedTypes.length === 0 ||
-        selectedTypes.includes(flight.fleetDetails?.flightType || "");
+      const newFiltered = fleetData.filter((flight) => {
+        const withinPrice = flight._numericPrice <= priceRange;
+        const matchesType =
+          selectedTypes.length === 0 ||
+          selectedTypes.includes(flight.fleetDetails?.flightType || "");
+        const hasAmenities =
+          selectedAmenities.length === 0 ||
+          selectedAmenities.every((am) => {
+            const val = flight.additionalAmenities?.[am]?.value || "not_available";
+            return val !== "not_available";
+          });
+        return withinPrice && matchesType && hasAmenities;
+      });
 
-      // NEW: Check Amenities
-      // If no amenities are selected, automatically pass. Otherwise, ensure
-      // *every* selected amenity is present and not "not_available".
-      const hasAmenities =
-        selectedAmenities.length === 0 ||
-        selectedAmenities.every((amenity) => {
-          const amenityValue =
-            flight.additionalAmenities?.[amenity]?.value || "not_available";
-          return amenityValue !== "not_available";
-        });
-
-      return withinPrice && matchesType && hasAmenities;
+      updatedStates[segmentIndex] = {
+        ...currentSegment,
+        ...newStates,
+        filteredData: newFiltered,
+      };
+      return updatedStates;
     });
+  };
 
-    setFilteredData(newFiltered);
-  }, [priceRange, selectedTypes, selectedAmenities, fleetData]);
-
-  // 4. All flight types
-  const allFlightTypes = useMemo(() => {
-    const types = fleetData
-      .map((f) => f.fleetDetails?.flightType)
-      .filter(Boolean);
-    return [...new Set(types)];
-  }, [fleetData]);
-
-  // NEW: Filter only available amenities
-  const allAmenities = useMemo(() => {
-    const amenitySet = new Set();
-    fleetData.forEach((flight) => {
-      if (flight.additionalAmenities) {
-        Object.entries(flight.additionalAmenities).forEach(([amenity, details]) => {
-          if (details?.value !== "not_available") {
-            amenitySet.add(amenity);
-          }
-        });
-      }
+  const handleClearFilters = (segmentIndex) => {
+    setSegmentStates((prev) => {
+      const updated = [...prev];
+      const segState = updated[segmentIndex];
+      updated[segmentIndex] = {
+        ...segState,
+        selectedTypes: [],
+        selectedAmenities: [],
+        priceRange: segState.maxPrice,
+        filteredData: segState.fleetData,
+      };
+      return updated;
     });
-    return [...amenitySet];
-  }, [fleetData]);
-
-
-  const handleClearFilters = () => {
-    setSelectedTypes([]);
-    setSelectedAmenities([]);
-    // If you want the slider to go back to its max value:
-    setPriceRange(maxPrice);
   };
 
-
-  // 5. Check/uncheck flight type
-  const handleTypeChange = (type) => {
-    setSelectedTypes((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
-    );
-  };
-
-  // NEW: Check/uncheck amenities
-  const handleAmenityChange = (amenity) => {
-    setSelectedAmenities((prevSelected) =>
-      prevSelected.includes(amenity)
-        ? prevSelected.filter((a) => a !== amenity)
-        : [...prevSelected, amenity]
-    );
-  };
-
-  // 6. When user selects a fleet for a specific segment
-  const handleFleetSelection = (index, flight) => {
-    const updatedFleets = [...selectedFleets];
-    updatedFleets[index] = flight;
-    setSelectedFleets(updatedFleets);
+  // --------------------------------------------------
+  // 4. Selecting Fleets
+  // --------------------------------------------------
+  const handleFleetSelection = (segmentIndex, flight) => {
+    const updated = [...selectedFleets];
+    updated[segmentIndex] = flight;
+    setSelectedFleets(updated);
 
     const updatedSearchData = { ...searchData };
-    updatedSearchData.segments[index].selectedFleet = {
+    updatedSearchData.segments[segmentIndex].selectedFleet = {
       name: flight?.fleetDetails?.registrationNo,
       model: flight?.fleetDetails?.flightType,
     };
@@ -174,59 +159,142 @@ const FilterAndFleetListing = ({ refreshKey }) => {
     sessionStorage.setItem("searchData", JSON.stringify(updatedSearchData));
   };
 
-  // 7. Navigate to the Enquiry page (or next step)
-  const navigateToEnquiryPage = () => {
-    console.log("Proceeding to enquiry with data:", searchData);
-    // add your routing logic
+  // Move to next segment
+  const handleNextSegment = () => {
+    setCurrentTripIndex((prev) => prev + 1);
   };
 
+  // NEW: Move to previous segment (Back button)
+  const handlePreviousSegment = () => {
+    setCurrentTripIndex((prev) => prev - 1);
+  };
+
+  const navigateToEnquiryPage = () => {
+    console.log("Proceeding to enquiry with data:", searchData);
+    // e.g. route to /finalEnquiry
+  };
+
+  // --------------------------------------------------
+  // 5. Precompute derived values (unconditional)
+  // --------------------------------------------------
+  const isMultiCity = searchData?.tripType === "multicity";
+  const tripCount = searchData?.segments?.length || 1;
+  const segmentIndex = isMultiCity ? currentTripIndex : 0;
+  const currentSegmentState = segmentStates[segmentIndex] || {};
+
+  const {
+    selectedTypes = [],
+    selectedAmenities = [],
+    minPrice = 0,
+    maxPrice = 0,
+    priceRange = 0,
+    fleetData = [],
+    filteredData = [],
+  } = currentSegmentState;
+
+  const allFlightTypes = useMemo(() => {
+    return [...new Set(fleetData.map((f) => f.fleetDetails?.flightType).filter(Boolean))];
+  }, [fleetData]);
+
+  const allAmenities = useMemo(() => {
+    const amenitySet = new Set();
+    fleetData.forEach((f) => {
+      if (f.additionalAmenities) {
+        Object.entries(f.additionalAmenities).forEach(([am, details]) => {
+          if (details?.value !== "not_available") {
+            amenitySet.add(am);
+          }
+        });
+      }
+    });
+    return [...amenitySet];
+  }, [fleetData]);
+
+  // Handlers for current segment
+  const onToggleType = (type) => {
+    const updated = selectedTypes.includes(type)
+      ? selectedTypes.filter((t) => t !== type)
+      : [...selectedTypes, type];
+    handleFilterChange(segmentIndex, {
+      selectedTypes: updated,
+      selectedAmenities,
+      priceRange,
+    });
+  };
+
+  const onToggleAmenity = (am) => {
+    const updated = selectedAmenities.includes(am)
+      ? selectedAmenities.filter((a) => a !== am)
+      : [...selectedAmenities, am];
+    handleFilterChange(segmentIndex, {
+      selectedTypes,
+      selectedAmenities: updated,
+      priceRange,
+    });
+  };
+
+  const onPriceChange = (val) => {
+    handleFilterChange(segmentIndex, {
+      selectedTypes,
+      selectedAmenities,
+      priceRange: Number(val),
+    });
+  };
+
+  // --------------------------------------------------
+  // 6. Return the appropriate UI
+  // --------------------------------------------------
+
+  // If no searchData yet, show a loading skeleton. The Hook order is preserved.
   if (!searchData) {
-    return <div className="p-4 space-y-6 animate-pulse w-full">
-      {/* Top Headings Row */}
-      <div className="flex flex-col md:flex-row justify-between space-y-2 md:space-y-0 md:items-center">
-        <div className="bg-gray-300 rounded h-6 w-48" />
-        <div className="bg-gray-300 rounded h-6 w-60" />
-        <div className="bg-gray-300 rounded h-8 w-32" />
-      </div>
-      <div className="bg-gray-300 rounded h-6 w-72" />
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="w-full md:w-1/4 space-y-4">
-          <div className="bg-gray-300 rounded h-6 w-32" />
-          <div className="bg-gray-300 rounded h-4 w-full" />
-          <div className="bg-gray-300 rounded h-4 w-3/4" />
-          <div className="bg-gray-300 rounded h-4 w-2/3" />
-          <div className="bg-gray-300 rounded h-4 w-3/4" />
-          <div className="bg-gray-300 rounded h-4 w-1/2" />
+    return (
+      <div className="p-4 space-y-6 animate-pulse w-full">
+        <div className="flex flex-col md:flex-row justify-between space-y-2 md:space-y-0 md:items-center">
+          <div className="bg-gray-300 rounded h-6 w-48" />
+          <div className="bg-gray-300 rounded h-6 w-60" />
+          <div className="bg-gray-300 rounded h-8 w-32" />
         </div>
-        <div className="flex-1 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="bg-gray-300 rounded h-20 w-32" />
-            <div className="flex-1 space-y-2 ml-4">
-              <div className="bg-gray-300 rounded h-4 w-1/2" />
-              <div className="bg-gray-300 rounded h-4 w-1/3" />
-              <div className="bg-gray-300 rounded h-4 w-1/4" />
+        <div className="bg-gray-300 rounded h-6 w-72" />
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="w-full md:w-1/4 space-y-4">
+            <div className="bg-gray-300 rounded h-6 w-32" />
+            <div className="bg-gray-300 rounded h-4 w-full" />
+            <div className="bg-gray-300 rounded h-4 w-3/4" />
+            <div className="bg-gray-300 rounded h-4 w-2/3" />
+            <div className="bg-gray-300 rounded h-4 w-3/4" />
+            <div className="bg-gray-300 rounded h-4 w-1/2" />
+          </div>
+          <div className="flex-1 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="bg-gray-300 rounded h-20 w-32" />
+              <div className="flex-1 space-y-2 ml-4">
+                <div className="bg-gray-300 rounded h-4 w-1/2" />
+                <div className="bg-gray-300 rounded h-4 w-1/3" />
+                <div className="bg-gray-300 rounded h-4 w-1/4" />
+              </div>
+              <div className="bg-gray-300 rounded h-6 w-16 ml-4" />
             </div>
-            <div className="bg-gray-300 rounded h-6 w-16 ml-4" />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <div className="bg-gray-300 rounded h-4 w-24" />
-            <div className="bg-gray-300 rounded h-4 w-32" />
-            <div className="bg-gray-300 rounded h-4 w-20" />
-            <div className="bg-gray-300 rounded h-4 w-28" />
-          </div>
-          <div className="flex gap-4">
-            <div className="bg-gray-300 rounded h-8 w-24" />
-            <div className="bg-gray-300 rounded h-8 w-32" />
+            <div className="flex flex-wrap gap-2">
+              <div className="bg-gray-300 rounded h-4 w-24" />
+              <div className="bg-gray-300 rounded h-4 w-32" />
+              <div className="bg-gray-300 rounded h-4 w-20" />
+              <div className="bg-gray-300 rounded h-4 w-28" />
+            </div>
+            <div className="flex gap-4">
+              <div className="bg-gray-300 rounded h-8 w-24" />
+              <div className="bg-gray-300 rounded h-8 w-32" />
+            </div>
           </div>
         </div>
       </div>
-    </div>;
+    );
   }
 
+  // Main UI
   return (
     <div className="relative w-full mx-auto flex flex-col items-start overflow-hidden shadow-lg">
       {/* Top Panel */}
-      <div className="w-full p-6 pt-2 bg-gray-50 border  shadow-lg ">
+      <div className="w-full p-6 pt-2 bg-gray-50 border shadow-lg">
         <h1 className="text-2xl font-bold text-center text-blue-700">
           Fleet Selection Panel
         </h1>
@@ -237,38 +305,39 @@ const FilterAndFleetListing = ({ refreshKey }) => {
             <h2 className="text-xl font-bold mb-4 text-gray-800">
               Selected Fleets
             </h2>
-            {selectedFleets.map((fleet, index) =>
+            {selectedFleets.map((fleet, idx) =>
               fleet ? (
                 <p
-                  key={index}
+                  key={idx}
                   className="text-sm text-gray-700 mb-2 border-l-4 border-blue-600 pl-2"
                 >
-                  Trip {index + 1}:{" "}
+                  Trip {idx + 1}:{" "}
                   <span className="font-medium">
-                    {fleet?.fleetDetails?.registrationNo}-{fleet?.fleetDetails?.selectedModel}
+                    {fleet?.fleetDetails?.registrationNo} - (
+                    {fleet?.fleetDetails?.flightType})
                   </span>
                 </p>
               ) : (
                 <p
-                  key={index}
+                  key={idx}
                   className="text-sm text-red-500 mb-2 border-l-4 border-red-500 pl-2"
                 >
-                  Trip {index + 1}:{" "}
+                  Trip {idx + 1}:{" "}
                   <span className="font-medium">No Fleet Selected</span>
                 </p>
               )
             )}
           </div>
 
-          {/* Fleet Selection Section */}
+          {/* Fleet Selection Summary / Buttons */}
           <div className="bg-white p-5 border border-blue-100 rounded-lg shadow-sm w-full ml-4">
-            {/* Oneway Trip */}
-            {searchData.tripType === "oneway" && (
+            {/* ONE-WAY */}
+            {!isMultiCity && (
               <div>
                 <h3 className="text-lg font-bold text-blue-600 mb-2">
                   Oneway Trip
                 </h3>
-                <div className="flex justify-between">
+                <div className="flex items-center justify-between">
                   <p className="text-sm text-gray-700 mb-2 flex items-center">
                     {searchData.segments[0]?.from} ------
                     <span className="inline-block mx-1">
@@ -278,10 +347,18 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                   </p>
 
                   <button
-                    onClick={() => handleFleetSelection(0, filteredData[0] || null)}
-                    disabled={!!selectedFleets[0] || !filteredData.length}
+                    onClick={() =>
+                      handleFleetSelection(
+                        0,
+                        segmentStates[0]?.filteredData?.[0] || null
+                      )
+                    }
+                    disabled={
+                      !!selectedFleets[0] ||
+                      segmentStates[0]?.filteredData?.length === 0
+                    }
                     className={`
-                      py-2 px-4 rounded-md shadow-md text-sm font-medium 
+                      py-2 px-4 rounded-md shadow-md text-sm font-medium
                       focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition-all
                       ${!!selectedFleets[0]
                         ? "bg-gray-400 text-white cursor-not-allowed"
@@ -291,79 +368,82 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                   >
                     {selectedFleets[0] ? "Fleet Selected" : "Select Fleet"}
                   </button>
+
                   {selectedFleets[0] && (
                     <Link href={"/finalEnquiry"}>
-                  <button
-                    onClick={navigateToEnquiryPage}
-                    className="bg-green-600 text-white py-2 px-4 rounded-md shadow-md 
-                      hover:bg-green-500 focus:outline-none focus:ring-2 
-                      focus:ring-green-400 focus:ring-offset-2 transition-all text-sm font-medium"
-                  >
-                    
-                    Proceed to Enquiry
-                    
-                  </button>
-                  </Link>
-                )}
+                      <button
+                        onClick={navigateToEnquiryPage}
+                        className="bg-green-600 text-white py-2 px-4 rounded-md shadow-md 
+                          hover:bg-green-500 focus:outline-none focus:ring-2 
+                          focus:ring-green-400 focus:ring-offset-2 transition-all text-sm font-medium ml-4"
+                      >
+                        Proceed to Enquiry
+                      </button>
+                    </Link>
+                  )}
                 </div>
-
-               
               </div>
             )}
 
-            {/* Multi City */}
-            {searchData.tripType === "multicity" && (
+            {/* MULTI-CITY */}
+            {isMultiCity && (
               <div>
                 <h3 className="text-lg font-bold text-blue-600 mb-2">
-                  Multicity Trip
+                  Multicity Trip - Step {currentTripIndex + 1} of {tripCount}
                 </h3>
-                {searchData.segments.map((segment, index) => (
-                  <div key={index} className="mb-5 flex justify-between">
-                    <p className="text-md text-gray-700 mb-2 flex items-center">
-                      <span className="font-medium">Trip {index + 1}:-</span>
-                      &nbsp;{segment.from} ------
-                      <span className="inline-block mx-1">
-                        <IoIosAirplane size={34} />
-                      </span>
-                      ----- {segment.to}
-                    </p>
-                    <button
-                      onClick={() =>
-                        handleFleetSelection(index, filteredData[0] || null)
-                      }
-                      disabled={!!selectedFleets[index] || !filteredData.length}
-                      className={`
-                        py-2 px-4 rounded-md shadow-md text-sm font-medium 
-                        focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition-all
-                        ${!!selectedFleets[index]
-                          ? "bg-gray-400 text-white cursor-not-allowed"
-                          : "bg-blue-600 hover:bg-blue-500 text-white"
-                        }
-                      `}
-                    >
-                      {selectedFleets[index] ? "Fleet Selected" : "Select Fleet"}
-                    </button>
-                  </div>
-                ))}
-                {selectedFleets.every((fleet) => fleet) && (
-                  <Link href={"/finalEnquiry"}>
+                <p className="text-sm text-gray-700 mb-2 flex items-center">
+                  {searchData.segments[currentTripIndex]?.from} ------
+                  <span className="inline-block mx-1">
+                    <IoIosAirplane size={34} />
+                  </span>
+                  ----- {searchData.segments[currentTripIndex]?.to}
+                </p>
+
+                {/* NEW: "Go Back" button, only if not on the first segment */}
+                {currentTripIndex > 0 && (
                   <button
-                    onClick={navigateToEnquiryPage}
-                    className="bg-green-600 text-white py-2 px-4 rounded-md shadow-md 
-                      hover:bg-green-500 focus:outline-none focus:ring-2 
-                      focus:ring-green-400 focus:ring-offset-2 transition-all text-sm font-medium "
+                    onClick={handlePreviousSegment}
+                    className="bg-gray-300 hover:bg-gray-400 text-black py-2 px-4 rounded-md shadow-md
+                               focus:outline-none focus:ring-2 focus:ring-blue-400
+                               focus:ring-offset-2 transition-all text-sm font-medium mr-3"
                   >
-                    Proceed to Enquiry
+                    Go Back
                   </button>
-                  </Link>
                 )}
+
+                {/* "Select Next Fleet" when fleet is chosen and not on last segment */}
+                {selectedFleets[currentTripIndex] && currentTripIndex < tripCount - 1 && (
+                  <button
+                    onClick={handleNextSegment}
+                    className="bg-blue-600 hover:bg-blue-500 text-white py-2 px-4 rounded-md shadow-md 
+                      focus:outline-none focus:ring-2 focus:ring-blue-400 
+                      focus:ring-offset-2 transition-all text-sm font-medium"
+                  >
+                    Select Next Fleet
+                  </button>
+                )}
+
+                {/* If on the last segment and a fleet is selected, "Proceed to Enquiry" */}
+                {currentTripIndex === tripCount - 1 &&
+                  selectedFleets[currentTripIndex] && (
+                    <Link href={"/finalEnquiry"}>
+                      <button
+                        onClick={navigateToEnquiryPage}
+                        className="bg-green-600 text-white py-2 px-4 rounded-md shadow-md 
+                          hover:bg-green-500 focus:outline-none focus:ring-2 
+                          focus:ring-green-400 focus:ring-offset-2 transition-all text-sm font-medium ml-2"
+                      >
+                        Proceed to Enquiry
+                      </button>
+                    </Link>
+                  )}
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Bottom Section: Filters + Fleet Listing */}
+      {/* Bottom Section: Filters + Fleet Listing (for current trip/segment) */}
       <div className="flex w-full">
         {/* Filter Section */}
         <motion.div
@@ -381,19 +461,18 @@ const FilterAndFleetListing = ({ refreshKey }) => {
               className="text-xl font-bold text-gray-700"
             >
               Filter Options
+              {isMultiCity && ` (Trip ${currentTripIndex + 1})`}
             </motion.h2>
 
-            {/* NEW Clear Button */}
             <button
-              onClick={handleClearFilters}
+              onClick={() => handleClearFilters(segmentIndex)}
               className="text-red-600 text-sm underline hover:text-red-800 transition-colors"
             >
               Clear Filters
             </button>
           </div>
 
-
-          {/* Dynamic Flight Type Checkboxes */}
+          {/* Flight Type Checkboxes */}
           <div className="space-y-4">
             {allFlightTypes.map((type) => {
               const count = fleetData.filter(
@@ -408,7 +487,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                   <input
                     type="checkbox"
                     checked={selectedTypes.includes(type)}
-                    onChange={() => handleTypeChange(type)}
+                    onChange={() => onToggleType(type)}
                     className="h-4 w-4 text-blue-500 border-gray-300 rounded focus:ring-blue-400"
                   />
                   <label className="text-gray-600 cursor-pointer">
@@ -437,7 +516,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                 min={minPrice}
                 max={maxPrice}
                 value={priceRange}
-                onChange={(e) => setPriceRange(Number(e.target.value))}
+                onChange={(e) => onPriceChange(e.target.value)}
                 className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
                 style={{
                   background: `linear-gradient(to right, #3b82f6 ${((priceRange - minPrice) / (maxPrice - minPrice)) * 100
@@ -446,7 +525,6 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                 }}
               />
             </div>
-
             {priceRange !== maxPrice && (
               <div className="mt-4 p-2 bg-blue-100 text-blue-800 rounded-lg shadow-md text-sm font-medium">
                 Selected Price: ${priceRange.toLocaleString()}
@@ -454,11 +532,11 @@ const FilterAndFleetListing = ({ refreshKey }) => {
             )}
           </div>
 
-          {/* NEW: Amenities Filter Section */}
+          {/* Amenities Filter */}
           <div className="mt-6">
             <h3 className="text-md font-semibold mb-2">Available Services</h3>
             {allAmenities.map((amenity) => {
-              const isChecked = selectedAmenities.includes(amenity);
+              const checked = selectedAmenities.includes(amenity);
               return (
                 <motion.div
                   key={amenity}
@@ -467,8 +545,8 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                 >
                   <input
                     type="checkbox"
-                    checked={isChecked}
-                    onChange={() => handleAmenityChange(amenity)}
+                    checked={checked}
+                    onChange={() => onToggleAmenity(amenity)}
                     className="h-4 w-4 text-blue-500 border-gray-300 rounded focus:ring-blue-400"
                   />
                   <label className="text-gray-600 cursor-pointer">
@@ -482,17 +560,26 @@ const FilterAndFleetListing = ({ refreshKey }) => {
 
         {/* Fleet Listing Section */}
         <div className="w-full bg-white flex flex-col items-center p-4">
-          {searchData.segments.map((segment, segmentIndex) => (
-            <div key={segmentIndex} className="mb-10 w-full">
-              <h3 className="text-lg font-bold mb-2 flex">
-                Trip {segmentIndex + 1}: {segment.from} ------
-                <span className="inline-block mx-1">
-                  <IoIosAirplane size={34} />
-                </span>
-                ----- {segment.to}
-              </h3>
+          <div className="mb-10 w-full">
+            <h3 className="text-lg font-bold mb-2 flex">
+              Trip {segmentIndex + 1}: {searchData.segments[segmentIndex].from}
+              ------
+              <span className="inline-block mx-1">
+                <IoIosAirplane size={34} />
+              </span>
+              ------
+              {searchData.segments[segmentIndex].to}
+            </h3>
 
-              {filteredData.map((flight) => (
+            {filteredData.length === 0 ? (
+              // This is the "empty card" or message
+              <div className="flex flex-col items-center justify-center mt-10">
+                <BsExclamationTriangle className="text-5xl text-gray-400 mb-2" />
+                <p className="text-lg text-gray-600">No fleets available</p>
+              </div>
+            ) : (
+              // Otherwise, render FlightCard for each fleet
+              filteredData.map((flight) => (
                 <FlightCard
                   key={flight.serialNumber}
                   filteredData={[flight]}
@@ -501,11 +588,12 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                   }
                   selectedFleet={selectedFleets[segmentIndex]}
                   tripType={searchData.tripType}
-                  segment={segment}
+                  segment={searchData.segments[segmentIndex]}
                 />
-              ))}
-            </div>
-          ))}
+              ))
+            )}
+
+          </div>
         </div>
       </div>
     </div>

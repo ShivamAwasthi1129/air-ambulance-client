@@ -7,11 +7,9 @@ const SearchList = () => {
     <div className='h-[150vh]'>
       {/* <Header /> */}
       {/* <div className='mt-20 flex items-center justify-center sticky top-20 z-20'> */}
-      <div className='flex items-center justify-center'>
+      <div className='flex items-center justify-center w-full'>
         <SearchBar />
       </div>
-
-     
     </div>
   )
 }
