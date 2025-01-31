@@ -152,8 +152,9 @@ const FilterAndFleetListing = ({ refreshKey }) => {
 
     const updatedSearchData = { ...searchData };
     updatedSearchData.segments[segmentIndex].selectedFleet = {
-      name: flight?.fleetDetails?.registrationNo,
-      model: flight?.fleetDetails?.flightType,
+      registrationNo: flight?.fleetDetails?.registrationNo,
+      type: flight?.fleetDetails?.flightType,
+      model: flight?.fleetDetails?.selectedModel,
     };
     setSearchData(updatedSearchData);
     sessionStorage.setItem("searchData", JSON.stringify(updatedSearchData));
@@ -248,76 +249,58 @@ const FilterAndFleetListing = ({ refreshKey }) => {
   if (!searchData) {
     return (
       <div className="p-4 space-y-6 animate-pulse w-full max-w-[100rem]">
-      {/* Top Bar */}
-      <div className="flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
-        {/* "Selected Fleets" skeleton */}
-        <div className="bg-gray-300 rounded h-6 w-48" />
-        {/* "Oneway Trip" skeleton */}
-        <div className="bg-gray-300 rounded h-6 w-60" />
-        {/* "Select Fleet" button skeleton */}
-        <div className="bg-gray-300 rounded h-8 w-32" />
-      </div>
-
-      {/* Trip Heading & Subheading */}
-      <div className="bg-gray-300 rounded h-6 w-3/4" />
-      <div className="bg-gray-300 rounded h-4 w-1/2" />
-
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Left Filter Panel */}
-        <div className="w-full md:w-1/4 space-y-4">
-          {/* "Filter Options for" heading */}
-          <div className="bg-gray-300 rounded h-6 w-36" />
-          {/* Sample filter items */}
-          <div className="bg-gray-300 rounded h-4 w-1/2" />
-          <div className="bg-gray-300 rounded h-4 w-3/4" />
-          <div className="bg-gray-300 rounded h-4 w-2/3" />
-          <div className="bg-gray-300 rounded h-4 w-3/4" />
-          <div className="bg-gray-300 rounded h-4 w-1/2" />
-          <div className="bg-gray-300 rounded h-4 w-3/4" />
-          <div className="bg-gray-300 rounded h-4 w-2/3" />
+        <div className="flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
+          <div className="bg-gray-300 rounded h-6 w-48" />
+          <div className="bg-gray-300 rounded h-6 w-60" />
+          <div className="bg-gray-300 rounded h-8 w-32" />
         </div>
+        <div className="bg-gray-300 rounded h-6 w-3/4" />
+        <div className="bg-gray-300 rounded h-4 w-1/2" />
 
-        {/* Right Flight Card Section */}
-        <div className="flex-1 space-y-4">
-          {/* "Trip 1: ..." heading skeleton */}
-          <div className="bg-gray-300 rounded h-6 w-1/2" />
-          {/* "Recommending flights..." subheading skeleton */}
-          <div className="bg-gray-300 rounded h-4 w-1/3" />
-
-          {/* Main flight card layout */}
-          <div className="flex flex-col lg:flex-row gap-4">
-            {/* Cockpit image area */}
-            <div className="bg-gray-300 rounded h-40 w-full lg:w-64" />
-
-            {/* Flight details info */}
-            <div className="flex-1 space-y-4">
-              <div className="bg-gray-300 rounded h-4 w-1/2" />
-              <div className="bg-gray-300 rounded h-4 w-1/4" />
-              {/* Price / Duration / etc. */}
-              <div className="bg-gray-300 rounded h-4 w-1/3" />
-              {/* Amenities row */}
-              <div className="flex flex-wrap gap-2">
-                <div className="bg-gray-300 rounded h-4 w-20" />
-                <div className="bg-gray-300 rounded h-4 w-24" />
-                <div className="bg-gray-300 rounded h-4 w-16" />
-                <div className="bg-gray-300 rounded h-4 w-28" />
-              </div>
-            </div>
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="w-full md:w-1/4 space-y-4">
+            <div className="bg-gray-300 rounded h-6 w-36" />
+            <div className="bg-gray-300 rounded h-4 w-1/2" />
+            <div className="bg-gray-300 rounded h-4 w-3/4" />
+            <div className="bg-gray-300 rounded h-4 w-2/3" />
+            <div className="bg-gray-300 rounded h-4 w-3/4" />
+            <div className="bg-gray-300 rounded h-4 w-1/2" />
+            <div className="bg-gray-300 rounded h-4 w-3/4" />
+            <div className="bg-gray-300 rounded h-4 w-2/3" />
           </div>
 
-          {/* "Select Flight" button skeleton */}
-          <div className="bg-gray-300 rounded h-8 w-28" />
+          {/* Right Flight Card Section */}
+          <div className="flex-1 space-y-4">
+            <div className="bg-gray-300 rounded h-6 w-1/2" />
+            <div className="bg-gray-300 rounded h-4 w-1/3" />
+            <div className="flex flex-col lg:flex-row gap-4">
+              <div className="bg-gray-300 rounded h-40 w-full lg:w-64" />
+              <div className="flex-1 space-y-4">
+                <div className="bg-gray-300 rounded h-4 w-1/2" />
+                <div className="bg-gray-300 rounded h-4 w-1/4" />
+                <div className="bg-gray-300 rounded h-4 w-1/3" />
+                <div className="flex flex-wrap gap-2">
+                  <div className="bg-gray-300 rounded h-4 w-20" />
+                  <div className="bg-gray-300 rounded h-4 w-24" />
+                  <div className="bg-gray-300 rounded h-4 w-16" />
+                  <div className="bg-gray-300 rounded h-4 w-28" />
+                </div>
+              </div>
+            </div>
+
+            {/* "Select Flight" button skeleton */}
+            <div className="bg-gray-300 rounded h-8 w-28" />
+          </div>
         </div>
       </div>
-    </div>
     );
   }
 
   // Main UI
   return (
-    <div className="relative w-full mx-auto flex flex-col items-start overflow-hidden shadow-lg max-w-[100rem]">
+    <div className="relative w-full mx-auto flex flex-col items-start overflow-hidden max-w-[100rem] px-6">
       {/* Top Panel */}
-      <div className="w-full p-6 pt-2 px-10">
+      <div className="w-full py-4 ">
         <h1 className="text-2xl font-bold text-center text-blue-700">
           Fleet Selection Panel
         </h1>
@@ -466,13 +449,13 @@ const FilterAndFleetListing = ({ refreshKey }) => {
       </div>
 
       {/* Bottom Section: Filters + Fleet Listing (for current trip/segment) */}
-      <div className="flex w-full">
+      <div className="flex w-full ">
         {/* Filter Section */}
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
-          className="w-[30%] p-6 bg-white shadow-lg rounded-r-md border-r border-gray-200 px-10"
+          className="w-[30%] p-6 bg-white  px-10 mr-4 border border-blue-100 rounded-xl"
         >
           {/* Heading row */}
           <div className="flex items-center justify-between mb-6 border-b pb-2">
@@ -482,7 +465,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
               transition={{ duration: 0.5 }}
               className="text-2xl font-bold text-gray-800"
             >
-              <p>Filter Options for</p>
+              <p>Filter Options </p>
               {isMultiCity && ` Trip ${currentTripIndex + 1}`}
             </motion.h2>
             <button
@@ -582,7 +565,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
 
 
         {/* Fleet Listing Section */}
-        <div className="w-full bg-white flex flex-col items-center p-4 px-12">
+        <div className="w-full bg-white flex flex-col items-center p-4 px-12 border border-blue-100 rounded-xl">
           <div className="mb-10 w-full">
             <h3 className="text-lg font-bold  flex">
               Trip {segmentIndex + 1}: {searchData.segments[segmentIndex].from}

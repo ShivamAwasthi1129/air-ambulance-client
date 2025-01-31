@@ -19,6 +19,7 @@ import {
 } from 'react-icons/md'
 import { BsFillLightningFill } from 'react-icons/bs'
 import { AiOutlineCheckCircle } from 'react-icons/ai' // Fallback or tick icon
+import Link from 'next/link'
 
 // 1) Currency data
 const currencyFlags = [
@@ -73,7 +74,7 @@ const amenityIcons = {
 }
 
 // Helper: chunk array
-function chunkArray (array, size) {
+function chunkArray(array, size) {
   const result = []
   for (let i = 0; i < array.length; i += size) {
     result.push(array.slice(i, i + size))
@@ -88,7 +89,8 @@ const FlightCard = ({
   onNextSegment,
   currentTripIndex,
   tripCount,
-  isMultiCity
+  isMultiCity,
+  readOnly = false // <-- default to false so existing code remains unchanged
 }) => {
   const [activeDetailsId, setActiveDetailsId] = useState(null)
   const [parsedData, setParsedData] = useState(null)
@@ -151,7 +153,7 @@ const FlightCard = ({
     }
 
     return (
-      <div className='relative w-full h-80 overflow-hidden rounded-2xl'>
+      <div className='relative w-full h-[22rem] overflow-hidden rounded-2xl'>
         <div
           className='flex transition-transform duration-700'
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
@@ -161,7 +163,7 @@ const FlightCard = ({
               key={i}
               src={imgSrc}
               alt={`Aircraft view ${i}`}
-              className=' h-80 object-cover flex-shrink-0'
+              className=' h-[22rem] object-cover flex-shrink-0'
             />
           ))}
         </div>
@@ -209,12 +211,59 @@ const FlightCard = ({
     exit: { x: 50, opacity: 0 }
   }
 
+  /**
+   * Parses a time string like "21:35" into { hours, minutes }.
+   */
+  function parseTimeString(timeStr) {
+    const [hhStr, mmStr] = timeStr.split(':')
+    const hours = Number(hhStr)
+    const minutes = Number(mmStr)
+    return { hours, minutes }
+  }
+
+  /**
+   * Parses a duration string like "9h 30m" or "2h" or "45m".
+   * Returns { hours, minutes }.
+   */
+  function parseDurationString(durationStr) {
+    // Initialize
+    let durationHours = 0
+    let durationMinutes = 0
+
+    // e.g. "(\d+)h" -> captures the number before "h"
+    const hoursMatch = durationStr.match(/(\d+)h/)
+    if (hoursMatch) {
+      durationHours = Number(hoursMatch[1])
+    }
+
+    // e.g. "(\d+)m" -> captures the number before "m"
+    const minutesMatch = durationStr.match(/(\d+)m/)
+    if (minutesMatch) {
+      durationMinutes = Number(minutesMatch[1])
+    }
+
+    return { hours: durationHours, minutes: durationMinutes }
+  }
+
+  function calculateArrivalTime(departureTimeStr, flightDurationStr) {
+    const { hours: depH, minutes: depM } = parseTimeString(departureTimeStr)
+    const { hours: durH, minutes: durM } =
+      parseDurationString(flightDurationStr)
+
+    let totalHours = depH + durH
+    let totalMinutes = depM + durM
+    totalHours += Math.floor(totalMinutes / 60)
+    totalMinutes = totalMinutes % 60
+    totalHours = totalHours % 24
+    const hh = String(totalHours).padStart(2, '0')
+    const mm = String(totalMinutes).padStart(2, '0')
+    return `${hh}:${mm}`
+  }
+
   return (
-    <div className='space-y-6 mb-11'>
+    <div className='space-y-6 mb-4'>
       {filteredData.map(flight => {
         const isOpen = activeDetailsId === flight.serialNumber
-
-        // free amenities
         const freeServicesAll = Object.entries(
           flight.additionalAmenities || {}
         ).filter(([, amenityData]) => amenityData.value === 'free')
@@ -227,8 +276,6 @@ const FlightCard = ({
           flight.additionalAmenities || {}
         )
         const chunkedAmenities = chunkArray(allAmenitiesEntries, 4)
-
-        // flightPrice is already in USD
         const flightPriceUSD = flight.totalPrice
           ? parseInt(flight.totalPrice.replace(/\D/g, ''), 10)
           : 0
@@ -245,14 +292,14 @@ const FlightCard = ({
               {/* "See flight Experience ->" */}
               <p
                 onClick={e => handleExperienceClick(flight.serialNumber, e)}
-                className='absolute bottom-2 left-2 text-white text-md bg-black bg-opacity-50 font-bold italic px-2 py-1 cursor-pointer rounded'
+                className='absolute bottom-2 left-2 text-white text-xl font-semibold italic px-2 py-1 cursor-pointer rounded'
               >
                 See Flight Experience -&gt;
               </p>
             </div>
 
             {/* RIGHT: flight details or amenities */}
-            <div className='w-full md:w-3/5 h-[80%] absolute right-10 rounded-xl bg-stone-50'>
+            <div className='w-full md:w-[65%]  absolute right-4 rounded-xl bg-stone-50 border border-stone-100'>
               <AnimatePresence mode='wait'>
                 {/* Collapsed Details */}
                 {!isOpen && (
@@ -348,14 +395,18 @@ const FlightCard = ({
 
                     {/* Flight Timings */}
                     <div className='flex items-center space-x-4 md:space-x-8 text-base text-gray-800 mt-2 mb-3'>
+                      {/* FROM side */}
                       <div>
                         <p className='font-semibold'>
-                          {parsedData?.segments?.[0]?.fromIATA || 'DEL'}
+                          {parsedData?.segments?.[currentTripIndex]?.fromIATA ||
+                            'DEL'}
                           {' - '}
-                          {parsedData?.segments?.[0]?.departureTime || '21:35'}
+                          {parsedData?.segments?.[currentTripIndex]
+                            ?.departureTime || '21:35'}
                         </p>
                         <p className='text-sm text-gray-500'>
-                          {parsedData?.segments?.[0]?.fromCity || 'New Delhi'}
+                          {parsedData?.segments?.[currentTripIndex]?.fromCity ||
+                            'New Delhi'}
                         </p>
                       </div>
 
@@ -364,24 +415,51 @@ const FlightCard = ({
                           ----{' '}
                           <span className='inline-block mx-1'>
                             <IoIosAirplane size={32} />
-                          </span>{' '}
+                          </span>
                           ----
                         </p>
                       </div>
 
+                      {/* TO side */}
                       <div>
-                        <p className='font-semibold'>
-                          {parsedData?.segments?.[0]?.toIATA || 'LHR'}{' '}
-                          {parsedData?.segments?.[0]?.arrivalTime || '06:35'}
-                        </p>
-                        <p className='text-sm text-gray-500'>
-                          {parsedData?.segments?.[0]?.toCity || 'Not found'}
-                        </p>
+                        {/* We'll calculate arrivalTime by adding flight.flightTime to the departureTime */}
+                        {(() => {
+                          const departureTime =
+                            parsedData?.segments?.[currentTripIndex]
+                              ?.departureTime || '21:35'
+
+                          // flightTime in your data is something like "9h 3m"
+                          const flightTime = flight.flightTime || '0h 0m'
+                          const arrivalTime = calculateArrivalTime(
+                            departureTime,
+                            flightTime
+                          )
+
+                          return (
+                            <>
+                              <p className='font-semibold'>
+                                {parsedData?.segments?.[currentTripIndex]
+                                  ?.toIATA || 'LHR'}
+                                {' - '}
+                                {arrivalTime}
+                              </p>
+                              <p className='text-sm text-gray-500'>
+                                {parsedData?.segments?.[currentTripIndex]
+                                  ?.toCity || 'Not found'}
+                              </p>
+                            </>
+                          )
+                        })()}
                       </div>
 
+                      {/* Flight Duration Display */}
                       <div className='flex items-center'>
                         <p className='text-sm text-gray-500 flex flex-col items-center'>
                           <span>Flight Duration</span>
+                          {/* 
+        Show flight.flightTime as is, or parse it. 
+        This is your original "9h 3m" text, or "n/a" if missing 
+      */}
                           <span>{flight.flightTime || 'n/a'}</span>
                         </p>
                       </div>
@@ -389,7 +467,7 @@ const FlightCard = ({
 
                     {/* Some free amenities */}
                     {freeServicesToShow.length > 0 ? (
-                      <div className='mb-3'>
+                      <div className='mb-2'>
                         <h4 className='text-base font-semibold mb-2'>
                           In-Flight Amenities
                         </h4>
@@ -415,8 +493,8 @@ const FlightCard = ({
                               const IconComponent = amenityIcons[
                                 amenityKey
                               ] || (
-                                <AiOutlineCheckCircle className='text-green-500 mr-2' />
-                              )
+                                  <AiOutlineCheckCircle className='text-green-500 mr-2' />
+                                )
                               return (
                                 <li
                                   key={amenityKey}
@@ -445,48 +523,53 @@ const FlightCard = ({
                     )}
 
                     {/* Actions */}
-                    <div className='flex items-center space-x-4 mb-1 justify-end'>
-                      <button
-                        onClick={() => onSelectFleet(flight)}
-                        className={`  ${
-                          selectedFleet?.serialNumber === flight.serialNumber
+                    {!readOnly && (
+                      <div className='flex items-center space-x-4 justify-end  mb-4'>
+                        <button
+                          onClick={() => onSelectFleet(flight)}
+                          className={`  ${selectedFleet?.serialNumber === flight.serialNumber
                             ? 'bg-red-500 focus:ring-2 focus:ring-red-300'
                             : 'bg-gradient-to-r from-green-500 to-green-700'
-                        } text-white text-base font-semibold px-4 py-2 rounded shadow-md focus:ring-2 focus:ring-green-300`}
-                      >
-                        {selectedFleet?.serialNumber === flight.serialNumber
-                          ? 'Fleet Selected'
-                          : 'Select Flight'}
-                      </button>
-                      {selectedFleet?.serialNumber === flight.serialNumber && (
-                        <>
-                          {isMultiCity ? (
-                            currentTripIndex < tripCount - 1 ? (
-                              <button
-                                onClick={onNextSegment}
-                                className='bg-blue-600 text-white px-4 py-2 rounded shadow-md'
-                              >
-                                Select Next Fleet
-                              </button>
+                            } text-white text-base font-semibold px-4 py-2 rounded shadow-md focus:ring-2 focus:ring-green-300`}
+                        >
+                          {selectedFleet?.serialNumber === flight.serialNumber
+                            ? 'Fleet Selected'
+                            : 'Select Flight'}
+                        </button>
+                        {selectedFleet?.serialNumber === flight.serialNumber && (
+                          <>
+                            {isMultiCity ? (
+                              currentTripIndex < tripCount - 1 ? (
+                                <button
+                                  onClick={onNextSegment}
+                                  className='bg-blue-600 text-white px-4 py-2 rounded shadow-md'
+                                >
+                                  Select Next Fleet
+                                </button>
+                              ) : (
+                                <Link href={"/finalEnquiry"}>
+                                  <button
+                                    onClick={() => { }}
+                                    className='bg-green-600 text-white px-4 py-2 rounded shadow-md'
+                                  >
+                                    Proceed to Enquiry
+                                  </button>
+                                </Link>
+                              )
                             ) : (
-                              <button
-                                onClick={() => {}}
-                                className='bg-green-600 text-white px-4 py-2 rounded shadow-md'
-                              >
-                                Proceed to Enquiry
-                              </button>
-                            )
-                          ) : (
-                            <button
-                              onClick={() => {}}
-                              className='bg-green-600 text-white px-4 py-2 rounded shadow-md'
-                            >
-                              Proceed to Enquiry
-                            </button>
-                          )}
-                        </>
-                      )}
-                    </div>
+                              <Link href={"/finalEnquiry"}>
+                                <button
+                                  onClick={() => { }}
+                                  className='bg-green-600 text-white px-4 py-2 rounded shadow-md'
+                                >
+                                  Proceed to Enquiry
+                                </button>
+                              </Link>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
                   </motion.div>
                 )}
 
@@ -623,11 +706,11 @@ const FlightCard = ({
                                   const IconComponent = amenityIcons[
                                     amenityKey
                                   ] || (
-                                    <AiOutlineCheckCircle
-                                      className='text-green-500'
-                                      size={20}
-                                    />
-                                  )
+                                      <AiOutlineCheckCircle
+                                        className='text-green-500'
+                                        size={20}
+                                      />
+                                    )
                                   return (
                                     <div
                                       key={amenityKey}
@@ -640,11 +723,10 @@ const FlightCard = ({
                                       <span
                                         className={`
                       text-sm font-semibold ml-2 px-2 py-1 rounded 
-                      ${
-                        amenityData.value === 'free'
-                          ? 'bg-green-100 text-green-600'
-                          : 'bg-red-100 text-red-600'
-                      }
+                      ${amenityData.value === 'free'
+                                            ? 'bg-green-100 text-green-600'
+                                            : 'bg-red-100 text-red-600'
+                                          }
                     `}
                                       >
                                         {amenityData.value === 'free'
@@ -700,11 +782,10 @@ const FlightCard = ({
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`py-2 px-4 text-sm font-semibold ${
-                    activeTab === tab
-                      ? 'text-blue-600 border-b-2 border-blue-600'
-                      : 'text-gray-500'
-                  }`}
+                  className={`py-2 px-4 text-sm font-semibold ${activeTab === tab
+                    ? 'text-blue-600 border-b-2 border-blue-600'
+                    : 'text-gray-500'
+                    }`}
                 >
                   {tab}
                 </button>
