@@ -6,6 +6,7 @@ import { BsExclamationTriangle } from "react-icons/bs";
 import FlightCard from "../components/FleetCard";
 import { Banner } from "../components/SearchBanner";
 import { Bottom } from "../components/Bottom";
+import { Header } from "../components/Header";
 
 // Remove parentheses from airport name
 function cleanAirportName(str) {
@@ -169,7 +170,7 @@ const FinalEnquiryPage = () => {
 
         {/* RIGHT COLUMN: JetSteals + Cost Details + Buttons */}
         <div className="w-[30%] hidden md:block">
-          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+          <div className="bg-white border-2 border-dashed border-gray-400 rounded-lg p-4 shadow-sm">
             {/* Dynamic trip info */}
             <h2 className="text-xl font-semibold mb-1">
               {fromOfFirstSegment} to {toOfLastSegment}
