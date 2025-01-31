@@ -96,7 +96,21 @@ const FinalEnquiryPage = () => {
   const subTotal = totalFlightCost + airportHandling;
   const gstAmount = Math.round(subTotal * 0.18); // 18% tax
   const estimatedCost = subTotal + gstAmount;
+  const message = `Hello, I would like to get a quotation for my flight trip. Please find the attached flight details.`;
+  const sendWhatsAppMessage = () => {
+    const phoneNumber = "+919999929832"; 
+    const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappURL, "_blank");
+  };
 
+  const sendEmailMessage = () => {
+    const emailAddress = "hexerve@gmail.com";
+    const subject = "Quotation Request";
+    const emailURL = `mailto:${emailAddress}?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(message)}`;
+    window.open(emailURL, "_blank");
+  }
   return (
     <div className="flex flex-col md:flex-row gap-6 p-4">
       {/* LEFT COLUMN: Flights */}
@@ -170,12 +184,12 @@ const FinalEnquiryPage = () => {
               <div className="text-xs font-normal">With Partial Payment</div>
             </button>
 
-            <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition-colors text-sm font-semibold">
+            <button onClick={sendWhatsAppMessage} className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition-colors text-sm font-semibold">
               SEND Enquiry
               <div className="text-xs font-normal">via Whatsapp</div>
             </button>
 
-            <button className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:opacity-90 text-white px-4 py-2 rounded transition-colors text-sm font-semibold">
+            <button onClick={sendEmailMessage} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:opacity-90 text-white px-4 py-2 rounded transition-colors text-sm font-semibold">
               SEND Enquiry
               <div className="text-xs font-normal">via Email</div>
             </button>
