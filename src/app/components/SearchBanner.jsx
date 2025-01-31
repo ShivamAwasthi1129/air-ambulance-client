@@ -2,7 +2,7 @@
 
 export const Banner = () => {
   return (
-    <div className="relative bg-darkblue h-[400px] w-[80%] mx-auto flex items-center justify-start overflow-hidden rounded-lg shadow-lg">
+    <div className="relative bg-darkblue h-[400px] w-[98%] flex items-center justify-start overflow-hidden shadow-lg mt-4">
       {/* Background Video */}
       <video
         src="https://s3.ap-south-1.amazonaws.com/aviation.hexerve/1650628-hd_1920_1080_25fps.mp4"
