@@ -30,13 +30,12 @@ export async function POST(req) {
         id: generateId(),
         via: "whatsapp",
         address: phoneNumber,
-        otp: otp,
+        otp,
         expiryTime: expiryTime,
       },
     };
 
     await ddbDocClient.send(new PutCommand(params));
-    const message = `Your OTP code is: ${otp}`;
 
     await fetch(
       `https://graph.facebook.com/v21.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
@@ -47,17 +46,43 @@ export async function POST(req) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to: phoneNumber,
-          // type: "text",
-          // text: { body: `Your OTP is: ${otp}. It expires in 5 minutes.` },
-          type: "template",
-          template: { name: "hello_world", language: { code: "en_US" } },
-        }),
+          "messaging_product": "whatsapp",
+          "to": `whatsapp:${phoneNumber}`,
+          "type": "template",
+          "template": {
+            "name": "otp_verify",
+            "language": {
+              "code": "en"
+            },
+            "components": [
+              {
+                "type": "body",
+                "parameters": [
+                  {
+                    "type": "text",
+                    "text": otp
+                  }
+                ]
+              },
+              {
+                "type": "button",
+                "sub_type": "url",
+                "index": "0",
+                "parameters": [
+                  {
+                    "type": "text",
+                    "text": "short-text"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+        ),
       }
     );
 
-    return NextResponse.json({ success: true, otp });
+    return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(
       { error: error.response?.data || error.message },
