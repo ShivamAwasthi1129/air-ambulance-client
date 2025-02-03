@@ -141,6 +141,18 @@ export default function UserInfoModal({ show, onClose }) {
     }
   };
 
+  const sendWhatsappOTP = async () => {
+    try{
+      await fetch("/api/otp/whatsapp", {
+        method: "POST",
+        body: JSON.stringify({phoneNumber: whatsapp})
+      })
+      setShowWhatsappOtp(true);
+    }catch(error){
+      alert('something went wrong');
+    }
+  }
+
   // ---------- 7) Early return if modal isn't visible ----------
   if (!show) return null;
 
@@ -292,7 +304,7 @@ export default function UserInfoModal({ show, onClose }) {
               </div>
               <button
                 type="button"
-                onClick={() => setShowWhatsappOtp(true)}
+                onClick={sendWhatsappOTP}
                 className="mb-1 inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
               >
                 Send OTP
@@ -302,18 +314,15 @@ export default function UserInfoModal({ show, onClose }) {
             {/* WhatsApp OTP Boxes */}
             {showWhatsappOtp && (
               <div className="flex space-x-2 mb-4">
-                {whatsappOtp.map((digit, idx) => (
                   <input
-                    key={idx}
                     type="text"
                     maxLength="1"
                     className="w-10 h-10 border border-gray-300 text-center rounded"
                     value={digit}
                     onChange={(e) =>
-                      handleWhatsappOtpChange(e.target.value, idx)
+                      handleWhatsappOtpChange(e.target.value)
                     }
                   />
-                ))}
               </div>
             )}
           </div>
