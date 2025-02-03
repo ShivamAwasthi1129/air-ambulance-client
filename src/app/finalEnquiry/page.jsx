@@ -3,10 +3,11 @@
 import React, { useEffect, useState } from "react";
 import { IoIosAirplane } from "react-icons/io";
 import { BsExclamationTriangle } from "react-icons/bs";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 import FlightCard from "../components/FleetCard";
 import { Banner } from "../components/SearchBanner";
 import { Bottom } from "../components/Bottom";
-import { Header } from "../components/Header";
 
 // Remove parentheses from airport name
 function cleanAirportName(str) {
@@ -43,9 +44,8 @@ const FinalEnquiryPage = () => {
 
         const url = `/api/search-flights?from=${encodeURIComponent(
           cleanedFrom
-        )}&to=${encodeURIComponent(cleanedTo)}&departureDate=${
-          segment.departureDate
-        }&travelerCount=${segment.passengers}`;
+        )}&to=${encodeURIComponent(cleanedTo)}&departureDate=${segment.departureDate
+          }&travelerCount=${segment.passengers}`;
 
         try {
           const res = await fetch(url);
@@ -82,6 +82,21 @@ const FinalEnquiryPage = () => {
       </div>
     );
   }
+
+
+  // Compute total flying time
+  const parseTimeToMinutes = (timeStr) => {
+    if (!timeStr) return 0;
+    const [hrs, mins] = timeStr.split("h ").map((t) => parseInt(t.replace("m", "")) || 0);
+    return hrs * 60 + mins;
+  };
+
+  const totalFlyingTimeMinutes = searchData.segments.reduce((total, segment) => {
+    return total + (segment.selectedFleet?.time ? parseTimeToMinutes(segment.selectedFleet.time) : 0);
+  }, 0);
+
+  const totalFlyingHours = `${Math.floor(totalFlyingTimeMinutes / 60)} Hrs ${totalFlyingTimeMinutes % 60
+    } Min`;
 
   // 3) Summation for cost details
   const allSelectedFlights = fetchedSegmentsData.flat();
@@ -128,6 +143,142 @@ const FinalEnquiryPage = () => {
   const passengerCount = firstSegment.passengers;
   const departureDate = firstSegment.departureDate;
 
+  // PDF Download Function (Proforma Invoice)
+  const generatePDF = () => {
+    const doc = new jsPDF();
+
+    // Set default font
+    doc.setFont("helvetica");
+
+    // === Title Section ===
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("Charter Flight Aviations", 14, 20);
+
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      "S-3 LEVEL, BLOCK E, INTERNATIONAL TRADE TOWER, NEHRU PLACE, South Delhi, Delhi, 110019",
+      14,
+      28
+    );
+    doc.text("Phone: +91-11-40845858 | Email: info@charterflightaviations.in", 14, 36);
+
+    // Greeting
+    doc.text("Dear Sir/Madam,", 14, 44);
+    doc.text(
+      "We are Pleased to offer to you the Aircraft. The commercials for the same will be as follows:",
+      14,
+      49
+    );
+
+    // === Flight Details Section ===
+    // Draw the header text first
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Flight Details", 14, 55);
+
+    // Then, draw the table below the header text
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.autoTable({
+      startY: 60, // Changed from 55 to 60 so that the header text isn’t overlapped
+      head: [["Date", "From", "To", "ETD", "Approx. Fly Time", "Pax", "Fleet Type"]],
+      body: searchData.segments.map((segment) => [
+        segment.departureDate,
+        segment.from,
+        segment.to,
+        segment.departureTime,
+        segment.selectedFleet?.time || "N/A",
+        segment.passengers,
+        segment.selectedFleet?.model || "Unknown",
+      ]),
+      theme: "grid", // Grid lines for better readability
+      headStyles: { fillColor: [22, 160, 133] }, // Green header
+      alternateRowStyles: { fillColor: [245, 245, 245] }, // Alternate row colors
+    });
+
+    // === Total Flying Hours ===
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text(
+      `Total Flying Hours: ${totalFlyingHours}`,
+      14,
+      doc.lastAutoTable.finalY + 10
+    );
+
+    // === Cost Breakdown Section ===
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Cost Breakdown", 14, doc.lastAutoTable.finalY + 20);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.autoTable({
+      startY: doc.lastAutoTable.finalY + 25,
+      head: [["Description", "Amount (₹)"]],
+      body: [
+        ["Total Flying Cost", totalFlightCost.toLocaleString()],
+        ["Total Handling Cost", airportHandling.toLocaleString()],
+        ["Subtotal", subTotal.toLocaleString()],
+        ["GST @ 18%", gstAmount.toLocaleString()],
+        ["All Inclusive Charter Package (with GST)", estimatedCost.toLocaleString()],
+      ],
+      theme: "grid",
+      headStyles: { fillColor: [22, 160, 133] },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+    });
+
+    // === Notes Section ===
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "italic");
+    const notesText =
+      "Note: Please Note :1. All quotations/options provided above are subject to all necessary permission and aircraft availability at the time of charter confirmation & as per the COVID protocol 2. Any miscellaneous charges including watch hour extensions (if required) will be charged on actuals 3. Timings to be confirmed on the basis of NOTAM and watch hours at respective Airports.4. If at Day/Night Halt Parking Is Unavailable Due to any reason, The Aircraft/Helicopter Shall Be Positioned And Parked To Nearest Airport and all associated charges will be charged Extra";
+
+    // Split notes into multiple lines to avoid overflow
+    const splitNotes = doc.splitTextToSize(notesText, 180); // 180 is the max width
+    doc.text(splitNotes, 14, doc.lastAutoTable.finalY + 15);
+
+    // === Terms & Conditions Section (on a new page) ===
+    doc.addPage();
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Terms & Conditions", 14, 20);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    const termsText = `1. This is only a Quotation. The Charter will be confirmed only after receipt of 100% payment in advance.
+  2. Additional sectors required after start of the flight itinerary will be on the sole discretion of Charter Flight Aviations Pvt. Ltd.
+  3. The flight duty time and flight time will be governed by DGCA – CAR – 7 – J III & IV dated 23.03.2021 effective from 30.09.2022.
+  4. Minimum booking value for a charter would be 2 Hrs of flying per booking per day.
+  5. The Flying Hrs. mentioned in the quotation is only indicative since...`;
+
+    const termsLines = doc.splitTextToSize(termsText, 180);
+    // Create a borderless table for better formatting of the terms text
+    doc.autoTable({
+      startY: 30,
+      body: termsLines.map((line) => [line]),
+      theme: "plain",
+      styles: {
+        fontSize: 9,
+        cellPadding: 2,
+        lineColor: [255, 255, 255], // Invisible borders
+      },
+      columnStyles: {
+        0: { cellWidth: 180 },
+      },
+      margin: { left: 14 },
+    });
+
+    // === Footer ===
+    const finalY = doc.lastAutoTable.finalY + 10;
+    doc.setFont("helvetica", "bold");
+    doc.text("For Charter Flight Aviations Pvt. Ltd.", 14, finalY);
+    doc.text("For Client", 14, finalY + 10);
+
+    // Save the PDF
+    doc.save("Proforma_Invoice.pdf");
+  };
   return (
     <div className="flex flex-col items-center">
       <Banner />
@@ -244,9 +395,7 @@ const FinalEnquiryPage = () => {
             {/* Existing "Download Proforma Invoice" button */}
             <button
               className="border border-orange-400 text-orange-500 px-4 py-2 rounded-md hover:bg-orange-100 transition-colors w-full text-center"
-              onClick={() => {
-                alert("Downloading Proforma Invoice...");
-              }}
+              onClick={generatePDF}
             >
               Download Proforma Invoice
             </button>

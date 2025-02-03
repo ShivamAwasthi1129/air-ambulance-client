@@ -13,10 +13,6 @@ const FilterAndFleetListing = ({ refreshKey }) => {
   const [currentTripIndex, setCurrentTripIndex] = useState(0);
   const [selectedFleets, setSelectedFleets] = useState([]);
 
-
-
-
-
   // --------------------------------------------------
   // 1. Load session data at top level (unconditional)
   // --------------------------------------------------
@@ -161,6 +157,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
       registrationNo: flight?.fleetDetails?.registrationNo,
       type: flight?.fleetDetails?.flightType,
       model: flight?.fleetDetails?.selectedModel,
+      time: flight?.flightTime,
     };
     setSearchData(updatedSearchData);
     sessionStorage.setItem("searchData", JSON.stringify(updatedSearchData));

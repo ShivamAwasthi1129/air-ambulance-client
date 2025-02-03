@@ -456,10 +456,6 @@ const FlightCard = ({
                       <div className='flex items-center'>
                         <p className='text-sm text-gray-500 flex flex-col items-center'>
                           <span>Flight Duration</span>
-                          {/* 
-        Show flight.flightTime as is, or parse it. 
-        This is your original "9h 3m" text, or "n/a" if missing 
-      */}
                           <span>{flight.flightTime || 'n/a'}</span>
                         </p>
                       </div>
