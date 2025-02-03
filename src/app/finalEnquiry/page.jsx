@@ -283,7 +283,8 @@ const FinalEnquiryPage = () => {
     <div className="flex flex-col items-center">
       <Banner />
 
-      <div className="flex flex-col md:flex-row justify-center gap-6 p-4">
+      <div className="flex flex-col md:flex-row justify-center gap-6 p-4"> 
+        
         {/* LEFT COLUMN: Flights */}
         <div className="w-[60%] md:w-[65rem] flex flex-col space-y-4">
           {searchData.segments.map((segment, segmentIndex) => {
