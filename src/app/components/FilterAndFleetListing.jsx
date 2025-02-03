@@ -5,6 +5,9 @@ import { motion } from "framer-motion";
 import { IoIosAirplane } from "react-icons/io";
 import FlightCard from "./FleetCard";
 import { BsExclamationTriangle } from "react-icons/bs";
+import Image from "next/image";
+import {loadingGif} from "../../airplane-12211.gif"
+
 
 
 const FilterAndFleetListing = ({ refreshKey }) => {
@@ -12,6 +15,10 @@ const FilterAndFleetListing = ({ refreshKey }) => {
   const [segmentStates, setSegmentStates] = useState([]);
   const [currentTripIndex, setCurrentTripIndex] = useState(0);
   const [selectedFleets, setSelectedFleets] = useState([]);
+
+
+
+  
 
   // --------------------------------------------------
   // 1. Load session data at top level (unconditional)
@@ -32,6 +39,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
             minPrice: 0,
             maxPrice: 0,
             priceRange: 0,
+            loading: true,
           }));
           setSegmentStates(initialSegmentStates);
 
@@ -81,6 +89,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
               minPrice: minP,
               maxPrice: maxP,
               priceRange: maxP,
+              loading: false,
             };
             return newState;
           });
@@ -242,13 +251,29 @@ const FilterAndFleetListing = ({ refreshKey }) => {
     });
   };
 
-  // --------------------------------------------------
-  // 6. Returning the appropriate UI
-  // --------------------------------------------------
   // If no searchData yet, show a loading skeleton. The Hook order is preserved.
   if (!searchData) {
     return (
-      <div className="p-4 space-y-6 animate-pulse w-full max-w-[100rem]">
+      <div className="p-4 space-y-6 w-full max-w-[100rem] h-[30rem] flex flex-col justify-center items-center">
+        <p className="text-3xl text-gray-700">
+          Register yourself and start search
+        </p>
+        <Image
+          src="https://cdn.pixabay.com/animation/2024/04/21/07/07/07-07-59-513_512.gif"
+          alt="Loading..."
+          width={600}  
+          height={100} 
+        />
+        
+      </div>
+    );
+  }
+  
+const isLoadingSegment = currentSegmentState?.loading;
+
+if (isLoadingSegment) {
+  return (
+    <div className="p-4 space-y-6 animate-pulse w-full max-w-[100rem]">
         <div className="flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
           <div className="bg-gray-300 rounded h-6 w-48" />
           <div className="bg-gray-300 rounded h-6 w-60" />
@@ -293,8 +318,8 @@ const FilterAndFleetListing = ({ refreshKey }) => {
           </div>
         </div>
       </div>
-    );
-  }
+  );
+}
 
   // Main UI
   return (
