@@ -117,8 +117,9 @@ export const GET = async (req) => {
     if (result.Items[0].otp != otp) {
       return NextResponse.json({ message: "Invalid OTP" }, { status: 400 });
     }
-
-    if (result.Items.expiryTime < Math.floor(Date.now() / 1000)) {
+    const expiryTime = result.Items[0].expiryTime;
+    const currentTime = Math.floor(Date.now() / 1000) + OTP_EXPIRY_TIME;
+    if (expiryTime < currentTime) {
       return NextResponse.json({ message: "OTP expired" }, { status: 400 });
     }
 
