@@ -6,9 +6,6 @@ import { IoIosAirplane } from "react-icons/io";
 import FlightCard from "./FleetCard";
 import { BsExclamationTriangle } from "react-icons/bs";
 import Image from "next/image";
-import {loadingGif} from "../../airplane-12211.gif"
-
-
 
 const FilterAndFleetListing = ({ refreshKey }) => {
   const [searchData, setSearchData] = useState(null);
@@ -18,7 +15,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
 
 
 
-  
+
 
   // --------------------------------------------------
   // 1. Load session data at top level (unconditional)
@@ -261,19 +258,18 @@ const FilterAndFleetListing = ({ refreshKey }) => {
         <Image
           src="https://cdn.pixabay.com/animation/2024/04/21/07/07/07-07-59-513_512.gif"
           alt="Loading..."
-          width={600}  
-          height={100} 
+          width={600}
+          height={100}
         />
-        
       </div>
     );
   }
-  
-const isLoadingSegment = currentSegmentState?.loading;
 
-if (isLoadingSegment) {
-  return (
-    <div className="p-4 space-y-6 animate-pulse w-full max-w-[100rem]">
+  const isLoadingSegment = currentSegmentState?.loading;
+
+  if (isLoadingSegment) {
+    return (
+      <div className="p-4 space-y-6 animate-pulse w-full max-w-[100rem]">
         <div className="flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
           <div className="bg-gray-300 rounded h-6 w-48" />
           <div className="bg-gray-300 rounded h-6 w-60" />
@@ -318,8 +314,8 @@ if (isLoadingSegment) {
           </div>
         </div>
       </div>
-  );
-}
+    );
+  }
 
   // Main UI
   return (

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
+import Link from "next/link";
 
 export default function UserInfoModal({ show, onClose }) {
   // Slides for the left-side carousel
@@ -330,30 +331,29 @@ export default function UserInfoModal({ show, onClose }) {
               />
               <label htmlFor="termsCheckbox" className="text-sm text-gray-700">
                 By proceeding, you agree to{" "}
-                <a href="#" className="text-blue-600 hover:underline">
+                <Link href={"/termsAndCondition"} className="text-blue-600 hover:underline">
                   Air aviations
-                </a>
+                </Link>
                 ’s{" "}
-                <a href="#" className="text-blue-600 hover:underline">
+                <Link href={"/termsAndCondition"} className="text-blue-600 hover:underline">
                   Privacy Policy
-                </a>
+                </Link>
                 ,{" "}
-                <a href="#" className="text-blue-600 hover:underline">
+                <Link href={"/termsAndCondition"} className="text-blue-600 hover:underline">
                   User Agreement
-                </a>{" "}
+                </Link>
                 and{" "}
-                <a href="#" className="text-blue-600 hover:underline">
-                  T&Cs
-                </a>
+                <Link href={"/termsAndCondition"} className="text-blue-600 hover:underline">
+                  T&Cs{" "}
+                </Link>
               </label>
             </div>
 
             <button
               onClick={handleContinue}
               disabled={!isFormValid}
-              className={`w-full px-4 py-2 text-white font-semibold rounded ${
-                isFormValid ? "bg-green-500 hover:bg-green-600" : "bg-gray-300"
-              }`}
+              className={`w-full px-4 py-2 text-white font-semibold rounded ${isFormValid ? "bg-green-500 hover:bg-green-600" : "bg-gray-300"
+                }`}
             >
               Continue
             </button>
