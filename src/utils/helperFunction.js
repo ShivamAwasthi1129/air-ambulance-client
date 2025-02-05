@@ -1,4 +1,5 @@
 import Airports from "@/app/models/Airports";
+import { connectToDatabase } from "@/config/mongo";
 
 // Haversine Formula to calculate distance
 export function haversine(lat1, lon1, lat2, lon2) {
@@ -21,15 +22,15 @@ export function haversine(lat1, lon1, lat2, lon2) {
 
 export async function searchStation(query) {
   try {
-    const results = await Airports.find({
-      "name": {
-        $regex: new RegExp(`^${query.trim()}$`, "i"),
-      },
-    });
+    await connectToDatabase();
+    const results = await Airports.find(
+      { $text: { $search: query } }, // Full-text search
+      { score: { $meta: "textScore" } } // Get search relevance score
+    ).sort({ score: { $meta: "textScore" } }); // Sort by relevance
 
     return results;
-  } catch (e) {
-    console.error("Error searching for station:", e.message);
+  } catch (error) {
+    console.error("Error searching airports:", error);
     return [];
   }
 }
