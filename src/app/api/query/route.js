@@ -1,46 +1,32 @@
 import { NextResponse } from "next/server";
-import { ddbDocClient } from "@/config/docClient";
-import { PutCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { connectToDatabase } from "@/config/mongo";
+import UserQuery from "@/app/models/UserQuery";
 import sendMail from "@/config/nodeMailer";
 
 export const POST = async (req) => {
   try {
+    await connectToDatabase();
+
     const { segments, userInfo, tripType } = await req.json();
-    const {
-      name,
-      email,
-      phone,
-      ip,
-      city,
-      region,
-      country,
-      loc,
-      postal,
-      timezone,
-    } = userInfo;
+    const { name, email, phone, ip, city, region, country, loc, postal, timezone } = userInfo;
 
-    const params = {
-      TableName: "AIR_USER_QUERY",
-      Item: {
-        id: "ID_" + Math.random().toString(36).substr(2, 9),
-        userInfo: {
-          email,
-          name,
-          phone,
-          ip,
-          city,
-          region,
-          country,
-          loc,
-          postal,
-        },
-        tripType,
-        segments,
-        timestamp: new Date().toISOString(),
+    const newUserQuery = new UserQuery({
+      userInfo: {
+        email,
+        name,
+        phone,
+        ip,
+        city,
+        region,
+        country,
+        loc,
+        postal
       },
-    };
+      tripType,
+      segments
+    });
 
-    await ddbDocClient.send(new PutCommand(params));
+    await newUserQuery.save();
 
     const html = `<!DOCTYPE html>
 <html>
@@ -113,7 +99,7 @@ export const POST = async (req) => {
             <p><strong>Departure Time:</strong> ${segment.departureTime}</p>
             <p><strong>Passengers:</strong> ${segment.passengers}</p>
         </div>`
-        )}
+        ).join("")}
     </div>
 
     <div class="footer">
@@ -130,25 +116,23 @@ export const POST = async (req) => {
     return NextResponse.json({ message: "User query submitted successfully" });
   } catch (error) {
     console.error("Error creating record:", error);
-    return NextResponse.json({ error }, { status: 500 });
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 };
 
 export const GET = async (req) => {
-  try{
-    const params = {
-      TableName: "AIR_USER_QUERY",
-    };
+  try {
+    await connectDB();
 
-    const result = await ddbDocClient.send(new ScanCommand(params));
+    const userQueries = await UserQuery.find();
 
-    if (!result.Items) {
-      return NextResponse.status(404).json({ message: "Record not found" });
+    if (!userQueries.length) {
+      return NextResponse.json({ message: "No records found" }, { status: 404 });
     }
 
-    return NextResponse.json(result.Items);
-  }catch(err){
-    console.error("Error retrieving records:", err);
-    return NextResponse.json({ error }, { status: 500 });
+    return NextResponse.json(userQueries);
+  } catch (error) {
+    console.error("Error retrieving records:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
-}
+};
