@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { ddbDocClient } from "@/config/docClient";
-import { PutCommand } from "@aws-sdk/lib-dynamodb";
+import { PutCommand, QueryCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
 
 const OTP_EXPIRY_TIME = process.env.OTP_EXPIRY_TIME || 300; // 5 minutes
 
@@ -30,13 +30,12 @@ export async function POST(req) {
         id: generateId(),
         via: "whatsapp",
         address: phoneNumber,
-        otp: otp,
+        otp,
         expiryTime: expiryTime,
       },
     };
 
     await ddbDocClient.send(new PutCommand(params));
-    const message = `Your OTP code is: ${otp}`;
 
     await fetch(
       `https://graph.facebook.com/v21.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
@@ -48,11 +47,36 @@ export async function POST(req) {
         },
         body: JSON.stringify({
           messaging_product: "whatsapp",
-          to: phoneNumber,
-          // type: "text",
-          // text: { body: `Your OTP is: ${otp}. It expires in 5 minutes.` },
+          to: `whatsapp:${phoneNumber}`,
           type: "template",
-          template: { name: "hello_world", language: { code: "en_US" } },
+          template: {
+            name: "otp_verify",
+            language: {
+              code: "en",
+            },
+            components: [
+              {
+                type: "body",
+                parameters: [
+                  {
+                    type: "text",
+                    text: otp,
+                  },
+                ],
+              },
+              {
+                type: "button",
+                sub_type: "url",
+                index: "0",
+                parameters: [
+                  {
+                    type: "text",
+                    text: "short-text",
+                  },
+                ],
+              },
+            ],
+          },
         }),
       }
     );
@@ -65,3 +89,48 @@ export async function POST(req) {
     );
   }
 }
+
+export const GET = async (req) => {
+  try {
+    const { searchParams } = new URL(req.url);
+    const phoneNumber = searchParams.get("phoneNumber");
+    const otp = searchParams.get("otp");
+
+    if (!phoneNumber || !otp) {
+      return NextResponse.json(
+        { error: "Phone number and OTP are required" },
+        { status: 400 }
+      );
+    }
+    const params = {
+      TableName: "OTPTable",
+      Key: {
+        phoneNumber: phoneNumber,
+      },
+    };
+
+    const result = await ddbDocClient.send(new ScanCommand(params));
+    if (!result.Items) {
+      return NextResponse.json({ message: "OTP not found" }, { status: 400 });
+    }
+
+    if (result.Items[0].otp != otp) {
+      return NextResponse.json({ message: "Invalid OTP" }, { status: 400 });
+    }
+    const expiryTime = result.Items[0].expiryTime;
+    const currentTime = Math.floor(Date.now() / 1000) + OTP_EXPIRY_TIME;
+    if (expiryTime < currentTime) {
+      return NextResponse.json({ message: "OTP expired" }, { status: 400 });
+    }
+
+    return NextResponse.json(
+      { message: "OTP verified successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    return NextResponse.json(
+      { error: error.response?.data || error.message },
+      { status: 500 }
+    );
+  }
+};
