@@ -3,10 +3,10 @@ import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import DeleteIcon from "@mui/icons-material/Delete";
-
 import FilterAndFleetListing from "../components/FilterAndFleetListing";
 import BannerSection from "./Banner";
 import UserInfoModal from "../components/UserInfoModal";
+
 
 export const SearchBar = () => {
   // State for airport search
@@ -115,6 +115,10 @@ export const SearchBar = () => {
     }
     fetchAirports();
   }, [searchQuery]);
+
+
+  
+  
 
   // ================== HANDLERS ==================
   // A) Trip Type

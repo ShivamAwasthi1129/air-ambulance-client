@@ -45,33 +45,14 @@ export default function UserInfoModal({ show, onClose }) {
   // ---------- 1) Form States ----------
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [whatsapp, setWhatsapp] = useState(""); // using 'whatsapp' as phone field
-
-  // Show/hide OTP sections
-  const [showEmailOtp, setShowEmailOtp] = useState(false);
-  const [showWhatsappOtp, setShowWhatsappOtp] = useState(false);
-
-  // OTP digits
-  const [emailOtp, setEmailOtp] = useState(new Array(6).fill(""));
-  const [whatsappOtp, setWhatsappOtp] = useState(new Array(6).fill(""));
-
-  // ---------- 2) OTP completion checks ----------
-  const isEmailOtpComplete = emailOtp.every((digit) => digit !== "");
-  const isWhatsappOtpComplete = whatsappOtp.every((digit) => digit !== "");
-  const isAnyOtpComplete = isEmailOtpComplete || isWhatsappOtpComplete;
-
-  // ---------- 3) Terms Checkbox ----------
+  const [whatsapp, setWhatsapp] = useState(""); 
   const [agreedToTerms, setAgreedToTerms] = useState(false);
-
-  // ---------- 4) Form validation ----------
   const isFormValid =
     fullName.trim() !== "" &&
     email.trim() !== "" &&
     whatsapp.trim() !== "" &&
-    isAnyOtpComplete &&
     agreedToTerms;
 
-  // ---------- 5) Load existing user info on mount ----------
   useEffect(() => {
     const savedData = sessionStorage.getItem("searchData");
     if (savedData) {
@@ -88,7 +69,6 @@ export default function UserInfoModal({ show, onClose }) {
     }
   }, []);
 
-  // ---------- Carousel Handlers ----------
   const handlePrevSlide = () => {
     setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
   };
@@ -96,19 +76,6 @@ export default function UserInfoModal({ show, onClose }) {
     setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
   };
 
-  // ---------- OTP Handlers ----------
-  const handleEmailOtpChange = (value, idx) => {
-    const updated = [...emailOtp];
-    updated[idx] = value.slice(-1);
-    setEmailOtp(updated);
-  };
-  const handleWhatsappOtpChange = (value, idx) => {
-    const updated = [...whatsappOtp];
-    updated[idx] = value.slice(-1);
-    setWhatsappOtp(updated);
-  };
-
-  // ---------- 6) Continue: fetch IP, store user info, close ----------
   const handleContinue = async () => {
     if (!isFormValid) return;
 
@@ -141,7 +108,7 @@ export default function UserInfoModal({ show, onClose }) {
     }
   };
 
-  // ---------- 7) Early return if modal isn't visible ----------
+  // ---------- 6) Early return if modal isn't visible ----------
   if (!show) return null;
 
   return (
@@ -227,7 +194,7 @@ export default function UserInfoModal({ show, onClose }) {
               />
             </div>
 
-            {/* Email + Send OTP */}
+            {/* Email with OTP Button */}
             <div className="mb-4 flex items-end space-x-2">
               <div className="flex-1">
                 <label
@@ -248,30 +215,14 @@ export default function UserInfoModal({ show, onClose }) {
               </div>
               <button
                 type="button"
-                onClick={() => setShowEmailOtp(true)}
+                onClick={() => console.log("Send email OTP")}
                 className="mb-1 inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
               >
                 Send OTP
               </button>
             </div>
 
-            {/* Email OTP Boxes */}
-            {showEmailOtp && (
-              <div className="flex space-x-2 mb-4">
-                {emailOtp.map((digit, idx) => (
-                  <input
-                    key={idx}
-                    type="text"
-                    maxLength="1"
-                    className="w-10 h-10 border border-gray-300 text-center rounded"
-                    value={digit}
-                    onChange={(e) => handleEmailOtpChange(e.target.value, idx)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* WhatsApp + Send OTP */}
+            {/* WhatsApp with OTP Button */}
             <div className="mb-4 flex items-end space-x-2">
               <div className="flex-1">
                 <label
@@ -292,30 +243,12 @@ export default function UserInfoModal({ show, onClose }) {
               </div>
               <button
                 type="button"
-                onClick={() => setShowWhatsappOtp(true)}
+                onClick={() => console.log("Send WhatsApp OTP")}
                 className="mb-1 inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
               >
                 Send OTP
               </button>
             </div>
-
-            {/* WhatsApp OTP Boxes */}
-            {showWhatsappOtp && (
-              <div className="flex space-x-2 mb-4">
-                {whatsappOtp.map((digit, idx) => (
-                  <input
-                    key={idx}
-                    type="text"
-                    maxLength="1"
-                    className="w-10 h-10 border border-gray-300 text-center rounded"
-                    value={digit}
-                    onChange={(e) =>
-                      handleWhatsappOtpChange(e.target.value, idx)
-                    }
-                  />
-                ))}
-              </div>
-            )}
           </div>
 
           {/* Checkbox & Continue */}
@@ -331,19 +264,31 @@ export default function UserInfoModal({ show, onClose }) {
               />
               <label htmlFor="termsCheckbox" className="text-sm text-gray-700">
                 By proceeding, you agree to{" "}
-                <Link href={"/termsAndCondition"} className="text-blue-600 hover:underline">
+                <Link
+                  href={"/termsAndCondition"}
+                  className="text-blue-600 hover:underline"
+                >
                   Air aviations
                 </Link>
                 ’s{" "}
-                <Link href={"/termsAndCondition"} className="text-blue-600 hover:underline">
+                <Link
+                  href={"/termsAndCondition"}
+                  className="text-blue-600 hover:underline"
+                >
                   Privacy Policy
                 </Link>
                 ,{" "}
-                <Link href={"/termsAndCondition"} className="text-blue-600 hover:underline">
+                <Link
+                  href={"/termsAndCondition"}
+                  className="text-blue-600 hover:underline"
+                >
                   User Agreement
                 </Link>
                 and{" "}
-                <Link href={"/termsAndCondition"} className="text-blue-600 hover:underline">
+                <Link
+                  href={"/termsAndCondition"}
+                  className="text-blue-600 hover:underline"
+                >
                   T&Cs{" "}
                 </Link>
               </label>
@@ -352,8 +297,11 @@ export default function UserInfoModal({ show, onClose }) {
             <button
               onClick={handleContinue}
               disabled={!isFormValid}
-              className={`w-full px-4 py-2 text-white font-semibold rounded ${isFormValid ? "bg-green-500 hover:bg-green-600" : "bg-gray-300"
-                }`}
+              className={`w-full px-4 py-2 text-white font-semibold rounded ${
+                isFormValid
+                  ? "bg-green-500 hover:bg-green-600"
+                  : "bg-gray-300"
+              }`}
             >
               Continue
             </button>
