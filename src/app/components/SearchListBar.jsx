@@ -123,10 +123,10 @@ export const SearchBar = () => {
   //     setAirports([]);
   //     return;
   //   }
-  
+
   //   // Log the current search query
   //   console.log("Search Query:", searchQuery);
-  
+
   //   const query = searchQuery.toLowerCase();
   //   const filteredAirports = airportsData.filter((airport) => {
   //     return (
@@ -135,17 +135,17 @@ export const SearchBar = () => {
   //       (typeof airport.icao_code === "string" && airport.icao_code.toLowerCase().includes(query))
   //     );
   //   });
-  
+
   //   // Log the filtered airports for this query
   //   // console.log("Filtered Airports:", filteredAirports);
-  
+
   //   setAirports(filteredAirports);
   // }, [searchQuery]);
-  
 
 
-  
-  
+
+
+
 
   // ================== HANDLERS ==================
   // A) Trip Type
@@ -254,15 +254,16 @@ export const SearchBar = () => {
     setIsLoading(true);
     try {
       // 1) Check if user info is in session
-      const storedDataRaw = sessionStorage.getItem("searchData");
-      const storedData = storedDataRaw ? JSON.parse(storedDataRaw) : {};
+      // REPLACE WITH: using localStorage to check for userInfo
+      const localDataRaw = localStorage.getItem("searchData");
+      const storedData = localDataRaw ? JSON.parse(localDataRaw) : {};
 
       if (!storedData?.userInfo) {
-        // userInfo not found => open modal & stop
         setIsUserInfoModalOpen(true);
         setIsLoading(false);
         return;
       }
+
 
       // 2) If user info is present, build final search data
       const finalSearchData = {
@@ -497,9 +498,8 @@ export const SearchBar = () => {
                     </label>
                     <input
                       type="datetime-local"
-                      value={`${segments[0].departureDate}T${
-                        segments[0].departureTime || "12:00"
-                      }`}
+                      value={`${segments[0].departureDate}T${segments[0].departureTime || "12:00"
+                        }`}
                       onChange={(e) => {
                         const [date, time] = e.target.value.split("T");
                         handleSegmentChange(0, "departureDate", date);
@@ -710,17 +710,15 @@ export const SearchBar = () => {
                             </label>
                             <input
                               type="datetime-local"
-                              value={`${segment.departureDate}T${
-                                segment.departureTime || "12:00"
-                              }`}
+                              value={`${segment.departureDate}T${segment.departureTime || "12:00"
+                                }`}
                               onChange={(e) => {
                                 const [date, time] = e.target.value.split("T");
                                 handleSegmentChange(index, "departureDate", date);
                                 handleSegmentChange(index, "departureTime", time);
                               }}
-                              min={`${
-                                new Date().toISOString().split("T")[0]
-                              }T00:00`}
+                              min={`${new Date().toISOString().split("T")[0]
+                                }T00:00`}
                               className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 rounded-md shadow-md focus:outline-none w-full"
                             />
                           </div>
