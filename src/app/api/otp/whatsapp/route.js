@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import OTPTable from "@/app/models/OTPTable";
+import { connectToDatabase } from "@/config/mongo";
 
 const OTP_EXPIRY_TIME = process.env.OTP_EXPIRY_TIME || 300; // 5 minutes
 
@@ -96,7 +97,8 @@ export const GET = async (req) => {
     await connectToDatabase();
 
     // Find the latest OTP for the phone number
-    const result = await OTPTable.findOne({ phoneNumber }).sort({ expiryTime: -1 });
+    const result = await OTPTable.findOne({ address : phoneNumber  }).sort({ expiryTime: 1 });
+    console.log("result" , result);
 
     if (!result) {
       return NextResponse.json({ message: "OTP not found" }, { status: 400 });
