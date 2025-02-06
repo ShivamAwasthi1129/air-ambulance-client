@@ -15,4 +15,6 @@ const AirportSchema = new mongoose.Schema({
   status: { type: String, enum: ["Active", "Inactive"], required: true }
 }, { timestamps: true });
 
+AirportSchema.index({ name: "text", city: "text", country: "text", iata_code: "text", icao_code: "text" });
+
 export default mongoose.models.Airports || mongoose.model("Airports", AirportSchema, "Airports");
