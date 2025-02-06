@@ -105,42 +105,42 @@ export const SearchBar = () => {
   }, [tripType, segments]);
 
   // 5) Fetch airports whenever searchQuery changes
-  // useEffect(() => {
-  //   async function fetchAirports() {
-  //     try {
-  //       const response = await fetch(`/api/basesearch?query=${searchQuery}`);
-  //       const data = await response.json();
-  //       setAirports(data);
-  //     } catch (error) {
-  //       console.error("Error fetching airport data:", error);
-  //     }
-  //   }
-  //   fetchAirports();
-  // }, [searchQuery]);
-
   useEffect(() => {
-    if (!searchQuery) {
-      setAirports([]);
-      return;
+    async function fetchAirports() {
+      try {
+        const response = await fetch(`/api/basesearch?query=${searchQuery}`);
+        const data = await response.json();
+        setAirports(data);
+      } catch (error) {
+        console.error("Error fetching airport data:", error);
+      }
     }
-  
-    // Log the current search query
-    console.log("Search Query:", searchQuery);
-  
-    const query = searchQuery.toLowerCase();
-    const filteredAirports = airportsData.filter((airport) => {
-      return (
-        (airport.name && airport.name.toLowerCase().includes(query)) ||
-        (typeof airport.iata_code === "string" && airport.iata_code.toLowerCase().includes(query)) ||
-        (typeof airport.icao_code === "string" && airport.icao_code.toLowerCase().includes(query))
-      );
-    });
-  
-    // Log the filtered airports for this query
-    // console.log("Filtered Airports:", filteredAirports);
-  
-    setAirports(filteredAirports);
+    fetchAirports();
   }, [searchQuery]);
+
+  // useEffect(() => {
+  //   if (!searchQuery) {
+  //     setAirports([]);
+  //     return;
+  //   }
+  
+  //   // Log the current search query
+  //   console.log("Search Query:", searchQuery);
+  
+  //   const query = searchQuery.toLowerCase();
+  //   const filteredAirports = airportsData.filter((airport) => {
+  //     return (
+  //       (airport.name && airport.name.toLowerCase().includes(query)) ||
+  //       (typeof airport.iata_code === "string" && airport.iata_code.toLowerCase().includes(query)) ||
+  //       (typeof airport.icao_code === "string" && airport.icao_code.toLowerCase().includes(query))
+  //     );
+  //   });
+  
+  //   // Log the filtered airports for this query
+  //   // console.log("Filtered Airports:", filteredAirports);
+  
+  //   setAirports(filteredAirports);
+  // }, [searchQuery]);
   
 
 

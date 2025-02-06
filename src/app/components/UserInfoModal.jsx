@@ -43,12 +43,12 @@ export default function UserInfoModal({ show, onClose }) {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   // ---------- 1) Form States ----------
-  const [fullName, setFullName] = useState("");
+  const [name, setname] = useState("");
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState(""); 
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const isFormValid =
-    fullName.trim() !== "" &&
+    name.trim() !== "" &&
     email.trim() !== "" &&
     whatsapp.trim() !== "" &&
     agreedToTerms;
@@ -59,7 +59,7 @@ export default function UserInfoModal({ show, onClose }) {
       try {
         const parsed = JSON.parse(savedData);
         if (parsed?.userInfo) {
-          setFullName(parsed.userInfo.fullName || "");
+          setname(parsed.userInfo.name || "");
           setEmail(parsed.userInfo.email || "");
           setWhatsapp(parsed.userInfo.phone || "");
         }
@@ -91,7 +91,7 @@ export default function UserInfoModal({ show, onClose }) {
       // 3) Insert or update user info
       if (!storedData.userInfo) {
         storedData.userInfo = {
-          fullName,
+          name,
           email,
           phone: whatsapp,
           ...ipData,
@@ -178,19 +178,19 @@ export default function UserInfoModal({ show, onClose }) {
             {/* Full Name */}
             <div className="mb-4">
               <label
-                htmlFor="fullName"
+                htmlFor="name"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
                 Your Full Name
               </label>
               <input
-                id="fullName"
+                id="name"
                 type="text"
                 className="w-full border border-gray-300 rounded px-3 py-2 
                            focus:outline-none focus:ring focus:border-blue-500"
                 placeholder="Enter your full name"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                value={name}
+                onChange={(e) => setname(e.target.value)}
               />
             </div>
 
