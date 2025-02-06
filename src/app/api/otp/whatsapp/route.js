@@ -17,16 +17,29 @@ export async function POST(req) {
     // Generate a random OTP
     const otp = Math.floor(100000 + Math.random() * 900000);
 
-    const expiryTime = Math.floor(Date.now() / 1000) + OTP_EXPIRY_TIME;
+    const expiryTime = Math.floor(Date.now() / 1000) + Number(OTP_EXPIRY_TIME);
 
     await connectToDatabase();
-    // Store OTP in MongoDB
-    await OTPTable.create({
-      via: "whatsapp",
-      address: phoneNumber,
-      otp,
-      expiryTime,
-    });
+
+    const result = await OTPTable.findOne(
+      { address: phoneNumber }
+    );
+
+    if (!result) {
+      // Store OTP in MongoDB
+      await OTPTable.create({
+        via: "whatsapp",
+        address: phoneNumber,
+        otp,
+        expiryTime,
+      });
+    } else {
+      // Update OTP in MongoDB
+      await OTPTable.updateOne(
+        { _id: result._id },
+        { $set: { otp, expiryTime } }
+      );
+    }
 
     await fetch(
       `https://graph.facebook.com/v21.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
@@ -84,7 +97,7 @@ export async function POST(req) {
 export const GET = async (req) => {
   try {
     const { searchParams } = new URL(req.url);
-    const phoneNumber = searchParams.get("phoneNumber");
+    let phoneNumber = searchParams.get("phoneNumber");
     const otp = searchParams.get("otp");
 
     if (!phoneNumber || !otp) {
@@ -95,11 +108,11 @@ export const GET = async (req) => {
     }
 
     await connectToDatabase();
+    phoneNumber = `+${phoneNumber.trim()}`;
 
     // Find the latest OTP for the phone number
     const result = await OTPTable.findOne(
-      { address: phoneNumber },
-      { sort: { expiryTime: -1 } }
+      { address: phoneNumber }
     );
 
     if (!result) {
@@ -110,7 +123,7 @@ export const GET = async (req) => {
       return NextResponse.json({ message: "Invalid OTP" }, { status: 400 });
     }
     const expiryTime = result.expiryTime;
-    const currentTime = Math.floor(Date.now() / 1000) + OTP_EXPIRY_TIME;
+    const currentTime = Math.floor(Date.now() / 1000);
     if (expiryTime < currentTime) {
       return NextResponse.json({ message: "OTP expired" }, { status: 400 });
     }
