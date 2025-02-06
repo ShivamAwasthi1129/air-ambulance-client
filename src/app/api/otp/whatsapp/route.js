@@ -97,8 +97,10 @@ export const GET = async (req) => {
     await connectToDatabase();
 
     // Find the latest OTP for the phone number
-    const result = await OTPTable.findOne({ address : phoneNumber  }).sort({ expiryTime: 1 });
-    console.log("result" , result);
+    const result = await OTPTable.findOne(
+      { address: phoneNumber },
+      { sort: { expiryTime: -1 } }
+    );
 
     if (!result) {
       return NextResponse.json({ message: "OTP not found" }, { status: 400 });
