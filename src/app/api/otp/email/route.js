@@ -124,10 +124,10 @@ export async function POST(req) {
 export const GET = async (req) => {
   try {
     const { searchParams } = new URL(req.url);
-    const phoneNumber = searchParams.get("email");
+    const email = searchParams.get("email");
     const otp = searchParams.get("otp");
 
-    if (!phoneNumber || !otp) {
+    if (!email || !otp) {
       return NextResponse.json(
         { error: "Email and OTP are required" },
         { status: 400 }
