@@ -5,25 +5,15 @@ import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FilterAndFleetListing from "../components/FilterAndFleetListing";
 import BannerSection from "./Banner";
-import UserInfoModal from "../components/UserInfoModal";
-import airportsData from "../data/airportbases.json";
-
-
+import UserInfoModal from "../components/UserInfoModal"; // We'll open this modal for OTP
+import Link from "next/link";
 
 export const SearchBar = () => {
-  // State for airport search
-  const [airports, setAirports] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [focusedSegmentIndex, setFocusedSegmentIndex] = useState(null);
-  const [focusedField, setFocusedField] = useState(null);
-  const [showDropdown, setShowDropdown] = useState(false);
-
-  // Trip Type & Multi-City
+  // ===================== State: Basic Trip Info =====================
   const [tripType, setTripType] = useState("oneway");
   const [showMultiCityDetails, setShowMultiCityDetails] = useState(false);
   const [isMultiCityCollapsed, setIsMultiCityCollapsed] = useState(false);
 
-  // Flight Segments
   const [segments, setSegments] = useState([
     {
       from: "Indira Gandhi International Airport (DEL)",
@@ -34,18 +24,39 @@ export const SearchBar = () => {
     },
   ]);
 
-  // Misc. state
+  // ===================== State: Airport Dropdown =====================
+  const [airports, setAirports] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [focusedSegmentIndex, setFocusedSegmentIndex] = useState(null);
+  const [focusedField, setFocusedField] = useState(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  // ===================== State: Additional Fields =====================
+  const [flightType, setFlightType] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [email, setEmail] = useState("");
+  const [agreedToPolicy, setAgreedToPolicy] = useState(false);
+
+  // ===================== Check if User Verified OTP =====================
+  const [isVerified, setIsVerified] = useState(false);
+
+  // ===================== Misc. State =====================
   const [refreshKey, setRefreshKey] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
-  // 2) Local state to show/hide the user info modal
+  // For opening the OTP modal
   const [isUserInfoModalOpen, setIsUserInfoModalOpen] = useState(false);
 
-  // Container ref for outside-click detection (multi-city collapse)
+  // ===================== userInfo State (previously ipData) =====================
+  // We'll store the IP info, plus user data, all together here—ONLY on search.
+  const [userInfo, setUserInfo] = useState(null);
+
   const containerRef = useRef(null);
 
-  // ================== EFFECTS ==================
-  // 1) Outside-click to collapse multi-city
+  // ===================== Effects =====================
+
+  // 1) Collapse multi-city if user clicks outside
   useEffect(() => {
     function handleDocClick(e) {
       if (!containerRef.current) return;
@@ -65,7 +76,7 @@ export const SearchBar = () => {
     };
   }, [tripType, isMultiCityCollapsed]);
 
-  // 2) Outside-click logic for Airport Dropdown
+  // 2) Close airport dropdown if user clicks outside
   useEffect(() => {
     function handleClickOutside(e) {
       if (
@@ -84,29 +95,47 @@ export const SearchBar = () => {
     };
   }, [showDropdown]);
 
-  // 3) Load search data from session on mount
+  // 3) Load only tripType and segments from session; do NOT load flightType, email, etc.
+  //    Also check userVerified status from session if present.
   useEffect(() => {
     const savedSearchData = sessionStorage.getItem("searchData");
     if (savedSearchData) {
-      const parsedData = JSON.parse(savedSearchData);
-      setTripType(parsedData.tripType);
-      setSegments(parsedData.segments || []);
+      const parsed = JSON.parse(savedSearchData);
+      // We only restore tripType & segments (and userInfo if needed).
+      if (parsed.tripType) setTripType(parsed.tripType);
+      if (parsed.segments) setSegments(parsed.segments);
+      if (parsed.userInfo) setUserInfo(parsed.userInfo);
 
-      if (parsedData.tripType === "multicity") {
+      if (parsed.tripType === "multicity") {
         setShowMultiCityDetails(true);
       }
     }
+
+    // Check if user is verified from session
+    const userHasVerified = sessionStorage.getItem("userVerified");
+    if (userHasVerified === "true") {
+      setIsVerified(true);
+    }
   }, []);
 
-  // 4) Save tripType/segments to session whenever they change
+  // 4) Store tripType/segments/userInfo in session on change
+  //    (avoid storing personal fields to prevent glimpses on refresh).
   useEffect(() => {
-    const partialData = { tripType, segments };
-    sessionStorage.setItem("searchData", JSON.stringify(partialData));
-  }, [tripType, segments]);
+    const dataToSave = {
+      tripType,
+      segments,
+      userInfo,
+    };
+    sessionStorage.setItem("searchData", JSON.stringify(dataToSave));
+  }, [tripType, segments, userInfo]);
 
-  // 5) Fetch airports whenever searchQuery changes
+  // 5) Fetch airports when searchQuery changes
   useEffect(() => {
     async function fetchAirports() {
+      if (!searchQuery) {
+        setAirports([]);
+        return;
+      }
       try {
         const response = await fetch(`/api/basesearch?query=${searchQuery}`);
         const data = await response.json();
@@ -118,37 +147,23 @@ export const SearchBar = () => {
     fetchAirports();
   }, [searchQuery]);
 
-  // useEffect(() => {
-  //   if (!searchQuery) {
-  //     setAirports([]);
-  //     return;
-  //   }
+  // 6) Fetch IP info on mount and store in userInfo
+  useEffect(() => {
+    async function fetchIP() {
+      try {
+        const res = await fetch("https://ipinfo.io/json");
+        const data = await res.json();
+        setUserInfo(data); // store IP data in userInfo
+      } catch (err) {
+        console.error("Failed to fetch IP info:", err);
+      }
+    }
+    fetchIP();
+  }, []);
 
-  //   // Log the current search query
-  //   console.log("Search Query:", searchQuery);
+  // ===================== Handlers =====================
 
-  //   const query = searchQuery.toLowerCase();
-  //   const filteredAirports = airportsData.filter((airport) => {
-  //     return (
-  //       (airport.name && airport.name.toLowerCase().includes(query)) ||
-  //       (typeof airport.iata_code === "string" && airport.iata_code.toLowerCase().includes(query)) ||
-  //       (typeof airport.icao_code === "string" && airport.icao_code.toLowerCase().includes(query))
-  //     );
-  //   });
-
-  //   // Log the filtered airports for this query
-  //   // console.log("Filtered Airports:", filteredAirports);
-
-  //   setAirports(filteredAirports);
-  // }, [searchQuery]);
-
-
-
-
-
-
-  // ================== HANDLERS ==================
-  // A) Trip Type
+  // A) Change trip type
   const handleTripTypeChange = (type) => {
     setTripType(type);
     if (type === "oneway") {
@@ -178,7 +193,7 @@ export const SearchBar = () => {
     }
   };
 
-  // B) Changing a segment
+  // B) Segment changes
   const handleSegmentChange = (index, field, value) => {
     const updatedSegments = [...segments];
     updatedSegments[index][field] = value;
@@ -213,16 +228,11 @@ export const SearchBar = () => {
     setFocusedSegmentIndex(null);
     setFocusedField(null);
     setSearchQuery("");
-
-    // Update session quickly for any immediate retrieval
-    sessionStorage.setItem(
-      "searchData",
-      JSON.stringify({ tripType, segments: updatedSegments })
-    );
   };
 
-  // D) Swap from/to (Only for One-Way)
+  // D) Swap (only for one-way)
   const handleSwap = (index) => {
+    if (tripType !== "oneway") return;
     const updated = [...segments];
     const temp = updated[index].from;
     updated[index].from = updated[index].to;
@@ -230,7 +240,7 @@ export const SearchBar = () => {
     setSegments(updated);
   };
 
-  // E) Add Multi-City
+  // E) Add multi-city segment
   const handleAddCity = () => {
     setSegments((prev) => [
       ...prev,
@@ -244,54 +254,87 @@ export const SearchBar = () => {
     ]);
   };
 
-  // F) Remove Multi-City
+  // F) Remove multi-city segment
   const handleRemoveCity = (index) => {
     setSegments((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // G) SEARCH
+  // G) SEARCH => immediately send final data, but still send OTP if not verified
   const handleSearch = async () => {
     setIsLoading(true);
     try {
-      // 1) Check if user info is in session
-      // REPLACE WITH: using localStorage to check for userInfo
-      const localDataRaw = localStorage.getItem("searchData");
-      const storedData = localDataRaw ? JSON.parse(localDataRaw) : {};
-
-      if (!storedData?.userInfo) {
-        setIsUserInfoModalOpen(true);
-        setIsLoading(false);
-        return;
+      // 1) If user not verified, ensure personal fields are filled
+      if (!isVerified) {
+        if (
+          !fullName.trim() ||
+          !phoneNumber.trim() ||
+          !email.trim() ||
+          !flightType ||
+          !agreedToPolicy
+        ) {
+          alert(
+            "Please fill out all fields and agree to the policy before searching."
+          );
+          setIsLoading(false);
+          return;
+        }
       }
 
-
-      // 2) If user info is present, build final search data
-      const finalSearchData = {
-        ...storedData,
-        tripType,
-        segments,
+      // 2) Merge IP data + personal fields
+      const mergedUserInfo = {
+        ...userInfo,
+        flightType,
+        fullName,
+        phoneNumber,
+        email,
+        agreedToPolicy,
       };
 
-      // 3) Save final to session
-      sessionStorage.setItem("searchData", JSON.stringify(finalSearchData));
+      // 3) Send OTP if user is NOT verified
+      if (!isVerified) {
+        try {
+          // We do this in parallel or in sequence, but we do NOT wait to send final data
+          fetch("/api/otp/email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email }),
+          });
+          fetch("/api/otp/whatsapp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phoneNumber: `+91${phoneNumber}` }),
+          });
 
-      // 4) Send data to your API
-      console.log("Final Payload to /api/query:", finalSearchData);
-      const response = await fetch("/api/query", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(finalSearchData),
-      });
-      if (!response.ok) {
-        throw new Error(`Error: ${response.statusText}`);
+          // We'll open the modal to let user verify
+          setIsUserInfoModalOpen(true);
+        } catch (err) {
+          console.error("Error sending OTP requests:", err);
+          // But do NOT return; we still proceed with final data.
+        }
       }
-      const result = await response.json();
-      console.log("Response from /api/query:", result);
 
-      // 5) Re-render listing
+      // 4) Build final data object
+      const finalData = {
+        tripType,
+        segments,
+        userInfo: mergedUserInfo,
+      };
+
+      // 5) Save final data in session
+      sessionStorage.setItem("searchData", JSON.stringify(finalData));
+
+      // 6) Send final data to console (or your API). This is immediate—no waiting for OTP.
+      console.log("Final Payload (sent immediately):", finalData);
+      // Example: If you want to POST to your server:
+      // await fetch("/api/query", {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify(finalData)
+      // });
+
+      // 7) Update local state
+      setUserInfo(mergedUserInfo);
       setRefreshKey((prev) => prev + 1);
-
-      // 6) If multi-city => collapse
       if (tripType === "multicity") {
         setIsMultiCityCollapsed(true);
       }
@@ -302,26 +345,29 @@ export const SearchBar = () => {
     }
   };
 
-  // ================== RENDER ==================
+  // ===================== Render =====================
   return (
     <>
-      {/* 2) Render the modal if isUserInfoModalOpen = true */}
       {isUserInfoModalOpen && (
         <UserInfoModal
-          // This "show" prop will control if the modal is visible
           show={isUserInfoModalOpen}
-          onClose={() => setIsUserInfoModalOpen(false)}
+          onClose={() => {
+            setIsUserInfoModalOpen(false);
+            // Re-check verification
+            const userHasVerified = sessionStorage.getItem("userVerified");
+            if (userHasVerified === "true") {
+              setIsVerified(true);
+            }
+          }}
         />
       )}
 
       <div className="flex flex-col items-center w-full">
-        {/* SearchBar Container */}
         <div className="w-full sticky top-0 z-30" ref={containerRef}>
+          {/* If multi-city is collapsed */}
           {tripType === "multicity" && isMultiCityCollapsed ? (
-            /* -------------- COLLAPSED MULTI-CITY -------------- */
             <div className="bg-[#041422] p-4 rounded-lg shadow-md flex flex-col gap-2 w-full relative">
               <div className="flex flex-wrap items-center justify-start gap-4 w-full">
-                {/* Trip Type */}
                 <div className="relative w-1/4 min-w-[150px]">
                   <label className="text-md text-[#008cff] mb-1 block">
                     Trip Type
@@ -329,7 +375,8 @@ export const SearchBar = () => {
                   <select
                     value={tripType}
                     onChange={(e) => handleTripTypeChange(e.target.value)}
-                    className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 rounded-md shadow-md cursor-pointer focus:outline-none w-full"
+                    className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 
+                               rounded-md shadow-md cursor-pointer focus:outline-none w-full"
                   >
                     <option className="text-black" value="oneway">
                       One Way
@@ -340,15 +387,14 @@ export const SearchBar = () => {
                   </select>
                 </div>
 
-                {/* FROM (Trip 1 only) */}
                 <div className="flex-1">
                   <label className="text-md text-[#008cff] mb-1">
                     From (Trip 1)
                   </label>
                   <input
                     type="text"
-                    className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 rounded-md shadow-md 
-                               focus:outline-none w-full"
+                    className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 
+                               rounded-md shadow-md focus:outline-none w-full"
                     value={segments[0]?.from || ""}
                     placeholder="Type departure airport..."
                     onFocus={() => {
@@ -370,20 +416,22 @@ export const SearchBar = () => {
               </div>
             </div>
           ) : (
-            /* -------------- FULL BAR -------------- */
-            <div className="bg-[#041422] px-6 py-2 flex flex-col gap-2 relative w-full">
+            /* Full bar */
+            <div className="bg-[#041422] px-6 py-2 flex flex-col gap-1 relative w-full">
+              {/* Top Row: Trip Info + SEARCH Button on the right */}
               {tripType === "oneway" ? (
-                /* -------------- ONE-WAY Layout -------------- */
-                <div className="flex flex-wrap items-end justify-between gap-2 w-full">
+                /* ------ One-Way Layout ------ */
+                <div className="flex flex-wrap items-end gap-2 w-full">
                   {/* Trip Type */}
-                  <div className="relative flex-2">
+                  <div className="min-w-[120px]">
                     <label className="text-md text-[#008cff] mb-1 block">
                       Trip Type
                     </label>
                     <select
                       value={tripType}
                       onChange={(e) => handleTripTypeChange(e.target.value)}
-                      className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 rounded-md shadow-md cursor-pointer focus:outline-none w-full"
+                      className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 
+                                 rounded-md shadow-md cursor-pointer focus:outline-none w-full"
                     >
                       <option className="text-black" value="oneway">
                         One Way
@@ -399,8 +447,10 @@ export const SearchBar = () => {
                     <label className="text-md text-[#008cff] mb-1">From</label>
                     <input
                       type="text"
-                      className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 rounded-md shadow-md focus:outline-none w-full"
+                      className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4
+                                 rounded-md shadow-md focus:outline-none w-full"
                       value={segments[0].from}
+                      placeholder="Type departure airport..."
                       onFocus={() => {
                         setFocusedSegmentIndex(0);
                         setFocusedField("from");
@@ -411,19 +461,23 @@ export const SearchBar = () => {
                         handleSegmentChange(0, "from", e.target.value);
                         setSearchQuery(e.target.value);
                       }}
-                      placeholder="Type departure airport..."
                     />
                     {/* Dropdown */}
                     {showDropdown &&
                       focusedSegmentIndex === 0 &&
                       focusedField === "from" &&
                       airports.length > 0 && (
-                        <ul className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
+                        <ul
+                          className="absolute left-0 mt-1 w-full max-h-48 
+                                       overflow-y-auto bg-white text-black 
+                                       shadow-md rounded z-50"
+                        >
                           {airports.map((airport) => (
                             <li
                               key={airport.id}
                               onClick={() => handleSelectAirport(airport)}
-                              className="p-2 cursor-pointer hover:bg-gray-200 border-b text-sm"
+                              className="p-2 cursor-pointer hover:bg-gray-200 
+                                         border-b text-sm"
                             >
                               <div className="font-semibold">
                                 {airport.city}, {airport.country}
@@ -442,7 +496,8 @@ export const SearchBar = () => {
                   <motion.button
                     onClick={() => handleSwap(0)}
                     whileHover={{ scale: 1.1 }}
-                    className="bg-blue-600 p-2 rounded-full shadow-md flex items-center justify-center"
+                    className="bg-blue-600 p-2 rounded-full shadow-md 
+                               flex items-center justify-center mt-6"
                   >
                     <SwapHorizIcon className="text-white text-2xl" />
                   </motion.button>
@@ -452,8 +507,11 @@ export const SearchBar = () => {
                     <label className="text-md text-[#008cff] mb-1">To</label>
                     <input
                       type="text"
-                      className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 rounded-md shadow-md focus:outline-none w-full"
+                      className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 
+                                 px-4 rounded-md shadow-md focus:outline-none 
+                                 w-full"
                       value={segments[0].to}
+                      placeholder="Type destination airport..."
                       onFocus={() => {
                         setFocusedSegmentIndex(0);
                         setFocusedField("to");
@@ -464,19 +522,22 @@ export const SearchBar = () => {
                         handleSegmentChange(0, "to", e.target.value);
                         setSearchQuery(e.target.value);
                       }}
-                      placeholder="Type destination airport..."
                     />
-                    {/* Dropdown */}
                     {showDropdown &&
                       focusedSegmentIndex === 0 &&
                       focusedField === "to" &&
                       airports.length > 0 && (
-                        <ul className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
+                        <ul
+                          className="absolute left-0 mt-1 w-full max-h-48 
+                                       overflow-y-auto bg-white text-black 
+                                       shadow-md rounded z-50"
+                        >
                           {airports.map((airport) => (
                             <li
                               key={airport.id}
                               onClick={() => handleSelectAirport(airport)}
-                              className="p-2 cursor-pointer hover:bg-gray-200 border-b text-sm"
+                              className="p-2 cursor-pointer hover:bg-gray-200 
+                                         border-b text-sm"
                             >
                               <div className="font-semibold">
                                 {airport.city}, {airport.country}
@@ -491,40 +552,42 @@ export const SearchBar = () => {
                       )}
                   </div>
 
-                  {/* Date/Time */}
-                  <div className="flex-1">
-                    <label className="text-md text-[#008cff] mb-1">
-                      Depart
-                    </label>
+                  {/* Depart Date/Time */}
+                  <div className="min-w-[180px]">
+                    <label className="text-md text-[#008cff] mb-1">Depart</label>
                     <input
                       type="datetime-local"
-                      value={`${segments[0].departureDate}T${segments[0].departureTime || "12:00"
-                        }`}
+                      value={`${segments[0].departureDate}T${
+                        segments[0].departureTime || "12:00"
+                      }`}
                       onChange={(e) => {
                         const [date, time] = e.target.value.split("T");
                         handleSegmentChange(0, "departureDate", date);
                         handleSegmentChange(0, "departureTime", time);
                       }}
                       min={`${new Date().toISOString().split("T")[0]}T00:00`}
-                      className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 rounded-md shadow-md focus:outline-none w-full"
+                      className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 
+                                 rounded-md shadow-md focus:outline-none w-full"
                     />
                   </div>
 
                   {/* Passengers */}
-                  <div className="flex-1">
+                  <div className="min-w-[120px]">
                     <label className="text-md text-[#008cff] mb-1">Seat</label>
                     <select
                       value={segments[0].passengers}
                       onChange={(e) =>
-                        handleSegmentChange(0, "passengers", Number(e.target.value))
+                        handleSegmentChange(0, "passengers", +e.target.value)
                       }
-                      className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 rounded-md shadow-md cursor-pointer focus:outline-none w-full"
+                      className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 
+                                 px-4 rounded-md shadow-md cursor-pointer 
+                                 focus:outline-none w-full"
                     >
                       {[...Array(10).keys()].map((num) => (
                         <option
-                          className="text-black"
                           key={num + 1}
                           value={num + 1}
+                          className="text-black"
                         >
                           {num + 1} Seat{num > 0 ? "s" : ""}
                         </option>
@@ -532,19 +595,23 @@ export const SearchBar = () => {
                     </select>
                   </div>
 
-                  {/* SEARCH Button */}
-                  <div className="flex items-end">
+                  {/* SEARCH Button on the right side */}
+                  <div className="mt-6 ml-auto">
                     <motion.button
                       onClick={handleSearch}
                       whileHover={{ scale: 1.05 }}
-                      className="bg-gradient-to-r from-blue-700 to-blue-500 text-white px-6 py-2 
-                                 rounded-md shadow-md hover:from-blue-600 hover:to-blue-400 
-                                 transition-all disabled:cursor-not-allowed disabled:opacity-50"
+                      className="bg-gradient-to-r from-blue-700 to-blue-500 
+                                 text-white px-6 py-2 rounded-md shadow-md 
+                                 hover:from-blue-600 hover:to-blue-400 transition-all 
+                                 disabled:cursor-not-allowed disabled:opacity-50"
                       disabled={isLoading}
                     >
                       {isLoading ? (
                         <div className="flex items-center">
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                          <div
+                            className="w-4 h-4 border-2 border-white border-t-transparent 
+                                       rounded-full animate-spin mr-2"
+                          />
                           Loading...
                         </div>
                       ) : (
@@ -554,18 +621,19 @@ export const SearchBar = () => {
                   </div>
                 </div>
               ) : (
-                /* -------------- MULTI-CITY Layout -------------- */
+                /* ------ Multi-City Layout ------ */
                 <>
-                  {/* Top row: Trip Type + SEARCH */}
-                  <div className="flex flex-wrap items-end justify-between gap-2 w-full pb-3">
-                    <div className="min-w-[150px]">
+                  <div className="flex flex-wrap items-end gap-2 w-full">
+                    <div className="min-w-[120px]">
                       <label className="text-md text-[#008cff] mb-1 block">
                         Trip Type
                       </label>
                       <select
                         value={tripType}
                         onChange={(e) => handleTripTypeChange(e.target.value)}
-                        className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 rounded-md shadow-md cursor-pointer focus:outline-none w-full"
+                        className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 
+                                   rounded-md shadow-md cursor-pointer 
+                                   focus:outline-none w-full"
                       >
                         <option className="text-black" value="oneway">
                           One Way
@@ -575,19 +643,23 @@ export const SearchBar = () => {
                         </option>
                       </select>
                     </div>
-
-                    <div className="flex items-end">
+                    {/* Put the SEARCH button on the right as well */}
+                    <div className="ml-auto mt-6">
                       <motion.button
                         onClick={handleSearch}
                         whileHover={{ scale: 1.05 }}
-                        className="bg-gradient-to-r from-blue-700 to-blue-500 text-white px-6 py-2
-                                   rounded-md shadow-md hover:from-blue-600 hover:to-blue-400 
-                                   transition-all disabled:cursor-not-allowed disabled:opacity-50"
+                        className="bg-gradient-to-r from-blue-700 to-blue-500 
+                                   text-white px-6 py-2 rounded-md shadow-md 
+                                   hover:from-blue-600 hover:to-blue-400 transition-all 
+                                   disabled:cursor-not-allowed disabled:opacity-50"
                         disabled={isLoading}
                       >
                         {isLoading ? (
                           <div className="flex items-center">
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                            <div
+                              className="w-4 h-4 border-2 border-white border-t-transparent 
+                                         rounded-full animate-spin mr-2"
+                            />
                             Loading...
                           </div>
                         ) : (
@@ -597,27 +669,31 @@ export const SearchBar = () => {
                     </div>
                   </div>
 
-                  {/* Multi-city segments (if expanded) */}
                   {showMultiCityDetails && (
-                    <>
+                    <div className="flex flex-col gap-2 mt-2">
                       {segments.map((segment, index) => (
                         <div
                           key={index}
-                          className="flex flex-wrap items-end justify-between gap-2 w-full rounded-lg shadow-md"
+                          className="flex flex-wrap items-end gap-4 p-2 rounded-lg shadow-md bg-[#041422]"
                         >
-                          <h3 className="text-lg text-[#008cff] font-semibold">
-                            Trip {index + 1}:
-                          </h3>
+                          {/* Trip index on the same row as FROM */}
+                          <div className="flex items-center">
+                            <h3 className="text-lg text-[#008cff] font-semibold">
+                              Trip {index + 1}:
+                            </h3>
+                          </div>
 
                           {/* FROM */}
-                          <div className="flex-1 relative">
-                            <label className="text-md text-[#008cff] mb-1">
+                          <div className="min-w-[200px] flex-1 relative">
+                            <label className="text-md text-[#008cff] mb-1 block">
                               From
                             </label>
                             <input
                               type="text"
-                              className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 rounded-md shadow-md focus:outline-none w-full"
+                              className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 rounded-md shadow-md 
+                                         focus:outline-none w-full"
                               value={segment.from}
+                              placeholder="Type departure airport..."
                               onFocus={() => {
                                 setFocusedSegmentIndex(index);
                                 setFocusedField("from");
@@ -625,20 +701,19 @@ export const SearchBar = () => {
                                 setSearchQuery(segment.from || "");
                               }}
                               onChange={(e) => {
-                                handleSegmentChange(
-                                  index,
-                                  "from",
-                                  e.target.value
-                                );
+                                handleSegmentChange(index, "from", e.target.value);
                                 setSearchQuery(e.target.value);
                               }}
-                              placeholder="Type departure airport..."
                             />
+                            {/* Dropdown */}
                             {showDropdown &&
                               focusedSegmentIndex === index &&
                               focusedField === "from" &&
                               airports.length > 0 && (
-                                <ul className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
+                                <ul
+                                  className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white 
+                                             text-black shadow-md rounded z-50"
+                                >
                                   {airports.map((airport) => (
                                     <li
                                       key={airport.id}
@@ -649,8 +724,7 @@ export const SearchBar = () => {
                                         {airport.city}, {airport.country}
                                       </div>
                                       <div className="text-xs text-gray-600">
-                                        {airport.name} •{" "}
-                                        {airport.iata_code || "N/A"}
+                                        {airport.name} • {airport.iata_code || "N/A"}
                                       </div>
                                     </li>
                                   ))}
@@ -659,14 +733,16 @@ export const SearchBar = () => {
                           </div>
 
                           {/* TO */}
-                          <div className="flex-1 relative">
-                            <label className="text-md text-[#008cff] mb-1">
+                          <div className="min-w-[200px] flex-1 relative">
+                            <label className="text-md text-[#008cff] mb-1 block">
                               To
                             </label>
                             <input
                               type="text"
-                              className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 rounded-md shadow-md focus:outline-none w-full"
+                              className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 rounded-md shadow-md 
+                                         focus:outline-none w-full"
                               value={segment.to}
+                              placeholder="Type destination airport..."
                               onFocus={() => {
                                 setFocusedSegmentIndex(index);
                                 setFocusedField("to");
@@ -677,13 +753,16 @@ export const SearchBar = () => {
                                 handleSegmentChange(index, "to", e.target.value);
                                 setSearchQuery(e.target.value);
                               }}
-                              placeholder="Type destination airport..."
                             />
+                            {/* Dropdown */}
                             {showDropdown &&
                               focusedSegmentIndex === index &&
                               focusedField === "to" &&
                               airports.length > 0 && (
-                                <ul className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
+                                <ul
+                                  className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white 
+                                             text-black shadow-md rounded z-50"
+                                >
                                   {airports.map((airport) => (
                                     <li
                                       key={airport.id}
@@ -694,8 +773,7 @@ export const SearchBar = () => {
                                         {airport.city}, {airport.country}
                                       </div>
                                       <div className="text-xs text-gray-600">
-                                        {airport.name} •{" "}
-                                        {airport.iata_code || "N/A"}
+                                        {airport.name} • {airport.iata_code || "N/A"}
                                       </div>
                                     </li>
                                   ))}
@@ -703,41 +781,39 @@ export const SearchBar = () => {
                               )}
                           </div>
 
-                          {/* DATE/TIME */}
-                          <div className="flex-1">
-                            <label className="text-md text-[#008cff] mb-1">
+                          {/* DATE & TIME */}
+                          <div className="min-w-[180px]">
+                            <label className="text-md text-[#008cff] mb-1 block">
                               Date &amp; Time
                             </label>
                             <input
                               type="datetime-local"
-                              value={`${segment.departureDate}T${segment.departureTime || "12:00"
-                                }`}
+                              value={`${segment.departureDate}T${
+                                segment.departureTime || "12:00"
+                              }`}
                               onChange={(e) => {
                                 const [date, time] = e.target.value.split("T");
                                 handleSegmentChange(index, "departureDate", date);
                                 handleSegmentChange(index, "departureTime", time);
                               }}
-                              min={`${new Date().toISOString().split("T")[0]
-                                }T00:00`}
-                              className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 rounded-md shadow-md focus:outline-none w-full"
+                              min={`${new Date().toISOString().split("T")[0]}T00:00`}
+                              className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 rounded-md shadow-md 
+                                         focus:outline-none w-full"
                             />
                           </div>
 
                           {/* Passengers */}
-                          <div className="flex-1">
-                            <label className="text-md text-[#008cff] mb-1">
+                          <div className="min-w-[120px]">
+                            <label className="text-md text-[#008cff] mb-1 block">
                               Seat
                             </label>
                             <select
                               value={segment.passengers}
                               onChange={(e) =>
-                                handleSegmentChange(
-                                  index,
-                                  "passengers",
-                                  Number(e.target.value)
-                                )
+                                handleSegmentChange(index, "passengers", +e.target.value)
                               }
-                              className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 rounded-md shadow-md cursor-pointer focus:outline-none w-full"
+                              className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 rounded-md 
+                                         shadow-md cursor-pointer focus:outline-none w-full"
                             >
                               {[...Array(10).keys()].map((num) => (
                                 <option
@@ -751,22 +827,23 @@ export const SearchBar = () => {
                             </select>
                           </div>
 
-                          {/* Add/Remove City (only on last row) */}
+                          {/* ADD/REMOVE City */}
                           {index === segments.length - 1 && (
-                            <div className="flex items-center gap-4 w-1/7 mt-2">
+                            <div className="flex items-center gap-4 mt-6">
                               {index > 0 && (
                                 <motion.button
                                   onClick={() => handleRemoveCity(index)}
                                   whileHover={{ scale: 1.1 }}
-                                  className="bg-red-600 p-2 rounded-full shadow-md flex items-center justify-center"
+                                  className="bg-red-600 p-2 rounded-full shadow-md flex items-center 
+                                             justify-center"
                                 >
                                   <DeleteIcon className="text-white text-xl" />
                                 </motion.button>
                               )}
-
                               <button
                                 onClick={handleAddCity}
-                                className="text-[#008cff] border border-[#008cff] py-2 px-4 rounded-md hover:bg-[#008cff] hover:text-white transition"
+                                className="text-[#008cff] border border-[#008cff] py-2 px-4 
+                                           rounded-md hover:bg-[#008cff] hover:text-white transition"
                               >
                                 + Add City
                               </button>
@@ -774,15 +851,117 @@ export const SearchBar = () => {
                           )}
                         </div>
                       ))}
-                    </>
+                    </div>
                   )}
                 </>
+              )}
+
+              {/* If user is NOT verified, show Additional Fields, else hide */}
+              {!isVerified && (
+                <div className="p-3 pt-0 bg-[#041422] rounded-lg flex flex-wrap items-end gap-4">
+                  {/* Flight Type */}
+                  <div className="flex-1 min-w-[180px]">
+                    <label className="text-md text-[#008cff] mb-1 block">
+                      Flight Type
+                    </label>
+                    <select
+                      value={flightType}
+                      onChange={(e) => setFlightType(e.target.value)}
+                      className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 
+                                 rounded-md shadow-md cursor-pointer 
+                                 focus:outline-none w-full"
+                    >
+                      <option value="" className="text-black">
+                        -- Select --
+                      </option>
+                      <option value="Charter Flight" className="text-black">
+                        Charter Flight
+                      </option>
+                      <option value="AirCharter" className="text-black">
+                        AirCharter
+                      </option>
+                      <option value="Air Ambulance" className="text-black">
+                        Air Ambulance
+                      </option>
+                      <option value="Helicopter" className="text-black">
+                        Helicopter
+                      </option>
+                      <option value="Private Jet" className="text-black">
+                        Private Jet
+                      </option>
+                    </select>
+                  </div>
+
+                  {/* Full Name */}
+                  <div className="flex-1 min-w-[180px]">
+                    <label className="text-md text-[#008cff] mb-1 block">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="Enter your name"
+                      className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 
+                                 rounded-md shadow-md focus:outline-none w-full"
+                    />
+                  </div>
+
+                  {/* Phone Number */}
+                  <div className="flex-1 min-w-[160px]">
+                    <label className="text-md text-[#008cff] mb-1 block">
+                      Phone Number
+                    </label>
+                    <input
+                      type="text"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      placeholder="e.g. 9876543210"
+                      className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 
+                                 rounded-md shadow-md focus:outline-none w-full"
+                    />
+                  </div>
+
+                  {/* Email */}
+                  <div className="flex-1 min-w-[200px]">
+                    <label className="text-md text-[#008cff] mb-1 block">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      className="bg-[hsla(0,0%,100%,0.1)] text-white py-2 px-4 
+                                 rounded-md shadow-md focus:outline-none w-full"
+                    />
+                  </div>
+
+                  {/* Checkbox */}
+                  <div className="flex items-center gap-2 min-w-[200px] mt-6">
+                    <input
+                      type="checkbox"
+                      id="policyCheck"
+                      checked={agreedToPolicy}
+                      onChange={(e) => setAgreedToPolicy(e.target.checked)}
+                      className="w-5 h-5 text-blue-600 bg-gray-200 rounded 
+                                 border-gray-300 focus:ring-blue-500"
+                    />
+                    <label htmlFor="policyCheck" className="text-md text-white">
+                      <Link href={"/termsAndCondition"} className="flex text-sm">
+                        <p>I agree to the&nbsp;</p>
+                        <p className="underline underline-offset-1 cursor-pointer">
+                          Terms &amp; Condition
+                        </p>
+                      </Link>
+                    </label>
+                  </div>
+                </div>
               )}
             </div>
           )}
         </div>
-
-        {/* Optional Banner & Fleet Listing */}
+        {/* Banner & Fleet Listing below */}
         <BannerSection />
         <FilterAndFleetListing key={refreshKey} />
       </div>

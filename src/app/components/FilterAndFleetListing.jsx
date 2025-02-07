@@ -33,6 +33,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
             maxPrice: 0,
             priceRange: 0,
             loading: true,
+            noData: false, // <-- NEW: Will indicate if 400/no data
           }));
           setSegmentStates(initialSegmentStates);
 
@@ -46,6 +47,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
   }, [refreshKey]);
 
   function cleanAirportName(str) {
+    // remove anything in parentheses + extra spaces
     return str.replace(/\s*\(.*?\)\s*/, "").trim();
   }
 
@@ -63,10 +65,30 @@ const FilterAndFleetListing = ({ refreshKey }) => {
 
       try {
         const response = await fetch(url);
+
+        // If 400 => No data. Set noData = true, skip parsing
+        if (response.status === 400) {
+          setSegmentStates((prev) => {
+            const newState = [...prev];
+            newState[segmentIndex] = {
+              ...newState[segmentIndex],
+              fleetData: [],
+              filteredData: [],
+              loading: false,
+              noData: true, // <-- Mark that no data was returned
+            };
+            return newState;
+          });
+          return; // Stop here
+        }
+
         const data = await response.json();
         if (data?.finalFleet) {
           const withParsedPrices = data.finalFleet.map((flight) => {
-            const numeric = parseInt(flight.totalPrice.replace(/\D/g, ""), 10) || 0;
+            const numeric = parseInt(
+              flight.totalPrice.replace(/\D/g, ""),
+              10
+            ) || 0;
             return { ...flight, _numericPrice: numeric };
           });
           const prices = withParsedPrices.map((f) => f._numericPrice);
@@ -83,12 +105,38 @@ const FilterAndFleetListing = ({ refreshKey }) => {
               maxPrice: maxP,
               priceRange: maxP,
               loading: false,
+              noData: false, // Data is there
+            };
+            return newState;
+          });
+        } else {
+          // If finalFleet is empty or missing, mark no data:
+          setSegmentStates((prev) => {
+            const newState = [...prev];
+            newState[segmentIndex] = {
+              ...newState[segmentIndex],
+              fleetData: [],
+              filteredData: [],
+              loading: false,
+              noData: true,
             };
             return newState;
           });
         }
       } catch (error) {
         console.error(`Error fetching data for segment ${segmentIndex}:`, error);
+        // If fetch fails, also set noData to avoid infinite skeleton
+        setSegmentStates((prev) => {
+          const newState = [...prev];
+          newState[segmentIndex] = {
+            ...newState[segmentIndex],
+            fleetData: [],
+            filteredData: [],
+            loading: false,
+            noData: true,
+          };
+          return newState;
+        });
       }
     };
 
@@ -168,7 +216,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
     setCurrentTripIndex((prev) => prev + 1);
   };
 
-  // NEW: Move to previous segment (Back button)
+  // Move to previous segment
   const handlePreviousSegment = () => {
     setCurrentTripIndex((prev) => prev - 1);
   };
@@ -194,12 +242,18 @@ const FilterAndFleetListing = ({ refreshKey }) => {
     priceRange = 0,
     fleetData = [],
     filteredData = [],
+    loading = false,
+    noData = false, // <-- NEW: indicates no data (400 or empty finalFleet)
   } = currentSegmentState;
 
+  // Distinct flight types
   const allFlightTypes = useMemo(() => {
-    return [...new Set(fleetData.map((f) => f.fleetDetails?.flightType).filter(Boolean))];
+    return [
+      ...new Set(fleetData.map((f) => f.fleetDetails?.flightType).filter(Boolean)),
+    ];
   }, [fleetData]);
 
+  // Collect all amenities
   const allAmenities = useMemo(() => {
     const amenitySet = new Set();
     fleetData.forEach((f) => {
@@ -214,7 +268,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
     return [...amenitySet];
   }, [fleetData]);
 
-  // Handlers for current segment
+  // Handlers for the current segment filters
   const onToggleType = (type) => {
     const updated = selectedTypes.includes(type)
       ? selectedTypes.filter((t) => t !== type)
@@ -245,7 +299,11 @@ const FilterAndFleetListing = ({ refreshKey }) => {
     });
   };
 
-  // If no searchData yet, show a loading skeleton. The Hook order is preserved.
+  // --------------------------------------------------
+  // 6. Conditional Rendering
+  // --------------------------------------------------
+
+  // A) If no searchData yet => "register & search"
   if (!searchData) {
     return (
       <div className="p-4 space-y-6 w-full max-w-[100rem] h-[30rem] flex flex-col justify-center items-center">
@@ -262,9 +320,8 @@ const FilterAndFleetListing = ({ refreshKey }) => {
     );
   }
 
-  const isLoadingSegment = currentSegmentState?.loading;
-
-  if (isLoadingSegment) {
+  // B) If the current segment is still "loading" => skeleton
+  if (loading) {
     return (
       <div className="p-4 space-y-6 animate-pulse w-full max-w-[100rem]">
         <div className="flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
@@ -314,7 +371,23 @@ const FilterAndFleetListing = ({ refreshKey }) => {
     );
   }
 
-  // Main UI
+  // C) If "noData" => show a "No fleets available" card
+  if (noData) {
+    return (
+      <div className="w-full max-w-[100rem] h-[30rem] flex flex-col justify-center items-center bg-white border border-blue-100 rounded-lg p-8">
+        <BsExclamationTriangle className="text-7xl text-gray-400 mb-4" />
+        <h2 className="text-2xl font-bold text-gray-700 mb-2">
+          No fleets available
+        </h2>
+        <p className="text-gray-600 text-sm text-center max-w-[40ch]">
+          Sorry, we couldn&apos;t find any fleet options for this route or date. 
+          Please try modifying your search or come back later.
+        </p>
+      </div>
+    );
+  }
+
+  // D) Otherwise, show main UI
   return (
     <div className="relative w-full mx-auto flex flex-col items-start overflow-hidden max-w-[100rem] px-6">
       {/* Top Panel */}
@@ -383,9 +456,10 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                     className={`
                       py-2 px-4 rounded-md shadow-md text-sm font-medium
                       focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition-all
-                      ${!!selectedFleets[0]
-                        ? "bg-gray-400 text-white cursor-not-allowed"
-                        : "bg-blue-600 hover:bg-blue-500 text-white"
+                      ${
+                        !!selectedFleets[0]
+                          ? "bg-gray-400 text-white cursor-not-allowed"
+                          : "bg-blue-600 hover:bg-blue-500 text-white"
                       }
                     `}
                   >
@@ -419,10 +493,10 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                   <span className="inline-block mx-1">
                     <IoIosAirplane size={34} />
                   </span>
-                  ----- {searchData.segments[currentTripIndex]?.to}
+                  ------ {searchData.segments[currentTripIndex]?.to}
                 </p>
 
-                {/* NEW: "Go Back" button, only if not on the first segment */}
+                {/* "Go Back" button, only if not on the first segment */}
                 {currentTripIndex > 0 && (
                   <button
                     onClick={handlePreviousSegment}
@@ -434,17 +508,18 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                   </button>
                 )}
 
-                {/* "Select Next Fleet" when fleet is chosen and not on last segment */}
-                {selectedFleets[currentTripIndex] && currentTripIndex < tripCount - 1 && (
-                  <button
-                    onClick={handleNextSegment}
-                    className="bg-blue-600 hover:bg-blue-500 text-white py-2 px-4 rounded-md shadow-md 
+                {/* "Select Next Fleet" if current fleet is chosen and not on last segment */}
+                {selectedFleets[currentTripIndex] &&
+                  currentTripIndex < tripCount - 1 && (
+                    <button
+                      onClick={handleNextSegment}
+                      className="bg-blue-600 hover:bg-blue-500 text-white py-2 px-4 rounded-md shadow-md 
                       focus:outline-none focus:ring-2 focus:ring-blue-400 
                       focus:ring-offset-2 transition-all text-sm font-medium"
-                  >
-                    Select Next Fleet
-                  </button>
-                )}
+                    >
+                      Select Next Fleet
+                    </button>
+                  )}
 
                 {/* If on the last segment and a fleet is selected, "Proceed to Enquiry" */}
                 {currentTripIndex === tripCount - 1 &&
@@ -543,9 +618,11 @@ const FilterAndFleetListing = ({ refreshKey }) => {
               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer
                  focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
               style={{
-                background: `linear-gradient(to right, #3b82f6 ${((priceRange - minPrice) / (maxPrice - minPrice)) * 100
-                  }%, #e5e7eb ${((priceRange - minPrice) / (maxPrice - minPrice)) * 100
-                  }%)`,
+                background: `linear-gradient(to right, #3b82f6 ${
+                  ((priceRange - minPrice) / (maxPrice - minPrice)) * 100
+                }%, #e5e7eb ${
+                  ((priceRange - minPrice) / (maxPrice - minPrice)) * 100
+                }%)`,
               }}
             />
             {priceRange !== maxPrice && (
@@ -578,9 +655,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
               })}
             </div>
           </div>
-
         </motion.div>
-
 
         {/* Fleet Listing Section */}
         <div className="w-full bg-white flex flex-col items-center p-4 px-12 border border-blue-100 rounded-xl">
@@ -595,10 +670,12 @@ const FilterAndFleetListing = ({ refreshKey }) => {
               {searchData.segments[segmentIndex].to}
             </h3>
 
-            <p className="text-neutral-800 text-xl mb-4">Recommending flights based on convenience and fare</p>
+            <p className="text-neutral-800 text-xl mb-4">
+              Recommending flights based on convenience and fare
+            </p>
 
             {filteredData.length === 0 ? (
-              // This is the "empty card" or message
+              // This is the "no fleets in filter" or empty card
               <div className="flex flex-col items-center justify-center mt-10">
                 <BsExclamationTriangle className="text-5xl text-gray-400 mb-2" />
                 <p className="text-lg text-gray-600">No fleets available</p>
@@ -610,7 +687,8 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                   key={flight.serialNumber}
                   filteredData={[flight]}
                   onSelectFleet={(selectedFleet) =>
-                    handleFleetSelection(segmentIndex, selectedFleet)}
+                    handleFleetSelection(segmentIndex, selectedFleet)
+                  }
                   selectedFleet={selectedFleets[segmentIndex]}
                   onNextSegment={handleNextSegment}
                   currentTripIndex={currentTripIndex}
@@ -619,7 +697,6 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                 />
               ))
             )}
-
           </div>
         </div>
       </div>

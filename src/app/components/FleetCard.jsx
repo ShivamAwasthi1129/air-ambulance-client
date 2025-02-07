@@ -99,7 +99,7 @@ const FlightCard = ({
     const data = sessionStorage.getItem('searchData')
     if (data) {
       const parsed = JSON.parse(data)
-      console.log('Fetched Search Data:', parsed)
+      // console.log('Fetched Search Data:', parsed)
       setParsedData(parsed)
     } else {
       console.log("No data found in sessionStorage for 'searchData'")
