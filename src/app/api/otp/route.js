@@ -20,6 +20,12 @@ export async function POST(req) {
 
     const expiryTime = Math.floor(Date.now() / 1000) + Number(OTP_EXPIRY_TIME);
 
+    const response = await fetch(`https://emailvalidation.abstractapi.com/v1/?api_key=d2e0e29759c1416a8ed262380033504d&email=${email}`);
+    const emailValidator = await response.json();
+
+    if(!emailValidator.deliverability == "UNDELIVERABLE")
+      return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
+
     await connectToDatabase();
 
     const result = await OTPTable.findOne({ address: phoneNumber });
@@ -172,6 +178,7 @@ export async function POST(req) {
 
     return NextResponse.json({ success: true, otp });
   } catch (error) {
+    console.log("error", error);
     return NextResponse.json(
       { error: error.response?.data || error.message },
       { status: 500 }
