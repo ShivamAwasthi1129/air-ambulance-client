@@ -1,5 +1,8 @@
 import Airports from "@/app/models/Airports";
 import { connectToDatabase } from "@/config/mongo";
+import jwt from "jsonwebtoken";
+
+const SECRET_KEY = process.env.JWT_SECRET;
 
 // Haversine Formula to calculate distance
 export function haversine(lat1, lon1, lat2, lon2) {
@@ -39,4 +42,12 @@ export function convertToHoursMinutes(decimalHours) {
   const hours = Math.floor(decimalHours);
   const minutes = Math.round((decimalHours - hours) * 60);
   return `${hours}h ${minutes}m`;
+}
+
+export function generateToken(user) {
+  return jwt.sign(
+    { id: user._id, email: user.email }, // Payload: user ID and email
+    SECRET_KEY, // Secret key
+    { expiresIn: "1h" } // Token expiration time
+  );
 }
