@@ -307,7 +307,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
   if (!searchData) {
     return (
       <div className="p-4 space-y-6 w-full max-w-[100rem] h-[30rem] flex flex-col justify-center items-center">
-        <p className="text-3xl text-gray-700">
+        {/* <p className="text-3xl text-gray-700">
           Register yourself and start search
         </p>
         <Image
@@ -315,7 +315,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
           alt="Loading..."
           width={600}
           height={100}
-        />
+        /> */}
       </div>
     );
   }
@@ -374,13 +374,13 @@ const FilterAndFleetListing = ({ refreshKey }) => {
   // C) If "noData" => show a "No fleets available" card
   if (noData) {
     return (
-      <div className="w-full max-w-[100rem] h-[30rem] flex flex-col justify-center items-center bg-white border border-blue-100 rounded-lg p-8">
+      <div className="w-full max-w-6xl h-[30rem] flex flex-col justify-center items-center bg-white border border-blue-100 rounded-lg p-8 mt-60">
         <BsExclamationTriangle className="text-7xl text-gray-400 mb-4" />
         <h2 className="text-2xl font-bold text-gray-700 mb-2">
           No fleets available
         </h2>
         <p className="text-gray-600 text-sm text-center max-w-[40ch]">
-          Sorry, we couldn&apos;t find any fleet options for this route or date. 
+          Sorry, we couldn&apos;t find any fleet options for this route or date.
           Please try modifying your search or come back later.
         </p>
       </div>
@@ -392,8 +392,8 @@ const FilterAndFleetListing = ({ refreshKey }) => {
     <div className="relative w-full mx-auto flex flex-col items-start overflow-hidden max-w-[100rem] px-6">
       {/* Top Panel */}
       <div className="w-full py-4 ">
-        <h1 className="text-2xl font-bold text-center text-blue-700">
-          Fleet Selection Panel
+        <h1 className="text-2xl font-bold text-center text-white">
+          ✈️  Select Your Dream Fleet ✈️
         </h1>
         <div className="flex mt-2 ">
           {/* Selected Fleets */}
@@ -456,10 +456,9 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                     className={`
                       py-2 px-4 rounded-md shadow-md text-sm font-medium
                       focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition-all
-                      ${
-                        !!selectedFleets[0]
-                          ? "bg-gray-400 text-white cursor-not-allowed"
-                          : "bg-blue-600 hover:bg-blue-500 text-white"
+                      ${!!selectedFleets[0]
+                        ? "bg-gray-400 text-white cursor-not-allowed"
+                        : "bg-blue-600 hover:bg-blue-500 text-white"
                       }
                     `}
                   >
@@ -618,11 +617,9 @@ const FilterAndFleetListing = ({ refreshKey }) => {
               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer
                  focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
               style={{
-                background: `linear-gradient(to right, #3b82f6 ${
-                  ((priceRange - minPrice) / (maxPrice - minPrice)) * 100
-                }%, #e5e7eb ${
-                  ((priceRange - minPrice) / (maxPrice - minPrice)) * 100
-                }%)`,
+                background: `linear-gradient(to right, #3b82f6 ${((priceRange - minPrice) / (maxPrice - minPrice)) * 100
+                  }%, #e5e7eb ${((priceRange - minPrice) / (maxPrice - minPrice)) * 100
+                  }%)`,
               }}
             />
             {priceRange !== maxPrice && (

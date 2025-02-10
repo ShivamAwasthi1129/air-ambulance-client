@@ -294,15 +294,14 @@ export const SearchBar = () => {
       if (!isVerified) {
         try {
           // We do this in parallel or in sequence, but we do NOT wait to send final data
-          fetch("/api/otp/email", {
+          // Send both email & phoneNumber in a single POST body
+          await fetch("/api/otp", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email }),
-          });
-          fetch("/api/otp/whatsapp", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ phoneNumber: `+91${phoneNumber}` }),
+            body: JSON.stringify({
+              email,
+              phoneNumber: `+91${phoneNumber}`,
+            }),
           });
 
           // We'll open the modal to let user verify
@@ -557,9 +556,8 @@ export const SearchBar = () => {
                     <label className="text-md text-[#008cff] mb-1">Depart</label>
                     <input
                       type="datetime-local"
-                      value={`${segments[0].departureDate}T${
-                        segments[0].departureTime || "12:00"
-                      }`}
+                      value={`${segments[0].departureDate}T${segments[0].departureTime || "12:00"
+                        }`}
                       onChange={(e) => {
                         const [date, time] = e.target.value.split("T");
                         handleSegmentChange(0, "departureDate", date);
@@ -788,9 +786,8 @@ export const SearchBar = () => {
                             </label>
                             <input
                               type="datetime-local"
-                              value={`${segment.departureDate}T${
-                                segment.departureTime || "12:00"
-                              }`}
+                              value={`${segment.departureDate}T${segment.departureTime || "12:00"
+                                }`}
                               onChange={(e) => {
                                 const [date, time] = e.target.value.split("T");
                                 handleSegmentChange(index, "departureDate", date);
