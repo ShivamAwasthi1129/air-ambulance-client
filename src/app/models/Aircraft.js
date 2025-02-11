@@ -37,6 +37,7 @@ const FleetDetailsSchema = new mongoose.Schema({
     mfgDate: { type: String, required: true },
     pricing: { type: String, required: true },
     refurbishedDate: { type: String, required: true },
+    luggage: { type: String, required: true },
     registrationNo: { type: String, required: true },
     restrictedAirports: [{ type: String }],
     seatCapacity: { type: Number, required: true },
