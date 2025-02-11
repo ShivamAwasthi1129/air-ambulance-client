@@ -22,7 +22,7 @@ export const SearchBar = () => {
 
   const [segments, setSegments] = useState([
     {
-      from: "Indira Gandhi International Airport (DEL)",
+      from: "Dubai International Airport (DXB)",
       to: "Heathrow Airport (LHR)",
       departureDate: new Date().toISOString().split("T")[0],
       departureTime: "12:00",

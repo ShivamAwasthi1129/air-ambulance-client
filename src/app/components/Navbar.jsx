@@ -83,7 +83,7 @@ const NavBar = () => {
 
       // If a token is returned, login is successful.
       if (data.token) {
-        const userData = { email, token: data.token };
+        const userData = { email, token: data.token, name: data.name, phone: data.phone};
         setUser(userData);
         // Save user details in session storage to persist across refreshes
         sessionStorage.setItem("user", JSON.stringify(userData));

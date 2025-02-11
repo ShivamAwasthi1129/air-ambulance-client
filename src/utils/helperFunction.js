@@ -38,6 +38,29 @@ export async function searchStation(query) {
   }
 }
 
+export function addHoursToDate(dateString, hoursToAdd) {
+  let date = new Date(dateString);
+  date.setHours(date.getHours() + hoursToAdd);
+  return date;
+}
+
+export function convertTo12HourFormat(time) {
+  // Split the time into hours and minutes
+  let [hours, minutes] = time.split(':');
+
+  // Convert hours to a number
+  hours = parseInt(hours);
+
+  // Determine AM or PM
+  const period = hours >= 12 ? 'PM' : 'AM';
+
+  // Convert to 12-hour format
+  hours = hours % 12 || 12; // Handle midnight (0 hours) case
+
+  // Return the formatted time
+  return `${hours}:${minutes} ${period}`;
+}
+
 export function convertToHoursMinutes(decimalHours) {
   const hours = Math.floor(decimalHours);
   const minutes = Math.round((decimalHours - hours) * 60);

@@ -42,7 +42,7 @@ const FinalEnquiryPage = () => {
         const cleanedFrom = cleanAirportName(segment.from);
         const cleanedTo = cleanAirportName(segment.to);
 
-        const url = `/api/search-flights?from=${encodeURIComponent(cleanedFrom)}&to=${encodeURIComponent(cleanedTo)}&departureDate=${segment.departureDate}&travelerCount=${segment.passengers}`;
+        const url = `/api/search-flights?from=${encodeURIComponent(cleanedFrom)}&to=${encodeURIComponent(cleanedTo)}&departureDate=${`${segment.departureDate}T${segment.departureTime}:00Z`}&travelerCount=${segment.passengers}`;
 
         try {
           const res = await fetch(url);
@@ -121,13 +121,26 @@ const FinalEnquiryPage = () => {
     window.open(whatsappURL, "_blank");
   };
 
-  const sendEmailMessage = () => {
-    const emailAddress = "hexerve@gmail.com";
-    const subject = "Quotation Request";
-    const emailURL = `mailto:${emailAddress}?subject=${encodeURIComponent(
-      subject
-    )}&body=${encodeURIComponent(message)}`;
-    window.open(emailURL, "_blank");
+  const sendEmailMessage = async () => {
+    // const emailAddress = "hexerve@gmail.com";
+    // const subject = "Quotation Request";
+    // const emailURL = `mailto:${emailAddress}?subject=${encodeURIComponent(
+    //   subject
+    // )}&body=${encodeURIComponent(message)}`;
+    // window.open(emailURL, "_blank");
+    try{
+      await fetch("/api/enquiry", {
+        method: "POST",
+        body: JSON.stringify({
+          segments: searchData.segments,
+          user: searchData.user
+        })
+      })
+
+      alert("mail sent");
+    }catch (e) {
+      alert("something went wrong");
+    }
   };
 
   // Grab dynamic details from the first and last segments

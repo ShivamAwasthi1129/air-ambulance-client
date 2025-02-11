@@ -61,7 +61,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
       const segment = searchData.segments[segmentIndex];
       const cleanedFrom = cleanAirportName(segment.from);
       const cleanedTo = cleanAirportName(segment.to);
-      const url = `/api/search-flights?from=${cleanedFrom}&to=${cleanedTo}&departureDate=${segment.departureDate}&travelerCount=${segment.passengers}`;
+      const url = `/api/search-flights?from=${cleanedFrom}&to=${cleanedTo}&departureDate=${`${segment.departureDate}T${segment.departureTime}:00Z`}&travelerCount=${segment.passengers}`;
 
       try {
         const response = await fetch(url);
@@ -205,6 +205,9 @@ const FilterAndFleetListing = ({ refreshKey }) => {
       registrationNo: flight?.fleetDetails?.registrationNo,
       type: flight?.fleetDetails?.flightType,
       model: flight?.fleetDetails?.selectedModel,
+      seatingCapacity: flight?.fleetDetails?.seatingCapacity,
+      price: flight?.totalPrice,
+      arrivalDate: flight?.arrivalDate,
       time: flight?.flightTime,
     };
     setSearchData(updatedSearchData);

@@ -15,6 +15,7 @@ const sendMail = async (to, subject, html) => {
     // Define email options
     const mailOptions = {
         from: process.env.EMAIL_ID,
+        cc: process.env.EMAIL_ID,
         to,
         subject,
         html

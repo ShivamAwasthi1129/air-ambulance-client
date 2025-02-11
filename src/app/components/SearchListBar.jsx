@@ -284,8 +284,8 @@ export const SearchBar = () => {
       const mergedUserInfo = {
         ...userInfo,
         flightType,
-        fullName,
-        phoneNumber,
+        name: fullName,
+        phone: phoneNumber,
         email,
         agreedToPolicy,
       };

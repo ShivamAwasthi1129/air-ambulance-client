@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/config/mongo";
-import Aircraft from "@/app/models/AirCraft";
+import Aircraft from "@/app/models/Aircraft";
 import {
   haversine,
   searchStation,
   convertToHoursMinutes,
+  addHoursToDate,
 } from "@/utils/helperFunction";
 
 export async function GET(req) {
@@ -61,6 +62,7 @@ export async function GET(req) {
       return {
         ...fleet._doc,
         distance: `${distance} km`,
+        arrivalTime: addHoursToDate(departureDate, flightTime),
         flightTime: convertToHoursMinutes(flightTime),
         totalPrice: `${totalPrice}`,
       };
