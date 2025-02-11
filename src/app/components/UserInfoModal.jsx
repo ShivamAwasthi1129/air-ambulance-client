@@ -121,7 +121,7 @@ export default function UserInfoModal({ show, onClose }) {
     try {
       // Make GET request to verify
       const resp = await fetch(
-        `/api/otp/email?otp=${encodeURIComponent(emailOTP)}&email=${encodeURIComponent(email)}`,
+        `/api/otp?email=${encodeURIComponent(email)}&otp=${encodeURIComponent(emailOTP)}`,
         { method: "GET" }
       );
       const data = await resp.json();

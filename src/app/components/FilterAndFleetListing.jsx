@@ -323,7 +323,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
   // B) If the current segment is still "loading" => skeleton
   if (loading) {
     return (
-      <div className="p-4 space-y-6 animate-pulse w-full max-w-[100rem]">
+      <div className="p-4 space-y-6 animate-pulse w-full max-w-6xl mt-40">
         <div className="flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
           <div className="bg-gray-300 rounded h-6 w-48" />
           <div className="bg-gray-300 rounded h-6 w-60" />
@@ -374,7 +374,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
   // C) If "noData" => show a "No fleets available" card
   if (noData) {
     return (
-      <div className="w-full max-w-6xl h-[30rem] flex flex-col justify-center items-center bg-white border border-blue-100 rounded-lg p-8 mt-60">
+      <div className="w-full max-w-6xl h-[30rem] flex flex-col justify-center items-center bg-none rounded-lg p-8 mt-60">
         <BsExclamationTriangle className="text-7xl text-gray-400 mb-4" />
         <h2 className="text-2xl font-bold text-gray-700 mb-2">
           No fleets available
