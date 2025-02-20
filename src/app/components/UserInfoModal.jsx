@@ -261,7 +261,7 @@ export default function UserInfoModal({ show, onClose }) {
             {/* Email OTP */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Enter the OTP sent to your Email
+                Enter the OTP sent to your Whatsapp / Mobile No. or Email
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -291,14 +291,14 @@ export default function UserInfoModal({ show, onClose }) {
               )}
               {emailVerified && (
                 <p className="text-green-600 text-sm mt-1">
-                  Email OTP verified successfully!
+                  OTP verified successfully!
                 </p>
               )}
             </div>
 
             {/* Phone OTP */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              {/* <label className="block text-sm font-medium text-gray-700 mb-1">
                 Enter the OTP sent to your WhatsApp
               </label>
               <div className="flex items-center gap-2">
@@ -317,9 +317,9 @@ export default function UserInfoModal({ show, onClose }) {
                 >
                   Verify
                 </button>
-              </div>
+              </div> */}
               {/* Timer & errors */}
-              {!phoneVerified && (
+              {/* {!phoneVerified && (
                 <p className="text-sm text-gray-500 mt-1">
                   Time left: {formatTime(phoneOtpTimeLeft)}
                 </p>
@@ -331,7 +331,7 @@ export default function UserInfoModal({ show, onClose }) {
                 <p className="text-green-600 text-sm mt-1">
                   Phone OTP verified successfully!
                 </p>
-              )}
+              )} */}
             </div>
           </div>
 

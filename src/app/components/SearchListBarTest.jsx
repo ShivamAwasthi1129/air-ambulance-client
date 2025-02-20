@@ -8,12 +8,6 @@ import BannerSection from "./Banner";
 import UserInfoModal from "../components/UserInfoModal";
 import Link from "next/link";
 
-import FlightTakeoffIcon from "@mui/icons-material/FlightTakeoff";
-import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
-import InventoryIcon from "@mui/icons-material/Inventory2";
-import BusinessIcon from "@mui/icons-material/Business";
-import WavesIcon from "@mui/icons-material/Waves";
-
 export const SearchBar = () => {
   // === State ===
   const [tripType, setTripType] = useState("oneway");
@@ -23,7 +17,7 @@ export const SearchBar = () => {
   const [segments, setSegments] = useState([
     {
       from: "Dubai International Airport (DXB)",
-      to: "Heathrow Airport (LHR)",
+      to: "Indira Gandhi International Airport (DEL)",
       departureDate: new Date().toISOString().split("T")[0],
       departureTime: "12:00",
       passengers: 1,
@@ -37,9 +31,9 @@ export const SearchBar = () => {
   const [showDropdown, setShowDropdown] = useState(false);
 
   const [flightType, setFlightType] = useState("");
-  const [name, setname] = useState("");
-  const [phone, setphone] = useState("");
-  const [countryCode, setCountryCode] = useState("+91"); // <-- NEW STATE FOR COUNTRY CODE
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [countryCode, setCountryCode] = useState("+91");
   const [email, setEmail] = useState("");
   const [agreedToPolicy, setAgreedToPolicy] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
@@ -52,7 +46,74 @@ export const SearchBar = () => {
 
   // === Effects ===
 
-  // 1) Collapse multi-city when user clicks outside
+  // (A) Load data from session OR set defaults if no saved data
+  useEffect(() => {
+    const savedSearchData = sessionStorage.getItem("searchData");
+    if (savedSearchData) {
+      // If session data exists, load it
+      const parsed = JSON.parse(savedSearchData);
+      if (parsed.tripType) setTripType(parsed.tripType);
+      if (parsed.segments) setSegments(parsed.segments);
+      if (parsed.userInfo) setUserInfo(parsed.userInfo);
+      if (parsed.tripType === "multicity") {
+        setShowMultiCityDetails(true);
+      }
+    } else {
+      // No session data => set default "from" (Dubai) and "to" (Delhi)
+      setSegments((prev) => {
+        const updated = [...prev];
+
+        const dxbAirport = {
+          name: "Dubai International Airport",
+          iata_code: "DXB",
+          icao_code: "OMDB",
+          city: "Dubai",
+          country: "UAE",
+        };
+        updated[0] = {
+          ...updated[0],
+          from: `${dxbAirport.name} (${dxbAirport.iata_code})`,
+          fromCity: dxbAirport.city,
+          fromIATA: dxbAirport.iata_code,
+          fromICAO: dxbAirport.icao_code,
+        };
+
+        const delAirport = {
+          name: "Indira Gandhi International Airport",
+          iata_code: "DEL",
+          icao_code: "VIDP",
+          city: "New Delhi",
+          country: "India",
+        };
+        updated[0] = {
+          ...updated[0],
+          to: `${delAirport.name} (${delAirport.iata_code})`,
+          toCity: delAirport.city,
+          toIATA: delAirport.iata_code,
+          toICAO: delAirport.icao_code,
+        };
+        return updated;
+      });
+    }
+
+    // Also check if user is verified
+    const userHasVerified = sessionStorage.getItem("userVerified");
+    if (userHasVerified === "true") {
+      setIsVerified(true);
+    }
+  }, []);
+
+  // (B) Whenever tripType, segments, or userInfo changes, store in session
+  useEffect(() => {
+    const dataToSave = {
+      tripType,
+      segments,
+      userInfo,
+    };
+    sessionStorage.setItem("searchData", JSON.stringify(dataToSave));
+  }, [tripType, segments, userInfo]);
+
+  // (C) Collapse multi-city when user clicks outside
   useEffect(() => {
     function handleDocClick(e) {
       if (!containerRef.current) return;
@@ -71,7 +132,7 @@ export const SearchBar = () => {
     };
   }, [tripType, isMultiCityCollapsed]);
 
-  // 2) Close airport dropdown if user clicks outside
+  // (D) Close airport dropdown if user clicks outside
   useEffect(() => {
     function handleClickOutside(e) {
       if (
@@ -90,35 +151,7 @@ export const SearchBar = () => {
     };
   }, [showDropdown]);
 
-  // 3) Load tripType & segments from session
-  useEffect(() => {
-    const savedSearchData = sessionStorage.getItem("searchData");
-    if (savedSearchData) {
-      const parsed = JSON.parse(savedSearchData);
-      if (parsed.tripType) setTripType(parsed.tripType);
-      if (parsed.segments) setSegments(parsed.segments);
-      if (parsed.userInfo) setUserInfo(parsed.userInfo);
-      if (parsed.tripType === "multicity") {
-        setShowMultiCityDetails(true);
-      }
-    }
-    const userHasVerified = sessionStorage.getItem("userVerified");
-    if (userHasVerified === "true") {
-      setIsVerified(true);
-    }
-  }, []);
-
-  // 4) Store changes in session
-  useEffect(() => {
-    const dataToSave = {
-      tripType,
-      segments,
-      userInfo,
-    };
-    sessionStorage.setItem("searchData", JSON.stringify(dataToSave));
-  }, [tripType, segments, userInfo]);
-
-  // 5) Fetch airports when searchQuery changes
+  // (E) Fetch airports when searchQuery changes
   useEffect(() => {
     async function fetchAirports() {
       if (!searchQuery) {
@@ -136,7 +169,7 @@ export const SearchBar = () => {
     fetchAirports();
   }, [searchQuery]);
 
-  // 6) Fetch IP info on mount
+  // (F) Fetch IP info on mount
   useEffect(() => {
     async function fetchIP() {
       try {
@@ -159,8 +192,8 @@ export const SearchBar = () => {
       setIsMultiCityCollapsed(false);
       setSegments([
         {
-          from: "Indira Gandhi International Airport (DEL)",
-          to: "Heathrow Airport (LHR)",
+          from: "Dubai International Airport (DXB)",
+          to: "Indira Gandhi International Airport (DEL)",
           departureDate: new Date().toISOString().split("T")[0],
           departureTime: "12:00",
           passengers: 1,
@@ -171,8 +204,8 @@ export const SearchBar = () => {
       setIsMultiCityCollapsed(false);
       setSegments([
         {
-          from: "",
-          to: "",
+          from: "Dubai International Airport (DXB)",
+          to: "Indira Gandhi International Airport (DEL)",
           departureDate: new Date().toISOString().split("T")[0],
           departureTime: "12:00",
           passengers: 1,
@@ -187,26 +220,33 @@ export const SearchBar = () => {
     setSegments(updatedSegments);
   };
 
-  const handleSelectAirport = (airport) => {
-    if (focusedSegmentIndex === null || !focusedField) return;
+  const handleSelectAirport = (
+    airport,
+    index = focusedSegmentIndex,
+    field = focusedField
+  ) => {
+    if (index === null || !field) return;
+
     const updatedSegments = [...segments];
-    if (focusedField === "from") {
-      updatedSegments[focusedSegmentIndex] = {
-        ...updatedSegments[focusedSegmentIndex],
+
+    if (field === "from") {
+      updatedSegments[index] = {
+        ...updatedSegments[index],
         from: `${airport.name} (${airport.iata_code})`,
-        fromCity: airport.city,
-        fromIATA: airport.iata_code,
-        fromICAO: airport.icao_code,
+        fromCity: airport.city || "Dubai",
+        fromIATA: airport.iata_code || "DXB",
+        fromICAO: airport.icao_code || "OMDB",
       };
-    } else if (focusedField === "to") {
-      updatedSegments[focusedSegmentIndex] = {
-        ...updatedSegments[focusedSegmentIndex],
+    } else if (field === "to") {
+      updatedSegments[index] = {
+        ...updatedSegments[index],
         to: `${airport.name} (${airport.iata_code})`,
-        toCity: airport.city,
-        toIATA: airport.iata_code,
-        toICAO: airport.icao_code,
+        toCity: airport.city || "New Delhi",
+        toIATA: airport.iata_code || "DEL",
+        toICAO: airport.icao_code || "VIDP",
       };
     }
+
     setSegments(updatedSegments);
     setShowDropdown(false);
     setFocusedSegmentIndex(null);
@@ -245,32 +285,26 @@ export const SearchBar = () => {
     try {
       // (A) If user not verified, ensure personal fields are filled
       if (!isVerified) {
-        if (
-          !name.trim() ||
-          !phone.trim() ||
-          !email.trim() ||
-          !flightType ||
-          !agreedToPolicy
-        ) {
+        if (!name.trim() || !phone.trim() || !email.trim() || !flightType || !agreedToPolicy) {
           alert("Please fill out all fields and agree to the policy before searching.");
           setIsLoading(false);
           return;
         }
       }
-  
-      // Append the selected country code to the phone number here
+
+      // Append the selected country code to the phone number
       const fullPhoneNumber = `${countryCode}${phone}`;
-  
+
       const mergedUserInfo = {
         ...userInfo,
         flightType,
         name,
-        phone: fullPhoneNumber, // <-- Updated phone number with country code
+        phone: fullPhoneNumber,
         email,
         agreedToPolicy,
       };
-  
-      // (B) If not verified, attempt to send OTP (if needed)
+
+      // (B) If not verified, attempt to send OTP
       if (!isVerified) {
         try {
           const response = await fetch("/api/otp", {
@@ -278,41 +312,39 @@ export const SearchBar = () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               name,
-              phone: fullPhoneNumber, // using the combined country code and phone
+              phone: fullPhoneNumber,
               email,
             }),
           });
           const data = await response.json();
           if (data.message === "user already exists") {
             alert(
-              data.message +
-                " please try to login via provided credential in your existing email"
+              data.message + " please try to login via provided credential in your existing email"
             );
+            setIsLoading(false);
             return;
           }
           setIsUserInfoModalOpen(true);
         } catch (err) {
-          console.error("Error sending OTP requests:", err);
+          console.error("Error sending OTP request:", err);
         }
       }
-  
-      // (C) Prepare final data and store it in sessionStorage.
+
+      // (C) Prepare final data and store it
       const finalData = {
         tripType,
         segments,
         userInfo: mergedUserInfo,
       };
       sessionStorage.setItem("searchData", JSON.stringify(finalData));
-  
-      // **NEW LINE:** Also mark the user as verified so that NavBar picks it up
+
+      // Mark user as verified so NavBar picks it up
       sessionStorage.setItem("userVerified", "true");
-      console.log("Final Payload (sent immediately):", finalData);
-      // (D) Dispatch the custom event so NavBar can refresh
       window.dispatchEvent(new Event("updateNavbar"));
-      // (E) Continue with any other state updates...
+
       setUserInfo(mergedUserInfo);
       setRefreshKey((prev) => prev + 1);
-  
+
       if (tripType === "multicity") {
         setIsMultiCityCollapsed(true);
       }
@@ -322,7 +354,8 @@ export const SearchBar = () => {
       setIsLoading(false);
     }
   };
-  
+
+  // === JSX ===
   return (
     <>
       {isUserInfoModalOpen && (
@@ -356,8 +389,30 @@ export const SearchBar = () => {
                   : "text-gray-700 hover:bg-gray-300"
                 }`}
             >
-              <FlightTakeoffIcon />
+              <img
+                src="https://s3.ap-south-1.amazonaws.com/aviation.hexerve/header+icons+/0476ea74-7ccd-439b-8a06-38872370b597.png"
+                alt="Charter Flight"
+                className="w-8 h-8"
+              />
+
               <span className="text-sm font-medium mt-1">Charter Flight</span>
+            </div>
+
+            <div
+              onClick={() => setFlightType("Private Jets")}
+              className={`cursor-pointer flex flex-col items-center p-2 
+                rounded-md transition-colors ${flightType === "Private Jets"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-700 hover:bg-gray-300"
+                }`}
+            >
+              <img
+                src="https://s3.ap-south-1.amazonaws.com/aviation.hexerve/header+icons+/Screenshot_19-2-2025_12929_.jpeg"
+                alt="Private Jets"
+                className="w-12 h-10"
+              />
+
+              <span className="text-sm font-medium mt-1">Private Jets</span>
             </div>
 
             <div
@@ -368,7 +423,12 @@ export const SearchBar = () => {
                   : "text-gray-700 hover:bg-gray-300"
                 }`}
             >
-              <LocalHospitalIcon />
+              <img
+                src="https://s3.ap-south-1.amazonaws.com/aviation.hexerve/header+icons+/91427a14-4335-48d7-9ee4-7e9fa6a4986c.png"
+                alt="Air Ambulance"
+                className="w-12 h-8"
+              />
+
               <span className="text-sm font-medium mt-1">Air Ambulance</span>
             </div>
 
@@ -380,20 +440,13 @@ export const SearchBar = () => {
                   : "text-gray-700 hover:bg-gray-300"
                 }`}
             >
-              <InventoryIcon />
-              <span className="text-sm font-medium mt-1">Air Cargo</span>
-            </div>
+              <img
+                src="https://s3.ap-south-1.amazonaws.com/aviation.hexerve/header+icons+/4785e20f-3e7e-43bd-a79e-8855af562028.png"
+                alt="Air Cargo"
+                className="w-10 h-8"
+              />
 
-            <div
-              onClick={() => setFlightType("Private Jets")}
-              className={`cursor-pointer flex flex-col items-center p-2 
-                rounded-md transition-colors ${flightType === "Private Jets"
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-700 hover:bg-gray-300"
-                }`}
-            >
-              <BusinessIcon />
-              <span className="text-sm font-medium mt-1">Private Jets</span>
+              <span className="text-sm font-medium mt-1">Air Cargo</span>
             </div>
 
             <div
@@ -404,7 +457,12 @@ export const SearchBar = () => {
                   : "text-gray-700 hover:bg-gray-300"
                 }`}
             >
-              <WavesIcon />
+              <img
+                src="https://s3.ap-south-1.amazonaws.com/aviation.hexerve/header+icons+/fa056278-43d3-402f-868f-771f2de17ebe.png"
+                alt="Sea Plane"
+                className="w-12 h-8"
+              />
+
               <span className="text-sm font-medium mt-1">Sea Plane</span>
             </div>
           </div>
@@ -462,16 +520,16 @@ export const SearchBar = () => {
                       setSearchQuery(e.target.value);
                     }}
                   />
-                  {/* Dropdown */}
+                  {/* Dropdown - limited to 5 results */}
                   {showDropdown &&
                     focusedSegmentIndex === 0 &&
                     focusedField === "from" &&
                     airports.length > 0 && (
                       <ul className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
-                        {airports.map((airport) => (
+                        {airports.slice(0, 5).map((airport) => (
                           <li
                             key={airport.id}
-                            onClick={() => handleSelectAirport(airport)}
+                            onClick={() => handleSelectAirport(airport, 0, "from")}
                             className="p-2 cursor-pointer hover:bg-gray-200 border-b text-sm"
                           >
                             <div className="font-semibold">
@@ -522,10 +580,10 @@ export const SearchBar = () => {
                     focusedField === "to" &&
                     airports.length > 0 && (
                       <ul className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
-                        {airports.map((airport) => (
+                        {airports.slice(0, 5).map((airport) => (
                           <li
                             key={airport.id}
-                            onClick={() => handleSelectAirport(airport)}
+                            onClick={() => handleSelectAirport(airport, 0, "to")}
                             className="p-2 cursor-pointer hover:bg-gray-200 border-b text-sm"
                           >
                             <div className="font-semibold">
@@ -638,17 +696,20 @@ export const SearchBar = () => {
                               focusedField === "from" &&
                               airports.length > 0 && (
                                 <ul className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
-                                  {airports.map((airport) => (
+                                  {airports.slice(0, 5).map((airport) => (
                                     <li
                                       key={airport.id}
-                                      onClick={() => handleSelectAirport(airport)}
+                                      onClick={() =>
+                                        handleSelectAirport(airport, index, "from")
+                                      }
                                       className="p-2 cursor-pointer hover:bg-gray-200 border-b text-sm"
                                     >
                                       <div className="font-semibold">
                                         {airport.city}, {airport.country}
                                       </div>
                                       <div className="text-xs text-gray-600">
-                                        {airport.name} • {airport.iata_code || "N/A"}
+                                        {airport.name} • {airport.iata_code || "N/A"} •{" "}
+                                        {airport.icao_code || "N/A"}
                                       </div>
                                     </li>
                                   ))}
@@ -682,17 +743,20 @@ export const SearchBar = () => {
                               focusedField === "to" &&
                               airports.length > 0 && (
                                 <ul className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
-                                  {airports.map((airport) => (
+                                  {airports.slice(0, 5).map((airport) => (
                                     <li
                                       key={airport.id}
-                                      onClick={() => handleSelectAirport(airport)}
+                                      onClick={() =>
+                                        handleSelectAirport(airport, index, "to")
+                                      }
                                       className="p-2 cursor-pointer hover:bg-gray-200 border-b text-sm"
                                     >
                                       <div className="font-semibold">
                                         {airport.city}, {airport.country}
                                       </div>
                                       <div className="text-xs text-gray-600">
-                                        {airport.name} • {airport.iata_code || "N/A"}
+                                        {airport.name} • {airport.iata_code || "N/A"} •{" "}
+                                        {airport.icao_code || "N/A"}
                                       </div>
                                     </li>
                                   ))}
@@ -739,7 +803,7 @@ export const SearchBar = () => {
                             </select>
                           </div>
 
-                          {/* Delete Button (if more than 1 segment) */}
+                          {/* Delete Button (if multiple segments) */}
                           <div className="mt-3 flex items-center gap-4">
                             {segments.length > 1 && (
                               <motion.button
@@ -753,7 +817,7 @@ export const SearchBar = () => {
                           </div>
                         </div>
 
-                        {/* Add Another Flight (only on the last segment) */}
+                        {/* Add Another Flight (last segment only) */}
                         {index === segments.length - 1 && (
                           <div className="mt-3 flex items-center gap-4 ml-10">
                             <button
@@ -775,17 +839,6 @@ export const SearchBar = () => {
             {/* (4) User Info Fields (only if not verified) */}
             {!isVerified && (
               <div className="flex flex-wrap items-center justify-center gap-4 mb-4">
-                {/* Full Name */}
-                <div className="flex-1 min-w-[180px]">
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setname(e.target.value)}
-                    placeholder="Full Name*"
-                    className="block w-full p-2 border rounded focus:outline-none bg-pink-50/50"
-                  />
-                </div>
-
                 {/* Email */}
                 <div className="flex-1 min-w-[200px]">
                   <input
@@ -799,7 +852,6 @@ export const SearchBar = () => {
 
                 {/* Phone Number with Country Code Select */}
                 <div className="flex-1 min-w-[160px] relative">
-                  {/* Country Code Select */}
                   <select
                     value={countryCode}
                     onChange={(e) => setCountryCode(e.target.value)}
@@ -809,13 +861,25 @@ export const SearchBar = () => {
                     <option value="+1">+1</option>
                     <option value="+44">+44</option>
                     <option value="+61">+61</option>
+                    {/* Add any other codes you need */}
                   </select>
                   <input
                     type="phone"
                     value={phone}
-                    onChange={(e) => setphone(e.target.value)}
+                    onChange={(e) => setPhone(e.target.value)}
                     placeholder="Phone Number*"
                     className="block w-full p-2 border rounded focus:outline-none pl-20 bg-pink-50/50"
+                  />
+                </div>
+
+                {/* Your Name */}
+                <div className="flex-1 min-w-[180px]">
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Your Name*"
+                    className="block w-full p-2 border rounded focus:outline-none bg-pink-50/50"
                   />
                 </div>
 
@@ -864,12 +928,7 @@ export const SearchBar = () => {
           </div>
         </div>
 
-        {/* 
-          (6) Conditionally render FilterAndFleetListing:
-              - Only show this if not loading AND user is verified
-              - Your backend/data calls can still happen inside FilterAndFleetListing,
-                or you can trigger them in the background if you prefer.
-        */}
+        {/* (6) Conditionally render FilterAndFleetListing */}
         {!isLoading && isVerified && (
           <>
             {/* <BannerSection /> */}

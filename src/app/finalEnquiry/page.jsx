@@ -22,8 +22,9 @@ function formatUSD(amount) {
 const FinalEnquiryPage = () => {
   const [searchData, setSearchData] = useState(null);
   const [fetchedSegmentsData, setFetchedSegmentsData] = useState([]);
+  const [userData, setUserData] = useState(null);
 
-  // 1) Read from sessionStorage
+  // 1) Read searchData from sessionStorage
   useEffect(() => {
     const storedData = sessionStorage.getItem("searchData");
     if (storedData) {
@@ -31,7 +32,23 @@ const FinalEnquiryPage = () => {
     }
   }, []);
 
-  // 2) Fetch flights for each segment, filter by selected registrationNo
+  // 2) Read user data from sessionStorage
+  useEffect(() => {
+    const storedUserData = sessionStorage.getItem("user");
+    if (storedUserData) {
+      setUserData(JSON.parse(storedUserData));
+    }
+  }, []);
+
+  // 2) Read trip type from sessionStorage
+  useEffect(() => {
+    const storedUserData = sessionStorage.getItem("user");
+    if (storedUserData) {
+      setUserData(JSON.parse(storedUserData));
+    }
+  }, []);
+
+  // 3) Fetch flights for each segment, filter by selected registrationNo
   useEffect(() => {
     const fetchAllSegments = async () => {
       if (!searchData || !searchData.segments) return;
@@ -42,7 +59,12 @@ const FinalEnquiryPage = () => {
         const cleanedFrom = cleanAirportName(segment.from);
         const cleanedTo = cleanAirportName(segment.to);
 
-        const url = `/api/search-flights?from=${encodeURIComponent(cleanedFrom)}&to=${encodeURIComponent(cleanedTo)}&departureDate=${`${segment.departureDate}T${segment.departureTime}:00Z`}&travelerCount=${segment.passengers}`;
+        const url = `/api/search-flights?from=${encodeURIComponent(
+          cleanedFrom
+        )}&to=${encodeURIComponent(
+          cleanedTo
+        )}&departureDate=${`${segment.departureDate}T${segment.departureTime}:00Z`}&travelerCount=${segment.passengers
+          }`;
 
         try {
           const res = await fetch(url);
@@ -80,7 +102,6 @@ const FinalEnquiryPage = () => {
     );
   }
 
-
   // Compute total flying time
   const parseTimeToMinutes = (timeStr) => {
     if (!timeStr) return 0;
@@ -92,10 +113,9 @@ const FinalEnquiryPage = () => {
     return total + (segment.selectedFleet?.time ? parseTimeToMinutes(segment.selectedFleet.time) : 0);
   }, 0);
 
-  const totalFlyingHours = `${Math.floor(totalFlyingTimeMinutes / 60)} Hrs ${totalFlyingTimeMinutes % 60
-    } Min`;
+  const totalFlyingHours = `${Math.floor(totalFlyingTimeMinutes / 60)} Hrs ${totalFlyingTimeMinutes % 60} Min`;
 
-  // 3) Summation for cost details
+  // 4) Summation for cost details
   const allSelectedFlights = fetchedSegmentsData.flat();
 
   // Parse flight.totalPrice, e.g. "$ 650,000"
@@ -105,9 +125,8 @@ const FinalEnquiryPage = () => {
     return acc + numericPrice;
   }, 0);
 
-  // Example: airport handling = 71,700 * number of segments
+  // Example: airport handling = 8700 * number of segments
   const airportHandling = 8700 * searchData.segments.length;
-
   const subTotal = totalFlightCost + airportHandling;
   const gstAmount = Math.round(subTotal * 0.18); // 18% tax
   const estimatedCost = subTotal + gstAmount;
@@ -122,26 +141,29 @@ const FinalEnquiryPage = () => {
   };
 
   const sendEmailMessage = async () => {
-    // const emailAddress = "hexerve@gmail.com";
-    // const subject = "Quotation Request";
-    // const emailURL = `mailto:${emailAddress}?subject=${encodeURIComponent(
-    //   subject
-    // )}&body=${encodeURIComponent(message)}`;
-    // window.open(emailURL, "_blank");
-    try{
+    try {
       await fetch("/api/enquiry", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           segments: searchData.segments,
-          user: searchData.user
-        })
-      })
-
-      alert("mail sent");
-    }catch (e) {
-      alert("something went wrong");
+          user: userData,
+          tripType: searchData.tripType,  // Ensure you've stored tripType in searchData
+          airportHandling,
+          subTotal,
+          gstAmount,
+          estimatedCost,
+        }),
+      });
+      alert("Mail sent to : " + userData.email);
+    } catch (e) {
+      alert("Something went wrong");
+      console.error("Error sending enquiry:", e);
     }
   };
+
 
   // Grab dynamic details from the first and last segments
   const firstSegment = searchData.segments[0];
@@ -289,12 +311,12 @@ const FinalEnquiryPage = () => {
     // Save the PDF
     doc.save("Proforma_Invoice.pdf");
   };
+
   return (
     <div className="flex flex-col items-center">
       <Banner />
 
       <div className="flex flex-col md:flex-row justify-center gap-6 p-4">
-
         {/* LEFT COLUMN: Flights */}
         <div className="w-[60%] md:w-[65rem] flex flex-col space-y-4">
           {searchData.segments.map((segment, segmentIndex) => {
@@ -373,11 +395,6 @@ const FinalEnquiryPage = () => {
               JetSteals grants you the opportunity to enjoy the luxury
               and convenience of flying private at commercial prices.
             </div>
-
-            {/* Enquiry button */}
-            {/* <button className="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded mb-6 font-semibold">
-              Enquire Now
-            </button> */}
 
             {/* Existing "BOOK NOW" + "SEND Enquiry" buttons */}
             <div className="flex justify-between space-2 mb-4">

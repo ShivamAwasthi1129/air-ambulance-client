@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { FaEye, FaEyeSlash, FaSpinner } from "react-icons/fa"; // Added icons
 
 const NavBar = () => {
   // State to control the login modal visibility
@@ -13,6 +14,11 @@ const NavBar = () => {
   const [errorMessage, setErrorMessage] = useState("");
   // State to control the user dropdown visibility
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // New state for toggling password visibility
+  const [showPassword, setShowPassword] = useState(false);
+  // New state to indicate when login is in progress
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Create a ref for the dropdown container
   const dropdownRef = useRef(null);
@@ -53,7 +59,7 @@ const NavBar = () => {
     }
   };
 
- // Click outside detection to hide the dropdown menu
+  // Click outside detection to hide the dropdown menu
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -71,6 +77,7 @@ const NavBar = () => {
   const handleLoginClick = async () => {
     // Clear any previous error message
     setErrorMessage("");
+    setIsLoggingIn(true);
 
     try {
       const response = await fetch("/api/login", {
@@ -83,25 +90,23 @@ const NavBar = () => {
 
       // If a token is returned, login is successful.
       if (data.token) {
-        const userData = { email, token: data.token, name: data.name, phone: data.phone};
+        const userData = { email, token: data.token, name: data.name, phone: data.phone };
         setUser(userData);
-        // Save user details in session storage to persist across refreshes
         sessionStorage.setItem("user", JSON.stringify(userData));
-        // Optionally, track verification with another key
         sessionStorage.setItem("userVerified", "true");
-        // Close the modal and clear form values
+        window.location.reload();
         setIsLoginModalOpen(false);
         setEmail("");
         setPassword("");
-        // Reload the page once to load the latest updates
-        window.location.reload();
+        // window.location.reload();
       } else if (data.error) {
-        // Display the error message returned by the API
         setErrorMessage(data.error);
       }
     } catch (err) {
       console.error("Error during login:", err);
       setErrorMessage("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -113,7 +118,6 @@ const NavBar = () => {
     sessionStorage.removeItem("userVerified");
     window.location.reload();
   };
-
 
   return (
     <>
@@ -141,10 +145,7 @@ const NavBar = () => {
             <Link href="/partners" className="text-white hover:text-slate-300">
               Partners
             </Link>
-            <Link
-              href="/termsAnsCondition"
-              className="text-white hover:text-slate-300"
-            >
+            <Link href="/termsAnsCondition" className="text-white hover:text-slate-300">
               Terms and Conditions
             </Link>
           </div>
@@ -197,7 +198,6 @@ const NavBar = () => {
         </div>
       </nav>
 
-      
       {/* Modal for login */}
       {isLoginModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -226,20 +226,38 @@ const NavBar = () => {
                 className="w-full p-2 border rounded"
               />
             </div>
-            <div className="mb-4">
+            <div className="mb-4 relative">
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded pr-10"
               />
+              <div
+                className="absolute inset-y-0 right-0 flex items-center pr-2 cursor-pointer"
+                onClick={() => setShowPassword((prev) => !prev)}
+              >
+                {showPassword ? (
+                  <FaEye className="text-gray-500" />
+                ) : (
+                  <FaEyeSlash className="text-gray-500" />
+                )}
+              </div>
             </div>
             <button
               onClick={handleLoginClick}
-              className="w-full py-4 bg-blue-500 text-white rounded hover:bg-blue-600"
+              className="w-full py-4 bg-blue-500 text-white rounded hover:bg-blue-600 flex justify-center items-center"
+              disabled={isLoggingIn}
             >
-              Login
+              {isLoggingIn ? (
+                <>
+                  <FaSpinner className="animate-spin mr-2" />
+                  Logging in...
+                </>
+              ) : (
+                "Login"
+              )}
             </button>
             {/* Display error message (if any) below the login button */}
             {errorMessage && (
