@@ -23,6 +23,8 @@ const FinalEnquiryPage = () => {
   const [searchData, setSearchData] = useState(null);
   const [fetchedSegmentsData, setFetchedSegmentsData] = useState([]);
   const [userData, setUserData] = useState(null);
+  const [orderId, setOrderId] = useState();
+  const [loading, setLoading] = useState(false);
 
   // 1) Read searchData from sessionStorage
   useEffect(() => {
@@ -30,6 +32,7 @@ const FinalEnquiryPage = () => {
     if (storedData) {
       setSearchData(JSON.parse(storedData));
     }
+    setOrderId(`ORD-${Date.now()}`);
   }, []);
 
   // 2) Read user data from sessionStorage
@@ -101,6 +104,55 @@ const FinalEnquiryPage = () => {
       </div>
     );
   }
+
+  const handlePayment = async () => {
+    setLoading(true);
+    try {
+        const response = await fetch("/api/ccavenue", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                order_id: orderId,
+                amount: (estimatedCost / 10).toFixed(2),
+                redirect_url: process.env.NEXT_PUBLIC_CCAVENUE_REDIRECT_URL,
+                cancel_url: process.env.NEXT_PUBLIC_CCAVENUE_REDIRECT_URL,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+            alert(data.error);
+            setLoading(false);
+            return;
+        }
+
+        // Create and submit a form dynamically
+        const form = document.createElement("form");
+        form.method = "post";
+        form.action = data.url;
+        form.target = "_self";
+
+        // Hidden input fields
+        const encInput = document.createElement("input");
+        encInput.type = "hidden";
+        encInput.name = "encRequest";
+        encInput.value = data.encRequest;
+        form.appendChild(encInput);
+
+        const accessInput = document.createElement("input");
+        accessInput.type = "hidden";
+        accessInput.name = "access_code";
+        accessInput.value = data.accessCode;
+        form.appendChild(accessInput);
+
+        document.body.appendChild(form);
+        form.submit();
+    } catch (error) {
+        alert("Payment initiation failed!");
+    }
+    setLoading(false);
+};
 
   // Compute total flying time
   const parseTimeToMinutes = (timeStr) => {
@@ -398,8 +450,8 @@ const FinalEnquiryPage = () => {
 
             {/* Existing "BOOK NOW" + "SEND Enquiry" buttons */}
             <div className="flex justify-between space-2 mb-4">
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors text-sm font-semibold">
-                BOOK NOW
+              <button onClick={handlePayment} disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors text-sm font-semibold">
+                {loading ? "Processing..." : "BOOK Now"}
                 <div className="text-xs font-normal">With Partial Payment</div>
               </button>
 
