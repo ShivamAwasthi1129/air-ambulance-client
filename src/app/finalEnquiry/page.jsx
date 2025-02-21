@@ -113,9 +113,7 @@ const FinalEnquiryPage = () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 order_id: orderId,
-                amount: (estimatedCost / 10).toFixed(2),
-                redirect_url: process.env.NEXT_PUBLIC_CCAVENUE_REDIRECT_URL,
-                cancel_url: process.env.NEXT_PUBLIC_CCAVENUE_REDIRECT_URL,
+                amount: (estimatedCost / 10).toFixed(2)
             }),
         });
 
@@ -130,7 +128,7 @@ const FinalEnquiryPage = () => {
         // Create and submit a form dynamically
         const form = document.createElement("form");
         form.method = "post";
-        form.action = data.url;
+        form.action = process.env.NEXT_PUBLIC_CCAVENUE_REDIRECT_URL;
         form.target = "_self";
 
         // Hidden input fields
