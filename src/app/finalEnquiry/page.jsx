@@ -8,6 +8,9 @@ import "jspdf-autotable";
 import FlightCard from "../components/FleetCard";
 import { Banner } from "../components/SearchBanner";
 import { Bottom } from "../components/Bottom";
+import { useRouter } from "next/navigation";
+import { decrypt } from '@/lib/ccavenueEncryption';
+
 
 // Remove parentheses from airport name
 function cleanAirportName(str) {
@@ -25,6 +28,8 @@ const FinalEnquiryPage = () => {
   const [userData, setUserData] = useState(null);
   const [orderId, setOrderId] = useState();
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
 
   // 1) Read searchData from sessionStorage
   useEffect(() => {
@@ -106,6 +111,7 @@ const FinalEnquiryPage = () => {
   }
 
   const handlePayment = async () => {
+
     setLoading(true);
     try {
         const response = await fetch("/api/ccavenue", {
@@ -118,36 +124,18 @@ const FinalEnquiryPage = () => {
         });
 
         const data = await response.json();
+        console.log("data" , data);
 
         if (data.error) {
             alert(data.error);
             setLoading(false);
             return;
         }
-
-        // Create and submit a form dynamically
-        const form = document.createElement("form");
-        form.method = "post";
-        form.action = process.env.NEXT_PUBLIC_CCAVENUE_REDIRECT_URL;
-        form.target = "_self";
-
-        // Hidden input fields
-        const encInput = document.createElement("input");
-        encInput.type = "hidden";
-        encInput.name = "encRequest";
-        encInput.value = data.encRequest;
-        form.appendChild(encInput);
-
-        const accessInput = document.createElement("input");
-        accessInput.type = "hidden";
-        accessInput.name = "access_code";
-        accessInput.value = data.accessCode;
-        form.appendChild(accessInput);
-
-        document.body.appendChild(form);
-        form.submit();
-    } catch (error) {
+         router.push(`${process.env.NEXT_PUBLIC_CCAVENUE_REDIRECT_URL}?${decrypt(data.encRequest)}`)
+    } catch (err) {
+      console.error(err);
         alert("Payment initiation failed!");
+        
     }
     setLoading(false);
 };

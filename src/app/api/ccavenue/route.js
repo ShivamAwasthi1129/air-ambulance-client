@@ -3,8 +3,6 @@ import { encrypt } from "@/lib/ccavenueEncryption";
 
 const MERCHANT_ID = process.env.CCA_MERCHANT_ID;
 const ACCESS_CODE = process.env.CCA_ACCESS_CODE;
-const REDIRECT_URL = process.env.NEXT_PUBLIC_CCAVENUE_REDIRECT_URL;
-const CANCEL_URL = process.env.NEXT_PUBLIC_CCAVENUE_CANCEL_URL;
 
 export async function POST(req) {
   try {
