@@ -12,11 +12,11 @@ export async function POST(req) {
     const orderId = `ORD${Date.now()}`; // Unique order ID
 
     // Prepare transaction request parameters
-    const data = `merchant_id=${MERCHANT_ID}&order_id=${orderId}&currency=INR&amount=${amount}&redirect_url=${REDIRECT_URL}&cancel_url=${CANCEL_URL}`;
+    const data = `merchant_id=${MERCHANT_ID}&order_id=${orderId}&currency=INR&amount=${amount}`;
     // Encrypt request
     const encRequest = encrypt(data);
 
-    return NextResponse.json({ url: REDIRECT_URL, encRequest, accessCode: ACCESS_CODE });
+    return NextResponse.json({ encRequest, accessCode: ACCESS_CODE });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
