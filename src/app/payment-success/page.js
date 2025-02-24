@@ -1,28 +1,18 @@
-"use client";
+'use client';
 
 import React from 'react';
 import { useSearchParams } from "next/navigation";
 import { AiOutlineCheckCircle } from 'react-icons/ai';
 
 export default function PaymentSuccessPage() {
-  // Get query parameters
-  const searchParams = useSearchParams();
+    const searchParams = useSearchParams();
 
-  const merchantId = searchParams.get("merchant_id");
-  const orderId = searchParams.get("order_id");
-  const currency = searchParams.get("currency");
-  const amount = searchParams.get("amount");
-  const redirectUrl = searchParams.get("redirect_url"); 
+    const merchantId = searchParams.get('merchant_id');
+    const orderId = searchParams.get('order_id');
+    const currency = searchParams.get('currency');
+    const amount = searchParams.get('amount');
 
-  // Validate if all required parameters exist
-  if (!merchantId || !orderId || !currency || !amount) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen">
-        <h2 className="text-red-500 text-2xl font-bold">Invalid Payment Details</h2>
-        <p className="text-gray-600">Some payment details are missing.</p>
-      </div>
-    );
-  }
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-green-400 to-blue-500">
@@ -51,7 +41,7 @@ export default function PaymentSuccessPage() {
           </div>
           <div className="mt-6">
             <a
-              href={redirectUrl || "#"}
+              href={redirectUrl || "/"}
               className="inline-block bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-full transition duration-300 cursor-pointer"
             >
               Continue another booking

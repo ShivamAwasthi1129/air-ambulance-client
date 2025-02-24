@@ -9,8 +9,12 @@ export async function POST(req) {
 
         console.log("Payment Response:", decryptedResponse);
 
-        return NextResponse.json({ status: 'success', data: decryptedResponse });
+        // return NextResponse.json({ status: 'success', data: decryptedResponse });
+        return NextResponse.redirect(
+            new URL(`/payment-success?${decryptedResponse}`, req.url)
+        );
     } catch (error) {
+        console.error("error", error)
         return NextResponse.json({ error: 'Error decrypting response' }, { status: 500 });
     }
 }
