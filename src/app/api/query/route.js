@@ -122,7 +122,7 @@ export const POST = async (req) => {
 
 export const GET = async (req) => {
   try {
-    await connectDB();
+    await connectToDatabase();
 
     const userQueries = await UserQuery.find();
 

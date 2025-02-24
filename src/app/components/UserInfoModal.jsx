@@ -189,6 +189,7 @@ export default function UserInfoModal({ show, onClose }) {
   const handleCloseOrDone = () => {
     if (canClose) {
       sessionStorage.setItem("userVerified", "true");
+      window.dispatchEvent(new Event("updateNavbar"));
     }
     onClose();
   };

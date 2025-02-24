@@ -324,7 +324,6 @@ export const SearchBar = () => {
 
       // 6) Send final data to console (or your API). This is immediate—no waiting for OTP.
       console.log("Final Payload (sent immediately):", finalData);
-      // Example: If you want to POST to your server:
       // await fetch("/api/query", {
       //   method: "POST",
       //   headers: { "Content-Type": "application/json" },

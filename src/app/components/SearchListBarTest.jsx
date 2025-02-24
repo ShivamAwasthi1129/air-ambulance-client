@@ -4,9 +4,10 @@ import { motion } from "framer-motion";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FilterAndFleetListing from "../components/FilterAndFleetListing";
-import BannerSection from "./Banner";
 import UserInfoModal from "../components/UserInfoModal";
 import Link from "next/link";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export const SearchBar = () => {
   // === State ===
@@ -285,16 +286,22 @@ export const SearchBar = () => {
     try {
       // (A) If user not verified, ensure personal fields are filled
       if (!isVerified) {
-        if (!name.trim() || !phone.trim() || !email.trim() || !flightType || !agreedToPolicy) {
-          alert("Please fill out all fields and agree to the policy before searching.");
+        if (
+          !name.trim() ||
+          !phone.trim() ||
+          !email.trim() ||
+          !flightType ||
+          !agreedToPolicy
+        ) {
+          toast.error(
+            "Please fill out all fields and agree to the policy before searching."
+          );
           setIsLoading(false);
           return;
         }
       }
-
       // Append the selected country code to the phone number
       const fullPhoneNumber = `${countryCode}${phone}`;
-
       const mergedUserInfo = {
         ...userInfo,
         flightType,
@@ -318,8 +325,9 @@ export const SearchBar = () => {
           });
           const data = await response.json();
           if (data.message === "user already exists") {
-            alert(
-              data.message + " please try to login via provided credential in your existing email"
+            toast.info(
+              data.message +
+                " please try to login via provided credential in your existing email"
             );
             setIsLoading(false);
             return;
@@ -337,13 +345,21 @@ export const SearchBar = () => {
         userInfo: mergedUserInfo,
       };
       sessionStorage.setItem("searchData", JSON.stringify(finalData));
-
-      // Mark user as verified so NavBar picks it up
-      sessionStorage.setItem("userVerified", "true");
-      window.dispatchEvent(new Event("updateNavbar"));
-
       setUserInfo(mergedUserInfo);
       setRefreshKey((prev) => prev + 1);
+
+      // -- NEW CODE: Immediately fetch the stored session (searchData)
+      //    and POST it to /api/query
+      const finalDataFromSession = sessionStorage.getItem("searchData");
+      if (finalDataFromSession) {
+        const finalDataToSend = JSON.parse(finalDataFromSession);
+        console.log("Final Payload (sent immediately):", finalDataToSend);
+        await fetch("/api/query", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(finalDataToSend),
+        });
+      }
 
       if (tripType === "multicity") {
         setIsMultiCityCollapsed(true);
@@ -384,9 +400,10 @@ export const SearchBar = () => {
             <div
               onClick={() => setFlightType("Charter Flights")}
               className={`cursor-pointer flex flex-col items-center p-2 
-                rounded-md transition-colors ${flightType === "Charter Flights"
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-700 hover:bg-gray-300"
+                rounded-md transition-colors ${
+                  flightType === "Charter Flights"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-700 hover:bg-gray-300"
                 }`}
             >
               <img
@@ -394,16 +411,16 @@ export const SearchBar = () => {
                 alt="Charter Flight"
                 className="w-8 h-8"
               />
-
               <span className="text-sm font-medium mt-1">Charter Flight</span>
             </div>
 
             <div
               onClick={() => setFlightType("Private Jets")}
               className={`cursor-pointer flex flex-col items-center p-2 
-                rounded-md transition-colors ${flightType === "Private Jets"
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-700 hover:bg-gray-300"
+                rounded-md transition-colors ${
+                  flightType === "Private Jets"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-700 hover:bg-gray-300"
                 }`}
             >
               <img
@@ -411,16 +428,16 @@ export const SearchBar = () => {
                 alt="Private Jets"
                 className="w-12 h-10"
               />
-
               <span className="text-sm font-medium mt-1">Private Jets</span>
             </div>
 
             <div
               onClick={() => setFlightType("Air Ambulance")}
               className={`cursor-pointer flex flex-col items-center p-2 
-                rounded-md transition-colors ${flightType === "Air Ambulance"
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-700 hover:bg-gray-300"
+                rounded-md transition-colors ${
+                  flightType === "Air Ambulance"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-700 hover:bg-gray-300"
                 }`}
             >
               <img
@@ -428,16 +445,16 @@ export const SearchBar = () => {
                 alt="Air Ambulance"
                 className="w-12 h-8"
               />
-
               <span className="text-sm font-medium mt-1">Air Ambulance</span>
             </div>
 
             <div
               onClick={() => setFlightType("Air Cargo")}
               className={`cursor-pointer flex flex-col items-center p-2 
-                rounded-md transition-colors ${flightType === "Air Cargo"
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-700 hover:bg-gray-300"
+                rounded-md transition-colors ${
+                  flightType === "Air Cargo"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-700 hover:bg-gray-300"
                 }`}
             >
               <img
@@ -445,16 +462,16 @@ export const SearchBar = () => {
                 alt="Air Cargo"
                 className="w-10 h-8"
               />
-
               <span className="text-sm font-medium mt-1">Air Cargo</span>
             </div>
 
             <div
               onClick={() => setFlightType("Sea Plane")}
               className={`cursor-pointer flex flex-col items-center p-2 
-                rounded-md transition-colors ${flightType === "Sea Plane"
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-700 hover:bg-gray-300"
+                rounded-md transition-colors ${
+                  flightType === "Sea Plane"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-700 hover:bg-gray-300"
                 }`}
             >
               <img
@@ -462,7 +479,6 @@ export const SearchBar = () => {
                 alt="Sea Plane"
                 className="w-12 h-8"
               />
-
               <span className="text-sm font-medium mt-1">Sea Plane</span>
             </div>
           </div>
@@ -606,8 +622,9 @@ export const SearchBar = () => {
                   </label>
                   <input
                     type="datetime-local"
-                    value={`${segments[0].departureDate}T${segments[0].departureTime || "12:00"
-                      }`}
+                    value={`${segments[0].departureDate}T${
+                      segments[0].departureTime || "12:00"
+                    }`}
                     onChange={(e) => {
                       const [date, time] = e.target.value.split("T");
                       handleSegmentChange(0, "departureDate", date);
@@ -708,7 +725,8 @@ export const SearchBar = () => {
                                         {airport.city}, {airport.country}
                                       </div>
                                       <div className="text-xs text-gray-600">
-                                        {airport.name} • {airport.iata_code || "N/A"} •{" "}
+                                        {airport.name} •{" "}
+                                        {airport.iata_code || "N/A"} •{" "}
                                         {airport.icao_code || "N/A"}
                                       </div>
                                     </li>
@@ -755,7 +773,8 @@ export const SearchBar = () => {
                                         {airport.city}, {airport.country}
                                       </div>
                                       <div className="text-xs text-gray-600">
-                                        {airport.name} • {airport.iata_code || "N/A"} •{" "}
+                                        {airport.name} •{" "}
+                                        {airport.iata_code || "N/A"} •{" "}
                                         {airport.icao_code || "N/A"}
                                       </div>
                                     </li>
@@ -771,8 +790,9 @@ export const SearchBar = () => {
                             </label>
                             <input
                               type="datetime-local"
-                              value={`${segment.departureDate}T${segment.departureTime || "12:00"
-                                }`}
+                              value={`${segment.departureDate}T${
+                                segment.departureTime || "12:00"
+                              }`}
                               onChange={(e) => {
                                 const [date, time] = e.target.value.split("T");
                                 handleSegmentChange(index, "departureDate", date);
@@ -930,12 +950,26 @@ export const SearchBar = () => {
 
         {/* (6) Conditionally render FilterAndFleetListing */}
         {!isLoading && isVerified && (
-          <>
-            {/* <BannerSection /> */}
-            <FilterAndFleetListing key={refreshKey} />
-          </>
+          <FilterAndFleetListing key={refreshKey} />
         )}
       </div>
+      <ToastContainer
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        style={{
+          position: 'fixed',
+          top: '12%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 100,
+        }}
+      />
     </>
   );
 };

@@ -135,7 +135,6 @@ const FinalEnquiryPage = () => {
     } catch (err) {
       console.error(err);
         alert("Payment initiation failed!");
-        
     }
     setLoading(false);
 };

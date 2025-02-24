@@ -78,27 +78,56 @@ const NavBar = () => {
     // Clear any previous error message
     setErrorMessage("");
     setIsLoggingIn(true);
-
+  
     try {
       const response = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-
+  
       const data = await response.json();
-
+  
       // If a token is returned, login is successful.
       if (data.token) {
-        const userData = { email, token: data.token, name: data.name, phone: data.phone };
-        setUser(userData);
-        sessionStorage.setItem("user", JSON.stringify(userData));
+        // Retrieve the existing searchData from session storage
+        const searchDataStr = sessionStorage.getItem("searchData");
+        if (searchDataStr) {
+          const searchData = JSON.parse(searchDataStr);
+  
+          // Append/update the new fields in the existing userInfo object
+          searchData.userInfo = {
+            ...searchData.userInfo,
+            email,
+            name: data.name,
+            phone: data.phone,
+            token: data.token,
+          };
+  
+          // Save the updated searchData back into session storage
+          sessionStorage.setItem("searchData", JSON.stringify(searchData));
+        }
+  
+        // Before reloading, send the updated searchData to the API
+        const finalDataFromSession = sessionStorage.getItem("searchData");
+        if (finalDataFromSession) {
+          const finalDataToSend = JSON.parse(finalDataFromSession);
+          console.log("Final Payload (sent immediately):", finalDataToSend);
+          await fetch("/api/query", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(finalDataToSend),
+          });
+        }
+  
+        // Mark the user as verified and reload the page
         sessionStorage.setItem("userVerified", "true");
         window.location.reload();
+  
+        // Optionally close the modal and clear the form fields
         setIsLoginModalOpen(false);
         setEmail("");
         setPassword("");
-        // window.location.reload();
       } else if (data.error) {
         setErrorMessage(data.error);
       }
@@ -109,6 +138,7 @@ const NavBar = () => {
       setIsLoggingIn(false);
     }
   };
+  
 
   // Handler for logging out
   const handleLogout = () => {
@@ -121,7 +151,7 @@ const NavBar = () => {
 
   return (
     <>
-      <nav className="w-full z-50">
+      <nav className="w-full z-20">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           {/* Left side: Logo */}
           <Link href="/" className="flex items-center">
