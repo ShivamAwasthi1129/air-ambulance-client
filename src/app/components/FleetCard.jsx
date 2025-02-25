@@ -154,7 +154,7 @@ const FlightCard = ({
     const data = sessionStorage.getItem("searchData");
     if (data) setParsedData(JSON.parse(data));
 
-    const userData = sessionStorage.getItem("user");
+    const userData = sessionStorage.getItem("loginData");
     if (userData) setUserSession(JSON.parse(userData));
 
     const storedShots = sessionStorage.getItem("flightShots");

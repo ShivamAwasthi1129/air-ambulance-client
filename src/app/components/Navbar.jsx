@@ -14,15 +14,12 @@ const NavBar = () => {
   const [errorMessage, setErrorMessage] = useState("");
   // State to control the user dropdown visibility
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
   // New state for toggling password visibility
   const [showPassword, setShowPassword] = useState(false);
   // New state to indicate when login is in progress
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-
   // Create a ref for the dropdown container
   const dropdownRef = useRef(null);
-
   // Initial load: check session storage
   useEffect(() => {
     loadUserFromSession();
@@ -88,27 +85,29 @@ const NavBar = () => {
   
       const data = await response.json();
   
-      // If a token is returned, login is successful.
       if (data.token) {
-        // Retrieve the existing searchData from session storage
+        // Store the returned login details in a variable.
+        const userLoginData = {
+          email,
+          name: data.name,
+          phone: data.phone,
+          token: data.token,
+        };
+  
+        // Retrieve any existing searchData from session storage.
         const searchDataStr = sessionStorage.getItem("searchData");
-        if (searchDataStr) {
-          const searchData = JSON.parse(searchDataStr);
+        let searchData = searchDataStr ? JSON.parse(searchDataStr) : {};
   
-          // Append/update the new fields in the existing userInfo object
-          searchData.userInfo = {
-            ...searchData.userInfo,
-            email,
-            name: data.name,
-            phone: data.phone,
-            token: data.token,
-          };
+        // Update the userInfo field with the new login data.
+        searchData.userInfo = { ...searchData.userInfo, ...userLoginData };
   
-          // Save the updated searchData back into session storage
-          sessionStorage.setItem("searchData", JSON.stringify(searchData));
-        }
+        // Save the updated searchData back to session storage.
+        sessionStorage.setItem("searchData", JSON.stringify(searchData));
   
-        // Before reloading, send the updated searchData to the API
+        // Also store the login data separately so it can be used after page reload.
+        sessionStorage.setItem("loginData", JSON.stringify(userLoginData));
+  
+        // Send the updated searchData to the API.
         const finalDataFromSession = sessionStorage.getItem("searchData");
         if (finalDataFromSession) {
           const finalDataToSend = JSON.parse(finalDataFromSession);
@@ -120,11 +119,13 @@ const NavBar = () => {
           });
         }
   
-        // Mark the user as verified and reload the page
+        // Mark the user as verified.
         sessionStorage.setItem("userVerified", "true");
+  
+        // Reload the page.
         window.location.reload();
   
-        // Optionally close the modal and clear the form fields
+        // Optionally close the modal and clear the form fields.
         setIsLoginModalOpen(false);
         setEmail("");
         setPassword("");

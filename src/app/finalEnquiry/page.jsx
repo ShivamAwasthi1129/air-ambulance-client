@@ -9,8 +9,7 @@ import FlightCard from "../components/FleetCard";
 import { Banner } from "../components/SearchBanner";
 import { Bottom } from "../components/Bottom";
 import { useRouter } from "next/navigation";
-import { decrypt } from '@/lib/ccavenueEncryption';
-
+import { decrypt } from "@/lib/ccavenueEncryption";
 
 // Remove parentheses from airport name
 function cleanAirportName(str) {
@@ -25,38 +24,48 @@ function formatUSD(amount) {
 const FinalEnquiryPage = () => {
   const [searchData, setSearchData] = useState(null);
   const [fetchedSegmentsData, setFetchedSegmentsData] = useState([]);
-  const [userData, setUserData] = useState(null);
-  const [orderId, setOrderId] = useState();
+  const [userData, setUserData] = useState({}); // Will hold { name, phone, email }
+  const [orderId, setOrderId] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-
-  // 1) Read searchData from sessionStorage
+  // 1) Read searchData from sessionStorage & fallback to loginData for user details
   useEffect(() => {
     const storedData = sessionStorage.getItem("searchData");
     if (storedData) {
-      setSearchData(JSON.parse(storedData));
+      const parsedSearchData = JSON.parse(storedData);
+      setSearchData(parsedSearchData);
+
+      // Extract user info from searchData.userInfo
+      const userInfo = parsedSearchData.userInfo || {};
+      let foundName = userInfo.name || "";
+      let foundPhone = userInfo.phone || "";
+      let foundEmail = userInfo.email || "";
+
+      // If name/phone is missing, try to get from loginData
+      if (!foundName || !foundPhone) {
+        const storedLoginData = sessionStorage.getItem("loginData");
+        if (storedLoginData) {
+          const parsedLoginData = JSON.parse(storedLoginData);
+          foundName = foundName || parsedLoginData.name || "";
+          foundPhone = foundPhone || parsedLoginData.phone || "";
+          foundEmail = foundEmail || parsedLoginData.email || "";
+        }
+      }
+
+      // Finally set userData in state
+      setUserData({
+        name: foundName,
+        phone: foundPhone,
+        email: foundEmail,
+      });
     }
+
+    // Generate a fresh orderId
     setOrderId(`ORD-${Date.now()}`);
   }, []);
 
-  // 2) Read user data from sessionStorage
-  useEffect(() => {
-    const storedUserData = sessionStorage.getItem("user");
-    if (storedUserData) {
-      setUserData(JSON.parse(storedUserData));
-    }
-  }, []);
-
-  // 2) Read trip type from sessionStorage
-  useEffect(() => {
-    const storedUserData = sessionStorage.getItem("user");
-    if (storedUserData) {
-      setUserData(JSON.parse(storedUserData));
-    }
-  }, []);
-
-  // 3) Fetch flights for each segment, filter by selected registrationNo
+  // 2) Fetch flights for each segment, filter by selected registrationNo
   useEffect(() => {
     const fetchAllSegments = async () => {
       if (!searchData || !searchData.segments) return;
@@ -71,8 +80,9 @@ const FinalEnquiryPage = () => {
           cleanedFrom
         )}&to=${encodeURIComponent(
           cleanedTo
-        )}&departureDate=${`${segment.departureDate}T${segment.departureTime}:00Z`}&travelerCount=${segment.passengers
-          }`;
+        )}&departureDate=${`${segment.departureDate}T${segment.departureTime}:00Z`}&travelerCount=${
+          segment.passengers
+        }`;
 
         try {
           const res = await fetch(url);
@@ -110,34 +120,39 @@ const FinalEnquiryPage = () => {
     );
   }
 
+  // Payment logic
   const handlePayment = async () => {
-
     setLoading(true);
     try {
-        const response = await fetch("/api/ccavenue", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                order_id: orderId,
-                amount: (estimatedCost / 10).toFixed(2)
-            }),
-        });
+      const response = await fetch("/api/ccavenue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          order_id: orderId,
+          amount: (estimatedCost / 10).toFixed(2),
+        }),
+      });
 
-        const data = await response.json();
-        console.log("data" , data);
+      const data = await response.json();
+      console.log("data", data);
 
-        if (data.error) {
-            alert(data.error);
-            setLoading(false);
-            return;
-        }
-         router.push(`${process.env.NEXT_PUBLIC_CCAVENUE_REDIRECT_URL}?${decrypt(data.encRequest)}`)
+      if (data.error) {
+        alert(data.error);
+        setLoading(false);
+        return;
+      }
+
+      router.push(
+        `${process.env.NEXT_PUBLIC_CCAVENUE_REDIRECT_URL}?${decrypt(
+          data.encRequest
+        )}`
+      );
     } catch (err) {
       console.error(err);
-        alert("Payment initiation failed!");
+      alert("Payment initiation failed!");
     }
     setLoading(false);
-};
+  };
 
   // Compute total flying time
   const parseTimeToMinutes = (timeStr) => {
@@ -150,7 +165,9 @@ const FinalEnquiryPage = () => {
     return total + (segment.selectedFleet?.time ? parseTimeToMinutes(segment.selectedFleet.time) : 0);
   }, 0);
 
-  const totalFlyingHours = `${Math.floor(totalFlyingTimeMinutes / 60)} Hrs ${totalFlyingTimeMinutes % 60} Min`;
+  const totalFlyingHours = `${Math.floor(totalFlyingTimeMinutes / 60)} Hrs ${
+    totalFlyingTimeMinutes % 60
+  } Min`;
 
   // 4) Summation for cost details
   const allSelectedFlights = fetchedSegmentsData.flat();
@@ -162,14 +179,13 @@ const FinalEnquiryPage = () => {
     return acc + numericPrice;
   }, 0);
 
-  // Example: airport handling = 8700 * number of segments
+  // Example: airport handling = 700 * number of segments
   const airportHandling = 700 * searchData.segments.length;
   const subTotal = totalFlightCost + airportHandling;
   const gstAmount = Math.round(subTotal * 0.18); // 18% tax
   const estimatedCost = subTotal + gstAmount;
 
-  const message = `Hello, I would like to get a quotation for my flight trip. 
-  Please find the attached flight details.`;
+  const message = `Hello, I would like to get a quotation for my flight trip.\n\nName: ${userData.name}\nPhone: ${userData.phone}\nEmail: ${userData.email}\n\nPlease find the attached flight details.`;
 
   const sendWhatsAppMessage = () => {
     const phoneNumber = "+919999929832";
@@ -186,21 +202,20 @@ const FinalEnquiryPage = () => {
         },
         body: JSON.stringify({
           segments: searchData.segments,
-          user: userData,
-          tripType: searchData.tripType,  // Ensure you've stored tripType in searchData
+          user: userData, // includes name, phone, email
+          tripType: searchData.tripType, 
           airportHandling,
           subTotal,
           gstAmount,
           estimatedCost,
         }),
       });
-      alert("Mail sent to : " + userData.email);
+      alert("Mail sent to: " + userData.email);
     } catch (e) {
       alert("Something went wrong");
       console.error("Error sending enquiry:", e);
     }
   };
-
 
   // Grab dynamic details from the first and last segments
   const firstSegment = searchData.segments[0];
@@ -242,16 +257,14 @@ const FinalEnquiryPage = () => {
     );
 
     // === Flight Details Section ===
-    // Draw the header text first
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.text("Flight Details", 14, 55);
 
-    // Then, draw the table below the header text
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     doc.autoTable({
-      startY: 60, // Changed from 55 to 60 so that the header text isn’t overlapped
+      startY: 60,
       head: [["Date", "From", "To", "ETD", "Approx. Fly Time", "Pax", "Fleet Type"]],
       body: searchData.segments.map((segment) => [
         segment.departureDate,
@@ -262,9 +275,9 @@ const FinalEnquiryPage = () => {
         segment.passengers,
         segment.selectedFleet?.model || "Unknown",
       ]),
-      theme: "grid", // Grid lines for better readability
-      headStyles: { fillColor: [22, 160, 133] }, // Green header
-      alternateRowStyles: { fillColor: [245, 245, 245] }, // Alternate row colors
+      theme: "grid",
+      headStyles: { fillColor: [22, 160, 133] },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
     });
 
     // === Total Flying Hours ===
@@ -291,7 +304,10 @@ const FinalEnquiryPage = () => {
         ["Total Handling Cost", airportHandling.toLocaleString()],
         ["Subtotal", subTotal.toLocaleString()],
         ["GST @ 18%", gstAmount.toLocaleString()],
-        ["All Inclusive Charter Package (with GST)", estimatedCost.toLocaleString()],
+        [
+          "All Inclusive Charter Package (with GST)",
+          estimatedCost.toLocaleString(),
+        ],
       ],
       theme: "grid",
       headStyles: { fillColor: [22, 160, 133] },
@@ -303,12 +319,10 @@ const FinalEnquiryPage = () => {
     doc.setFont("helvetica", "italic");
     const notesText =
       "Note: Please Note :1. All quotations/options provided above are subject to all necessary permission and aircraft availability at the time of charter confirmation & as per the COVID protocol 2. Any miscellaneous charges including watch hour extensions (if required) will be charged on actuals 3. Timings to be confirmed on the basis of NOTAM and watch hours at respective Airports.4. If at Day/Night Halt Parking Is Unavailable Due to any reason, The Aircraft/Helicopter Shall Be Positioned And Parked To Nearest Airport and all associated charges will be charged Extra";
-
-    // Split notes into multiple lines to avoid overflow
-    const splitNotes = doc.splitTextToSize(notesText, 180); // 180 is the max width
+    const splitNotes = doc.splitTextToSize(notesText, 180);
     doc.text(splitNotes, 14, doc.lastAutoTable.finalY + 15);
 
-    // === Terms & Conditions Section (on a new page) ===
+    // === Terms & Conditions Section ===
     doc.addPage();
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
@@ -317,13 +331,12 @@ const FinalEnquiryPage = () => {
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     const termsText = `1. This is only a Quotation. The Charter will be confirmed only after receipt of 100% payment in advance.
-  2. Additional sectors required after start of the flight itinerary will be on the sole discretion of Charter Flight Aviations Pvt. Ltd.
-  3. The flight duty time and flight time will be governed by DGCA – CAR – 7 – J III & IV dated 23.03.2021 effective from 30.09.2022.
-  4. Minimum booking value for a charter would be 2 Hrs of flying per booking per day.
-  5. The Flying Hrs. mentioned in the quotation is only indicative since...`;
+2. Additional sectors required after start of the flight itinerary will be on the sole discretion of Charter Flight Aviations Pvt. Ltd.
+3. The flight duty time and flight time will be governed by DGCA – CAR – 7 – J III & IV dated 23.03.2021 effective from 30.09.2022.
+4. Minimum booking value for a charter would be 2 Hrs of flying per booking per day.
+5. The Flying Hrs. mentioned in the quotation is only indicative since...`;
 
     const termsLines = doc.splitTextToSize(termsText, 180);
-    // Create a borderless table for better formatting of the terms text
     doc.autoTable({
       startY: 30,
       body: termsLines.map((line) => [line]),
@@ -331,7 +344,7 @@ const FinalEnquiryPage = () => {
       styles: {
         fontSize: 9,
         cellPadding: 2,
-        lineColor: [255, 255, 255], // Invisible borders
+        lineColor: [255, 255, 255],
       },
       columnStyles: {
         0: { cellWidth: 180 },
@@ -345,7 +358,6 @@ const FinalEnquiryPage = () => {
     doc.text("For Charter Flight Aviations Pvt. Ltd.", 14, finalY);
     doc.text("For Client", 14, finalY + 10);
 
-    // Save the PDF
     doc.save("Proforma_Invoice.pdf");
   };
 
@@ -358,7 +370,6 @@ const FinalEnquiryPage = () => {
         <div className="w-[60%] md:w-[65rem] flex flex-col space-y-4">
           {searchData.segments.map((segment, segmentIndex) => {
             const flightsForSegment = fetchedSegmentsData[segmentIndex] || [];
-
             return (
               <div
                 key={segmentIndex}
@@ -400,10 +411,11 @@ const FinalEnquiryPage = () => {
               Departure Time: {departureTime || "—"}
             </p>
             <p className="text-sm text-gray-600 mb-4">
-              {passengerCount} Passenger{passengerCount > 1 ? "s" : ""} | {departureDate}
+              {passengerCount} Passenger{passengerCount > 1 ? "s" : ""} |{" "}
+              {departureDate}
             </p>
 
-            {/* Cost breakdown using your existing formatUSD */}
+            {/* Cost breakdown */}
             <div className="flex justify-between mb-2">
               <span>Flying Cost</span>
               <span>{formatUSD(totalFlightCost)}</span>
@@ -433,9 +445,13 @@ const FinalEnquiryPage = () => {
               and convenience of flying private at commercial prices.
             </div>
 
-            {/* Existing "BOOK NOW" + "SEND Enquiry" buttons */}
+            {/* Buttons */}
             <div className="flex justify-between space-2 mb-4">
-              <button onClick={handlePayment} disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded transition-colors text-sm font-semibold">
+              <button
+                onClick={handlePayment}
+                disabled={loading}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded transition-colors text-sm font-semibold"
+              >
                 {loading ? "Processing..." : "BOOK Now"}
                 <div className="text-xs font-normal">With Partial Payment</div>
               </button>
@@ -457,7 +473,7 @@ const FinalEnquiryPage = () => {
               </button>
             </div>
 
-            {/* Existing "Download Proforma Invoice" button */}
+            {/* Download Proforma Invoice button */}
             <button
               className="border border-orange-400 text-orange-500 px-4 py-2 rounded-md hover:bg-orange-100 transition-colors w-full text-center"
               onClick={generatePDF}
