@@ -1,19 +1,17 @@
 'use client';
-
+ 
 import React from 'react';
 import { useSearchParams } from "next/navigation";
 import { AiOutlineCheckCircle } from 'react-icons/ai';
-
+ 
 export default function PaymentSuccessPage() {
     const searchParams = useSearchParams();
-
+ 
     const merchantId = searchParams.get('merchant_id');
     const orderId = searchParams.get('order_id');
     const currency = searchParams.get('currency');
     const amount = searchParams.get('amount');
-
-
-
+ 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-green-400 to-blue-500">
       <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
@@ -41,7 +39,7 @@ export default function PaymentSuccessPage() {
           </div>
           <div className="mt-6">
             <a
-              href={redirectUrl || "/"}
+              href={"/"}
               className="inline-block bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-full transition duration-300 cursor-pointer"
             >
               Continue another booking
