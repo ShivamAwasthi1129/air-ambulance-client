@@ -5,8 +5,8 @@ import { IoIosAirplane } from "react-icons/io";
 import { BsExclamationTriangle } from "react-icons/bs";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
-import { toast , ToastContainer } from "react-toastify";          // <-- import from react-toastify
-import "react-toastify/dist/ReactToastify.css";  // <-- also import the CSS
+import { toast, ToastContainer } from "react-toastify";  // <-- react-toastify
+import "react-toastify/dist/ReactToastify.css";          // <-- react-toastify CSS
 import FlightCard from "../components/FleetCard";
 import { Banner } from "../components/SearchBanner";
 import { Bottom } from "../components/Bottom";
@@ -32,6 +32,8 @@ const FinalEnquiryPage = () => {
 
   // Track WhatsApp "Sending..." state
   const [isWhatsAppSending, setIsWhatsAppSending] = useState(false);
+  // Track Email "Sending..." state
+  const [isEmailSending, setIsEmailSending] = useState(false);
 
   const router = useRouter();
 
@@ -84,9 +86,9 @@ const FinalEnquiryPage = () => {
 
         const url = `/api/search-flights?from=${encodeURIComponent(
           cleanedFrom
-        )}&to=${encodeURIComponent(cleanedTo)}&departureDate=${`${segment.departureDate}T${segment.departureTime}:00Z`}&travelerCount=${
-          segment.passengers
-        }`;
+        )}&to=${encodeURIComponent(cleanedTo)}&departureDate=${
+          `${segment.departureDate}T${segment.departureTime}:00Z`
+        }&travelerCount=${segment.passengers}`;
 
         try {
           const res = await fetch(url);
@@ -161,12 +163,17 @@ const FinalEnquiryPage = () => {
   // Compute total flying time
   const parseTimeToMinutes = (timeStr) => {
     if (!timeStr) return 0;
-    const [hrs, mins] = timeStr.split("h ").map((t) => parseInt(t.replace("m", "")) || 0);
+    const [hrs, mins] = timeStr
+      .split("h ")
+      .map((t) => parseInt(t.replace("m", "")) || 0);
     return hrs * 60 + mins;
   };
 
   const totalFlyingTimeMinutes = searchData.segments.reduce((total, segment) => {
-    return total + (segment.selectedFleet?.time ? parseTimeToMinutes(segment.selectedFleet.time) : 0);
+    return (
+      total +
+      (segment.selectedFleet?.time ? parseTimeToMinutes(segment.selectedFleet.time) : 0)
+    );
   }, 0);
 
   const totalFlyingHours = `${Math.floor(totalFlyingTimeMinutes / 60)} Hrs ${
@@ -190,59 +197,59 @@ const FinalEnquiryPage = () => {
 
   // Updated: POST to /api/booking-request, using react-toastify
   const sendWhatsAppMessage = async () => {
-    const phoneNumber = "+919999929832"; // The number to which we say we sent
+    const phoneNumber = "+919958241284"; // The number to which we say we sent
     setIsWhatsAppSending(true);
-  
+
     // 1. Show an "info" toast with no autoClose
     const toastId = toast.info("Sending your enquiry...", {
       position: "top-center",
-      autoClose: false, // Keep it open until we dismiss or update
-      closeOnClick: false,
+      autoClose: true, // Keep it open until we dismiss or update
+      closeOnClick: true,
       draggable: false,
     });
-  
+
     try {
       // Check if 'loginData' session exists in sessionStorage
       const loginDataStr = sessionStorage.getItem("loginData");
       if (loginDataStr) {
-        // Parse the stored session data
+        // Parse the stored session data and update searchData.userInfo with login details
         const loginData = JSON.parse(loginDataStr);
-        // Update searchData.userInfo with login details
         searchData.userInfo = {
           name: loginData.name,
           email: loginData.email,
           phone: loginData.phone,
         };
       }
-      
+
       // Log the payload before sending
       console.log("Sending payload:", searchData);
-  
+
       // 2. POST request to /api/booking-request with searchData payload
       const response = await fetch("/api/booking-request", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ searchData }),
+        body: JSON.stringify(searchData),
       });
-  
+
       if (!response.ok) {
         // Force an error for the catch block below
         throw new Error(`Server error: ${response.statusText}`);
       }
-  
+
       // 3. Dismiss the loading toast
       toast.dismiss(toastId);
-  
+
       // 4. Show success toast
       toast.success(`Enquiry sent successfully to ${phoneNumber}`, {
         position: "top-center",
+        autoClose: 5000,
       });
     } catch (err) {
       // 5. Dismiss the loading toast
       toast.dismiss(toastId);
-  
+
       // 6. Show error toast
       toast.error(`Something went wrong: ${err.message}`, {
         position: "top-center",
@@ -251,12 +258,13 @@ const FinalEnquiryPage = () => {
       setIsWhatsAppSending(false);
     }
   };
-  
 
   // Email logic
   const sendEmailMessage = async () => {
+    setIsEmailSending(true); // Show "Sending..." on the button
+
     try {
-      await fetch("/api/enquiry", {
+      const response = await fetch("/api/enquiry", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -272,12 +280,19 @@ const FinalEnquiryPage = () => {
         }),
       });
 
+      if (!response.ok) {
+        throw new Error("Failed to send email");
+      }
+
+      // If everything goes well, show success toast
       toast.success(`Mail sent to: ${userData.email}`, {
         position: "top-center",
       });
     } catch (e) {
       toast.error("Something went wrong", { position: "top-center" });
       console.error("Error sending enquiry:", e);
+    } finally {
+      setIsEmailSending(false); // Revert back to normal text
     }
   };
 
@@ -526,9 +541,10 @@ const FinalEnquiryPage = () => {
               {/* EMAIL ENQUIRY Button */}
               <button
                 onClick={sendEmailMessage}
+                disabled={isEmailSending}
                 className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:opacity-90 text-white px-3 py-2 rounded transition-colors text-sm font-semibold"
               >
-                SEND Enquiry
+                {isEmailSending ? "Sending..." : "SEND Enquiry"}
                 <div className="text-xs font-normal">via Email</div>
               </button>
             </div>
@@ -545,6 +561,7 @@ const FinalEnquiryPage = () => {
       </div>
 
       <Bottom />
+
       <ToastContainer
         autoClose={5000}
         hideProgressBar={false}
@@ -555,10 +572,10 @@ const FinalEnquiryPage = () => {
         draggable
         pauseOnHover
         style={{
-          position: 'fixed',
-          top: '12%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
+          position: "fixed",
+          top: "12%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
           zIndex: 100,
         }}
       />

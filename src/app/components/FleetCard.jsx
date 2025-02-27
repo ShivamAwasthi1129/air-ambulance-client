@@ -4,6 +4,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import html2canvas from "html2canvas";
 
+// React-Toastify
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 // Icons
 import { FaWhatsapp } from "react-icons/fa";
 import { AiOutlineMail, AiOutlineCheckCircle } from "react-icons/ai";
@@ -70,6 +74,7 @@ async function combineSnapshotsInOneColumn(snapshotMap) {
   return canvas.toDataURL("image/png");
 }
 
+// Amenity Icons
 const amenityIcons = {
   "Life Jacket": <AiOutlineCheckCircle className="text-gray-600" />,
   "Brand new Paint": <GiPaintRoller className="text-red-500" />,
@@ -98,6 +103,7 @@ const amenityIcons = {
   "Lounge Access": <AiOutlineCheckCircle className="text-gray-600" />,
 };
 
+// Chunk array helper
 function chunkArray(array, size) {
   const result = [];
   for (let i = 0; i < array.length; i += size) {
@@ -106,7 +112,7 @@ function chunkArray(array, size) {
   return result;
 }
 
-// For currency
+// Currency rates
 const exchangeRates = {
   USD: 1,
   INR: 82,
@@ -321,6 +327,7 @@ const FlightCard = ({
         }
       } catch (err) {
         console.error("Screenshot failed: ", err);
+        toast.error("Screenshot capture failed!");
       }
     }
   };
@@ -328,46 +335,46 @@ const FlightCard = ({
   // Send via WhatsApp
   const handleSendWhatsApp = async () => {
     if (!combinedPreview) {
-      alert("No flights selected!");
+      toast.error("No flights selected!");
       return;
     }
-  
+
     try {
       // Convert DataURL to file
       const file = dataURLtoFile(combinedPreview, "combined_flights.png");
       const formData = new FormData();
       formData.append("profile", file);
-  
+
       // 1) Upload image to S3 via /api/user/image
       const response = await fetch("/api/user/image", {
         method: "POST",
         body: formData,
       });
       const result = await response.json();
-  
+
       if (!result.success) {
         console.error("Upload error:", result);
-        alert("Upload error: " + (result.error || "Unknown error"));
+        toast.error(`Upload error: ${result.error || "Unknown error"}`);
         return;
       }
-  
+
       const s3Link = result.secureUrl;
       console.log("WhatsApp S3 link:", s3Link);
-      alert("Uploaded to S3:\n" + s3Link);
-  
+      toast.success("Image uploaded successfully to S3!");
+
       // 2) Determine user name & phone from loginData or searchData
       let name = userSession?.name || "";
       let phone = userSession?.phone || "";
-  
+
       if (!name || !phone) {
         // fallback to searchData userInfo
         const fallbackName = parsedData?.userInfo?.name || "";
         const fallbackPhone = parsedData?.userInfo?.phone || "";
-  
+
         if (!name) name = fallbackName;
         if (!phone) phone = fallbackPhone;
       }
-  
+
       // 3) Send name, phone, and imageUrl to fleet-enquiry API
       try {
         const fleetEnquiryResponse = await fetch("/api/fleet-enquiry", {
@@ -381,41 +388,38 @@ const FlightCard = ({
             imageUrl: s3Link,
           }),
         });
-  
+
         if (!fleetEnquiryResponse.ok) {
           console.error("Error sending data to fleet-enquiry:", fleetEnquiryResponse);
-          alert("Something went wrong while sending data to fleet-enquiry API.");
+          toast.error("Failed to send data to fleet-enquiry API.");
           return;
         }
-  
+
         const fleetEnquiryData = await fleetEnquiryResponse.json();
         console.log("fleet-enquiry response:", fleetEnquiryData);
-  
-        alert("Successfully sent data to fleet-enquiry API!");
+
+        toast.success("Successfully sent data to fleet-enquiry API!");
       } catch (err) {
         console.error("Error in POST request to fleet-enquiry API:", err);
-        alert("Failed to send data to fleet-enquiry API.");
+        toast.error("Failed to send data to fleet-enquiry API.");
       }
-  
+
       // Optionally clear your selections / state
       setCheckedFlights({});
       setSnapshots({});
       sessionStorage.removeItem("flightShots");
       setCombinedPreview(null);
       closeWhatsAppModal();
-  
     } catch (err) {
       console.error("Error in uploading (WhatsApp)", err);
-      alert("Something went wrong uploading images.");
+      toast.error("Something went wrong uploading images.");
     }
   };
-  
-  
 
   // Send via Email
   const handleSendEmail = async () => {
     if (!combinedPreview) {
-      alert("No flights selected!");
+      toast.error("No flights selected!");
       return;
     }
     try {
@@ -431,12 +435,15 @@ const FlightCard = ({
 
       if (!result.success) {
         console.error("Upload error:", result);
-        alert("Upload error: " + (result.error || "Unknown error"));
+        toast.error(`Upload error: ${result.error || "Unknown error"}`);
         return;
       }
       const s3Link = result.secureUrl;
       console.log("Email S3 link:", s3Link);
-      alert("Uploaded to S3:\n" + s3Link);
+      toast.success("Image uploaded successfully to S3!");
+
+      // You might also send an email here or do another fetch call
+      // to your backend with the S3 link.
 
       setCheckedFlights({});
       setSnapshots({});
@@ -445,7 +452,7 @@ const FlightCard = ({
       closeEmailModal();
     } catch (err) {
       console.error("Error in uploading (Email)", err);
-      alert("Something went wrong uploading images.");
+      toast.error("Something went wrong uploading images.");
     }
   };
 
@@ -470,190 +477,174 @@ const FlightCard = ({
   };
 
   return (
-    <div className="space-y-6 mb-4">
-      {filteredData.map((flight) => {
-        const isOpen = activeDetailsId === flight.serialNumber;
-        const allAmenities = Object.entries(flight.additionalAmenities || {});
-        const freeAmenities = allAmenities.filter(
-          ([, data]) => data.value === "free"
-        );
-        const freeServicesToShow = freeAmenities.slice(0, 7);
-        const firstLineServices = freeServicesToShow.slice(0, 4);
-        const secondLineServices = freeServicesToShow.slice(4, 7);
+    <>
+      <div className="space-y-6 mb-4">
+        {filteredData.map((flight) => {
+          const isOpen = activeDetailsId === flight.serialNumber;
+          const allAmenities = Object.entries(flight.additionalAmenities || {});
+          const freeAmenities = allAmenities.filter(
+            ([, data]) => data.value === "free"
+          );
+          const freeServicesToShow = freeAmenities.slice(0, 7);
+          const firstLineServices = freeServicesToShow.slice(0, 4);
+          const secondLineServices = freeServicesToShow.slice(4, 7);
 
-        const chunkedAmenities = chunkArray(allAmenities, 4);
-        const flightPriceUSD = flight.totalPrice
-          ? parseInt(flight.totalPrice.replace(/\D/g, ""), 10)
-          : 0;
+          const chunkedAmenities = chunkArray(allAmenities, 4);
+          const flightPriceUSD = flight.totalPrice
+            ? parseInt(flight.totalPrice.replace(/\D/g, ""), 10)
+            : 0;
 
-        return (
-          <div
-            key={flight.serialNumber}
-            ref={(node) => setCardRef(flight.serialNumber, node)}
-            className="relative flex flex-col md:flex-row items-center rounded-2xl p-4 overflow-hidden
-                       hover:shadow-[0_0_8px_rgba(0,0,0,0.25)] transition-shadow duration-300"
-          >
-            {/* LEFT: Image slider */}
-            <div className="relative w-full md:w-2/5">
-              <ImageSlider aircraftGallery={flight.aircraftGallery} />
-              <p
-                onClick={(e) => handleExperienceClick(flight.serialNumber, e)}
-                className="absolute bottom-2 left-2 text-white text-xl font-semibold italic px-2 py-1 cursor-pointer rounded"
-              >
-                See Flight Experience -&gt;
-              </p>
-            </div>
+          return (
+            <div
+              key={flight.serialNumber}
+              ref={(node) => setCardRef(flight.serialNumber, node)}
+              className="relative flex flex-col md:flex-row items-center rounded-2xl p-4 overflow-hidden
+                         hover:shadow-[0_0_8px_rgba(0,0,0,0.25)] transition-shadow duration-300"
+            >
+              {/* LEFT: Image slider */}
+              <div className="relative w-full md:w-2/5">
+                <ImageSlider aircraftGallery={flight.aircraftGallery} />
+                <p
+                  onClick={(e) => handleExperienceClick(flight.serialNumber, e)}
+                  className="absolute bottom-2 left-2 text-white text-xl font-semibold italic px-2 py-1 cursor-pointer rounded"
+                >
+                  See Flight Experience -&gt;
+                </p>
+              </div>
 
-            {/* RIGHT: flight details or amenities */}
-            <div className="w-full md:w-[65%] absolute right-4 rounded-xl bg-stone-50 border border-stone-100">
-              <AnimatePresence mode="wait">
-                {/* Collapsed details */}
-                {!isOpen && (
-                  <motion.div
-                    key="flight-details"
-                    variants={flightDetailsVariants}
-                    initial="hidden"
-                    animate="show"
-                    exit="exit"
-                    transition={{ duration: 0.4 }}
-                    className="p-4 py-0 h-full rounded-xl"
-                  >
-                    {/* Top row */}
-                    <div className="flex items-center justify-between border-b border-gray-300 py-2">
-                      <div className="flex items-center space-x-2">
-                        <img
-                          src={
-                            flight.logo ||
-                            "https://imgak.mmtcdn.com/flights/assets/media/dt/common/icons/GF.png?v=19"
-                          }
-                          alt={flight.title || "Airline"}
-                          className="w-10 h-10 object-contain"
-                        />
-                        <div className="flex flex-col items-end">
-                          <h2 className="text-xl font-bold text-gray-800">
-                            {flight.fleetDetails.selectedModel || "Gulf Air"}
-                          </h2>
-                          <p className="text-sm text-gray-700 font-medium">
-                            Reg. No:{" "}
-                            {flight.fleetDetails.registrationNo || "n/a"}
+              {/* RIGHT: flight details or amenities */}
+              <div className="w-full md:w-[65%] absolute right-4 rounded-xl bg-stone-50 border border-stone-100">
+                <AnimatePresence mode="wait">
+                  {/* Collapsed details */}
+                  {!isOpen && (
+                    <motion.div
+                      key="flight-details"
+                      variants={flightDetailsVariants}
+                      initial="hidden"
+                      animate="show"
+                      exit="exit"
+                      transition={{ duration: 0.4 }}
+                      className="p-4 py-0 h-full rounded-xl"
+                    >
+                      {/* Top row */}
+                      <div className="flex items-center justify-between border-b border-gray-300 py-2">
+                        <div className="flex items-center space-x-2">
+                          <img
+                            src={
+                              flight.logo ||
+                              "https://imgak.mmtcdn.com/flights/assets/media/dt/common/icons/GF.png?v=19"
+                            }
+                            alt={flight.title || "Airline"}
+                            className="w-10 h-10 object-contain"
+                          />
+                          <div className="flex flex-col items-end">
+                            <h2 className="text-xl font-bold text-gray-800">
+                              {flight.fleetDetails.selectedModel || "Gulf Air"}
+                            </h2>
+                            <p className="text-sm text-gray-700 font-medium">
+                              Reg. No:{" "}
+                              {flight.fleetDetails.registrationNo || "n/a"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center">
+                          <p className="text-md text-gray-700 flex flex-col items-center">
+                            <span>Flight - Duration</span>
+                            <span>{flight.flightTime || "n/a"}</span>
+                          </p>
+                        </div>
+
+                        <div className="text-right">
+                          <p className="text-sm text-gray-500">Starting from</p>
+                          <p className="text-xl font-bold text-gray-800">
+                            USD {convertPrice(flightPriceUSD, "USD").toLocaleString()}
+                          </p>
+                          <p className="text-xs text-gray-600 mt-1">
+                            INR {convertPrice(flightPriceUSD, "INR").toLocaleString()},
+                            GBP {convertPrice(flightPriceUSD, "GBP").toLocaleString()}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center">
-                        <p className="text-md text-gray-700 flex flex-col items-center">
-                          <span>Flight - Duration</span>
-                          <span>{flight.flightTime || "n/a"}</span>
-                        </p>
-                      </div>
+                      {/* Timings row */}
+                      <div className="flex items-center space-x-4 md:space-x-8 text-base text-gray-800 mt-2 mb-3">
+                        {/* FROM */}
+                        <div>
+                          <p className="font-semibold">
+                            {parsedData?.segments?.[currentTripIndex]?.fromIATA || "DEL"}{" "}
+                            -{" "}
+                            {parsedData?.segments?.[currentTripIndex]?.departureTime ||
+                              "21:35"}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {parsedData?.segments?.[currentTripIndex]?.fromCity ||
+                              "New Delhi"}
+                          </p>
+                        </div>
 
-                      <div className="text-right">
-                        <p className="text-sm text-gray-500">Starting from</p>
-                        <p className="text-xl font-bold text-gray-800">
-                          USD {convertPrice(flightPriceUSD, "USD").toLocaleString()}
-                        </p>
-                        <p className="text-xs text-gray-600 mt-1">
-                          INR {convertPrice(flightPriceUSD, "INR").toLocaleString()},
-                          GBP {convertPrice(flightPriceUSD, "GBP").toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
+                        <div className="text-sm text-gray-500 text-center">
+                          <p className="text-lg text-gray-700 mb-2 flex items-center">
+                            ----{" "}
+                            <span className="inline-block mx-1">
+                              <IoIosAirplane size={32} />
+                            </span>{" "}
+                            ----
+                          </p>
+                        </div>
 
-                    {/* Timings row */}
-                    <div className="flex items-center space-x-4 md:space-x-8 text-base text-gray-800 mt-2 mb-3">
-                      {/* FROM */}
-                      <div>
-                        <p className="font-semibold">
-                          {parsedData?.segments?.[currentTripIndex]?.fromIATA || "DEL"} -{" "}
-                          {parsedData?.segments?.[currentTripIndex]?.departureTime ||
-                            "21:35"}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {parsedData?.segments?.[currentTripIndex]?.fromCity ||
-                            "New Delhi"}
-                        </p>
-                      </div>
-
-                      <div className="text-sm text-gray-500 text-center">
-                        <p className="text-lg text-gray-700 mb-2 flex items-center">
-                          ----{" "}
-                          <span className="inline-block mx-1">
-                            <IoIosAirplane size={32} />
-                          </span>{" "}
-                          ----
-                        </p>
-                      </div>
-
-                      {/* TO */}
-                      <div>
-                        {(() => {
-                          const departureTime =
-                            parsedData?.segments?.[currentTripIndex]?.departureTime ||
-                            "21:35";
-                          const flightTime = flight.flightTime || "0h 0m";
-                          const arrivalTime = calculateArrivalTime(
-                            departureTime,
-                            flightTime
-                          );
-                          return (
-                            <>
-                              <p className="font-semibold">
-                                {parsedData?.segments?.[currentTripIndex]?.toIATA ||
-                                  "LHR"}{" "}
-                                - {arrivalTime}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                {parsedData?.segments?.[currentTripIndex]?.toCity ||
-                                  "Not found"}
-                              </p>
-                            </>
-                          );
-                        })()}
-                      </div>
-
-                      {/* Stats: seats, speed, luggage */}
-                      <div className="flex">
-                        <span className="text-base md:text-lg font-bold text-gray-600 flex items-center mr-2">
-                          <MdAirlineSeatReclineExtra size={22} className="mr-1" />
-                          {flight.fleetDetails.seatCapacity} | 
-                        </span>
-                        <span className="text-base md:text-lg font-bold text-gray-600 flex items-center mr-2">
-                          <IoMdSpeedometer size={22} className="mr-1" />
-                          {flight.fleetDetails.maxSpeed} nm |
-                        </span>
-                        <span className="text-base md:text-lg font-bold text-gray-600 flex items-center">
-                          <BsFillLuggageFill size={22} className="mr-1" />
-                          {flight.fleetDetails.luggage}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Some free amenities */}
-                    {freeServicesToShow.length > 0 ? (
-                      <div className="mb-2">
-                        <h4 className="text-base font-semibold mb-2">
-                          In-Flight Amenities
-                        </h4>
-                        <ul className="flex space-x-1 mb-1 flex-wrap">
-                          {firstLineServices.map(([amenityKey]) => {
-                            const IconComp =
-                              amenityIcons[amenityKey] || (
-                                <AiOutlineCheckCircle className="text-green-500 mr-2" />
-                              );
-                            return (
-                              <li
-                                key={amenityKey}
-                                className="flex items-center text-base border-r-2 border-gray-300 pr-2 mr-2"
-                              >
-                                <span className="mr-1">{IconComp}</span>
-                                <span>{amenityKey}</span>
-                              </li>
+                        {/* TO */}
+                        <div>
+                          {(() => {
+                            const departureTime =
+                              parsedData?.segments?.[currentTripIndex]
+                                ?.departureTime || "21:35";
+                            const flightTime = flight.flightTime || "0h 0m";
+                            const arrivalTime = calculateArrivalTime(
+                              departureTime,
+                              flightTime
                             );
-                          })}
-                        </ul>
-                        {secondLineServices.length > 0 && (
-                          <ul className="flex space-x-1 flex-wrap">
-                            {secondLineServices.map(([amenityKey]) => {
+                            return (
+                              <>
+                                <p className="font-semibold">
+                                  {parsedData?.segments?.[currentTripIndex]?.toIATA ||
+                                    "LHR"}{" "}
+                                  - {arrivalTime}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                  {parsedData?.segments?.[currentTripIndex]?.toCity ||
+                                    "Not found"}
+                                </p>
+                              </>
+                            );
+                          })()}
+                        </div>
+
+                        {/* Stats: seats, speed, luggage */}
+                        <div className="flex">
+                          <span className="text-base md:text-lg font-bold text-gray-600 flex items-center mr-2">
+                            <MdAirlineSeatReclineExtra size={22} className="mr-1" />
+                            {flight.fleetDetails.seatCapacity} | 
+                          </span>
+                          <span className="text-base md:text-lg font-bold text-gray-600 flex items-center mr-2">
+                            <IoMdSpeedometer size={22} className="mr-1" />
+                            {flight.fleetDetails.maxSpeed} nm |
+                          </span>
+                          <span className="text-base md:text-lg font-bold text-gray-600 flex items-center">
+                            <BsFillLuggageFill size={22} className="mr-1" />
+                            {flight.fleetDetails.luggage}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Some free amenities */}
+                      {freeServicesToShow.length > 0 ? (
+                        <div className="mb-2">
+                          <h4 className="text-base font-semibold mb-2">
+                            In-Flight Amenities
+                          </h4>
+                          <ul className="flex space-x-1 mb-1 flex-wrap">
+                            {firstLineServices.map(([amenityKey]) => {
                               const IconComp =
                                 amenityIcons[amenityKey] || (
                                   <AiOutlineCheckCircle className="text-green-500 mr-2" />
@@ -668,235 +659,254 @@ const FlightCard = ({
                                 </li>
                               );
                             })}
-                            <button
-                              onClick={() => toggleFlightDetails(flight.serialNumber)}
-                              className="text-base text-blue-700 font-semibold hover:underline"
-                            >
-                              See more...
-                            </button>
                           </ul>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-base text-gray-600 mb-3">
-                        No free services available
-                      </p>
-                    )}
-
-                    {/* Bottom actions: check/share/select */}
-                    {!readOnly && (
-                      <div className="flex items-start justify-between mb-4 mt-4 pt-2 border-t border-gray-300">
-                        {/* LEFT: checkbox + share */}
-                        <div className="flex items-end">
-                          <label className="flex items-start flex-col">
-                            <input
-                              type="checkbox"
-                              className="w-4 h-4"
-                              checked={checkedFlights[flight.serialNumber] || false}
-                              onChange={(e) => handleCheckboxChange(flight, e)}
-                            />
-                            <span className="text-xs">Select for sharing</span>
-                          </label>
-
-                          <button
-                            onClick={openWhatsAppModal}
-                            className="flex flex-col items-center text-green-600 hover:text-green-700 mx-2"
-                          >
-                            <FaWhatsapp className="text-2xl" />
-                            <span className="text-xs mt-1">Send via WhatsApp</span>
-                          </button>
-
-                          <button
-                            onClick={openEmailModal}
-                            className="flex flex-col items-center text-gray-700 hover:text-gray-900"
-                          >
-                            <AiOutlineMail className="text-2xl" />
-                            <span className="text-xs mt-1">Send via Email</span>
-                          </button>
-                        </div>
-
-                        {/* RIGHT: "Select Fleet" & possibly Next Enquiry */}
-                        <div className="flex items-center space-x-4 mt-4 md:mt-0">
-                          <button
-                            onClick={() => onSelectFleet(flight)}
-                            className={`${
-                              selectedFleet?.serialNumber === flight.serialNumber
-                                ? "bg-red-500 focus:ring-2 focus:ring-red-300"
-                                : "bg-gradient-to-r from-green-500 to-green-700"
-                            } text-white text-base font-semibold px-4 py-2 rounded shadow-md`}
-                          >
-                            {selectedFleet?.serialNumber === flight.serialNumber
-                              ? "Fleet Selected"
-                              : "Select Flight"}
-                          </button>
-
-                          {selectedFleet?.serialNumber === flight.serialNumber && (
-                            <>
-                              {isMultiCity ? (
-                                currentTripIndex < tripCount - 1 ? (
-                                  <button
-                                    onClick={onNextSegment}
-                                    className="bg-blue-600 text-white px-4 py-2 rounded shadow-md"
+                          {secondLineServices.length > 0 && (
+                            <ul className="flex space-x-1 flex-wrap">
+                              {secondLineServices.map(([amenityKey]) => {
+                                const IconComp =
+                                  amenityIcons[amenityKey] || (
+                                    <AiOutlineCheckCircle className="text-green-500 mr-2" />
+                                  );
+                                return (
+                                  <li
+                                    key={amenityKey}
+                                    className="flex items-center text-base border-r-2 border-gray-300 pr-2 mr-2"
                                   >
-                                    Select Next Fleet
-                                  </button>
+                                    <span className="mr-1">{IconComp}</span>
+                                    <span>{amenityKey}</span>
+                                  </li>
+                                );
+                              })}
+                              <button
+                                onClick={() => toggleFlightDetails(flight.serialNumber)}
+                                className="text-base text-blue-700 font-semibold hover:underline"
+                              >
+                                See more...
+                              </button>
+                            </ul>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-base text-gray-600 mb-3">
+                          No free services available
+                        </p>
+                      )}
+
+                      {/* Bottom actions: check/share/select */}
+                      {!readOnly && (
+                        <div className="flex items-start justify-between mb-4 mt-4 pt-2 border-t border-gray-300">
+                          {/* LEFT: checkbox + share */}
+                          <div className="flex items-end">
+                            <label className="flex items-start flex-col">
+                              <input
+                                type="checkbox"
+                                className="w-4 h-4"
+                                checked={checkedFlights[flight.serialNumber] || false}
+                                onChange={(e) => handleCheckboxChange(flight, e)}
+                              />
+                              <span className="text-xs">Select for sharing</span>
+                            </label>
+
+                            <button
+                              onClick={openWhatsAppModal}
+                              className="flex flex-col items-center text-green-600 hover:text-green-700 mx-2"
+                            >
+                              <FaWhatsapp className="text-2xl" />
+                              <span className="text-xs mt-1">Send via WhatsApp</span>
+                            </button>
+
+                            <button
+                              onClick={openEmailModal}
+                              className="flex flex-col items-center text-gray-700 hover:text-gray-900"
+                            >
+                              <AiOutlineMail className="text-2xl" />
+                              <span className="text-xs mt-1">Send via Email</span>
+                            </button>
+                          </div>
+
+                          {/* RIGHT: "Select Fleet" & possibly Next Enquiry */}
+                          <div className="flex items-center space-x-4 mt-4 md:mt-0">
+                            <button
+                              onClick={() => onSelectFleet(flight)}
+                              className={`${
+                                selectedFleet?.serialNumber === flight.serialNumber
+                                  ? "bg-red-500 focus:ring-2 focus:ring-red-300"
+                                  : "bg-gradient-to-r from-green-500 to-green-700"
+                              } text-white text-base font-semibold px-4 py-2 rounded shadow-md`}
+                            >
+                              {selectedFleet?.serialNumber === flight.serialNumber
+                                ? "Fleet Selected"
+                                : "Select Flight"}
+                            </button>
+
+                            {selectedFleet?.serialNumber === flight.serialNumber && (
+                              <>
+                                {isMultiCity ? (
+                                  currentTripIndex < tripCount - 1 ? (
+                                    <button
+                                      onClick={onNextSegment}
+                                      className="bg-blue-600 text-white px-4 py-2 rounded shadow-md"
+                                    >
+                                      Select Next Fleet
+                                    </button>
+                                  ) : (
+                                    <Link href="/finalEnquiry">
+                                      <button className="bg-green-600 text-white px-4 py-2 rounded shadow-md">
+                                        Proceed to Enquiry
+                                      </button>
+                                    </Link>
+                                  )
                                 ) : (
                                   <Link href="/finalEnquiry">
                                     <button className="bg-green-600 text-white px-4 py-2 rounded shadow-md">
                                       Proceed to Enquiry
                                     </button>
                                   </Link>
-                                )
-                              ) : (
-                                <Link href="/finalEnquiry">
-                                  <button className="bg-green-600 text-white px-4 py-2 rounded shadow-md">
-                                    Proceed to Enquiry
-                                  </button>
-                                </Link>
-                              )}
-                            </>
-                          )}
+                                )}
+                              </>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </motion.div>
-                )}
+                      )}
+                    </motion.div>
+                  )}
 
-                {/* Expanded Amenities */}
-                {isOpen && (
-                  <motion.div
-                    key="amenities"
-                    variants={amenitiesVariants}
-                    initial="hidden"
-                    animate="show"
-                    exit="exit"
-                    transition={{ duration: 0.4 }}
-                    className="bg-white p-4 pb-0 h-full rounded-xl"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center space-x-2">
-                        <img
-                          src={
-                            flight.logo ||
-                            "https://imgak.mmtcdn.com/flights/assets/media/dt/common/icons/GF.png?v=19"
-                          }
-                          alt={flight.title || "Gulf Air"}
-                          className="w-8 h-8 md:w-10 md:h-10 object-contain"
-                        />
-                        <div className="flex flex-col items-end">
-                          <h2 className="text-xl md:text-2xl font-bold text-gray-800">
-                            {flight.fleetDetails.selectedModel || "Gulf Air"}
-                          </h2>
-                          <p className="text-sm text-gray-700 font-medium">
-                            Reg. No:{" "}
-                            {flight.fleetDetails.registrationNo || "Gulf Air"}
+                  {/* Expanded Amenities */}
+                  {isOpen && (
+                    <motion.div
+                      key="amenities"
+                      variants={amenitiesVariants}
+                      initial="hidden"
+                      animate="show"
+                      exit="exit"
+                      transition={{ duration: 0.4 }}
+                      className="bg-white p-4 pb-0 h-full rounded-xl"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center space-x-2">
+                          <img
+                            src={
+                              flight.logo ||
+                              "https://imgak.mmtcdn.com/flights/assets/media/dt/common/icons/GF.png?v=19"
+                            }
+                            alt={flight.title || "Gulf Air"}
+                            className="w-8 h-8 md:w-10 md:h-10 object-contain"
+                          />
+                          <div className="flex flex-col items-end">
+                            <h2 className="text-xl md:text-2xl font-bold text-gray-800">
+                              {flight.fleetDetails.selectedModel || "Gulf Air"}
+                            </h2>
+                            <p className="text-sm text-gray-700 font-medium">
+                              Reg. No:{" "}
+                              {flight.fleetDetails.registrationNo || "Gulf Air"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-gray-500">Starting from</p>
+                          <p className="text-2xl font-bold text-gray-800">
+                            USD {convertPrice(flightPriceUSD, "USD").toLocaleString()}
+                          </p>
+                          <p className="text-sm text-gray-600 mt-1">
+                            INR {convertPrice(flightPriceUSD, "INR").toLocaleString()},
+                            GBP {convertPrice(flightPriceUSD, "GBP").toLocaleString()}
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm text-gray-500">Starting from</p>
-                        <p className="text-2xl font-bold text-gray-800">
-                          USD {convertPrice(flightPriceUSD, "USD").toLocaleString()}
-                        </p>
-                        <p className="text-sm text-gray-600 mt-1">
-                          INR {convertPrice(flightPriceUSD, "INR").toLocaleString()},
-                          GBP {convertPrice(flightPriceUSD, "GBP").toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
 
-                    {allAmenities.length > 0 ? (
-                      <div className="mt-3">
-                        <div className="flex justify-between items-center mb-2">
-                          <h3 className="text-lg font-semibold">
-                            Additional Services
-                          </h3>
-                          <button
-                            onClick={() => toggleFlightDetails(flight.serialNumber)}
-                            className="text-base text-blue-500"
+                      {allAmenities.length > 0 ? (
+                        <div className="mt-3">
+                          <div className="flex justify-between items-center mb-2">
+                            <h3 className="text-lg font-semibold">
+                              Additional Services
+                            </h3>
+                            <button
+                              onClick={() => toggleFlightDetails(flight.serialNumber)}
+                              className="text-base text-blue-500"
+                            >
+                              Hide Flight Details ^
+                            </button>
+                          </div>
+
+                          <div
+                            className="max-w-[40rem] h-32 relative border border-gray-300 rounded p-2 group"
+                            style={{ overflowX: "auto" }}
                           >
-                            Hide Flight Details ^
-                          </button>
-                        </div>
+                            <style>
+                              {`
+                                .group::-webkit-scrollbar {
+                                  width: 6px;
+                                  height: 6px;
+                                }
+                                .group::-webkit-scrollbar-track {
+                                  background: #f0f0f0;
+                                  border-radius: 6px;
+                                }
+                                .group::-webkit-scrollbar-thumb {
+                                  background-color: #bfbfbf;
+                                  border-radius: 6px;
+                                }
+                                .group:hover::-webkit-scrollbar-thumb {
+                                  background-color: #999;
+                                }
+                              `}
+                            </style>
 
-                        <div
-                          className="max-w-[40rem] h-32 relative border border-gray-300 rounded p-2 group"
-                          style={{ overflowX: "auto" }}
-                        >
-                          <style>
-                            {`
-                              .group::-webkit-scrollbar {
-                                width: 6px;
-                                height: 6px;
-                              }
-                              .group::-webkit-scrollbar-track {
-                                background: #f0f0f0;
-                                border-radius: 6px;
-                              }
-                              .group::-webkit-scrollbar-thumb {
-                                background-color: #bfbfbf;
-                                border-radius: 6px;
-                              }
-                              .group:hover::-webkit-scrollbar-thumb {
-                                background-color: #999;
-                              }
-                            `}
-                          </style>
-
-                          <div className="flex flex-row flex-nowrap gap-8">
-                            {chunkedAmenities.map((column, colIndex) => (
-                              <div
-                                key={colIndex}
-                                className="flex flex-col space-y-2 min-w-[250px]"
-                              >
-                                {column.map(([amenityKey, amenityData]) => {
-                                  const IconComp =
-                                    amenityIcons[amenityKey] || (
-                                      <AiOutlineCheckCircle
-                                        className="text-green-500"
-                                        size={20}
-                                      />
-                                    );
-                                  return (
-                                    <div
-                                      key={amenityKey}
-                                      className="flex items-center space-x-2"
-                                    >
-                                      <span>{IconComp}</span>
-                                      <span className="font-medium text-base text-gray-800">
-                                        {amenityKey}
-                                      </span>
-                                      <span
-                                        className={`text-sm font-semibold ml-2 px-2 py-1 rounded ${
-                                          amenityData.value === "free"
-                                            ? "bg-green-100 text-green-600"
-                                            : "bg-red-100 text-red-600"
-                                        }`}
+                            <div className="flex flex-row flex-nowrap gap-8">
+                              {chunkedAmenities.map((column, colIndex) => (
+                                <div
+                                  key={colIndex}
+                                  className="flex flex-col space-y-2 min-w-[250px]"
+                                >
+                                  {column.map(([amenityKey, amenityData]) => {
+                                    const IconComp =
+                                      amenityIcons[amenityKey] || (
+                                        <AiOutlineCheckCircle
+                                          className="text-green-500"
+                                          size={20}
+                                        />
+                                      );
+                                    return (
+                                      <div
+                                        key={amenityKey}
+                                        className="flex items-center space-x-2"
                                       >
-                                        {amenityData.value === "free"
-                                          ? "Free"
-                                          : "Chargeable"}
-                                      </span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            ))}
+                                        <span>{IconComp}</span>
+                                        <span className="font-medium text-base text-gray-800">
+                                          {amenityKey}
+                                        </span>
+                                        <span
+                                          className={`text-sm font-semibold ml-2 px-2 py-1 rounded ${
+                                            amenityData.value === "free"
+                                              ? "bg-green-100 text-green-600"
+                                              : "bg-red-100 text-red-600"
+                                          }`}
+                                        >
+                                          {amenityData.value === "free"
+                                            ? "Free"
+                                            : "Chargeable"}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ) : (
-                      <p className="text-base text-gray-600 mt-3">
-                        No additional amenities.
-                      </p>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                      ) : (
+                        <p className="text-base text-gray-600 mt-3">
+                          No additional amenities.
+                        </p>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
 
       {/* EXPERIENCE MODAL */}
       {showExperienceModal && (
@@ -1057,7 +1067,26 @@ const FlightCard = ({
           </div>
         </div>
       )}
-    </div>
+
+      {/* React-Toastify container */}
+      <ToastContainer
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        style={{
+          position: "fixed",
+          top: "12%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          zIndex: 100,
+        }}
+      />
+    </>
   );
 };
 

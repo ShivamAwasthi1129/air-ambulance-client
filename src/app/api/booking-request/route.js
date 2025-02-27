@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 function generateWhatsAppMessage(data) {
-  console.log("data" , data);
+
   const name = data.userInfo.name;
   const passengers = data.segments[0].passengers;
   const email = data.userInfo.email;

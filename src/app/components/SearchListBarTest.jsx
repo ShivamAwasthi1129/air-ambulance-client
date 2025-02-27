@@ -6,8 +6,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import FilterAndFleetListing from "../components/FilterAndFleetListing";
 import UserInfoModal from "../components/UserInfoModal";
 import Link from "next/link";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export const SearchBar = () => {
   // === State ===
@@ -300,6 +300,7 @@ export const SearchBar = () => {
           return;
         }
       }
+
       // Append the selected country code to the phone number
       const fullPhoneNumber = `${countryCode}${phone}`;
       const mergedUserInfo = {
@@ -327,7 +328,7 @@ export const SearchBar = () => {
           if (data.message === "user already exists") {
             toast.info(
               data.message +
-                " please try to login via provided credential in your existing email"
+                " with email : " + email + " Check your email for credentials"
             );
             setIsLoading(false);
             return;
@@ -335,6 +336,7 @@ export const SearchBar = () => {
           setIsUserInfoModalOpen(true);
         } catch (err) {
           console.error("Error sending OTP request:", err);
+          toast.error("Failed to send OTP. Please try again.");
         }
       }
 
@@ -348,8 +350,7 @@ export const SearchBar = () => {
       setUserInfo(mergedUserInfo);
       setRefreshKey((prev) => prev + 1);
 
-      // -- NEW CODE: Immediately fetch the stored session (searchData)
-      //    and POST it to /api/query
+      // Immediately POST to /api/query for flight listing
       const finalDataFromSession = sessionStorage.getItem("searchData");
       if (finalDataFromSession) {
         const finalDataToSend = JSON.parse(finalDataFromSession);
@@ -361,11 +362,13 @@ export const SearchBar = () => {
         });
       }
 
+      // For multi-city, collapse after searching
       if (tripType === "multicity") {
         setIsMultiCityCollapsed(true);
       }
     } catch (err) {
       console.error("Error in handleSearch:", err);
+      toast.error("Something went wrong while searching. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -374,6 +377,7 @@ export const SearchBar = () => {
   // === JSX ===
   return (
     <>
+      {/* User Info (OTP) Modal */}
       {isUserInfoModalOpen && (
         <UserInfoModal
           show={isUserInfoModalOpen}
@@ -387,9 +391,8 @@ export const SearchBar = () => {
         />
       )}
 
-      {/* Outer container */}
       <div className="w-full flex flex-col items-center relative">
-        {/* This container wraps the search bar */}
+        {/* Search Bar Container */}
         <div
           className="p-4 sm:p-6 md:p-8 max-w-6xl w-full rounded-lg bg-white/40 
                      backdrop-blur-md shadow-md -mt-32 relative z-10"
@@ -510,9 +513,9 @@ export const SearchBar = () => {
             </label>
           </div>
 
-          {/* Outer box for the search fields */}
+          {/* (3) Main Search Fields Container */}
           <div className="bg-white rounded-xl border-4 border-gray-300 p-4">
-            {/* (3) Main Search Fields (One Way) */}
+            {/* One Way Fields */}
             {tripType === "oneway" && (
               <div className="flex flex-wrap md:flex-nowrap items-end gap-4 mb-4 border-b-2 border-gray-300 pb-4">
                 {/* FROM */}
@@ -536,7 +539,7 @@ export const SearchBar = () => {
                       setSearchQuery(e.target.value);
                     }}
                   />
-                  {/* Dropdown - limited to 5 results */}
+                  {/* Dropdown */}
                   {showDropdown &&
                     focusedSegmentIndex === 0 &&
                     focusedField === "from" &&
@@ -615,7 +618,7 @@ export const SearchBar = () => {
                     )}
                 </div>
 
-                {/* Depart Date/Time */}
+                {/* Departure Date & Time */}
                 <div className="w-full sm:w-1/2 md:w-[200px]">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Departure Date & Time
@@ -856,7 +859,7 @@ export const SearchBar = () => {
               </>
             )}
 
-            {/* (4) User Info Fields (only if not verified) */}
+            {/* User Info Fields (shown if not verified) */}
             {!isVerified && (
               <div className="flex flex-wrap items-center justify-center gap-4 mb-4">
                 {/* Email */}
@@ -870,7 +873,7 @@ export const SearchBar = () => {
                   />
                 </div>
 
-                {/* Phone Number with Country Code Select */}
+                {/* Phone Number + Country Code */}
                 <div className="flex-1 min-w-[160px] relative">
                   <select
                     value={countryCode}
@@ -881,7 +884,6 @@ export const SearchBar = () => {
                     <option value="+1">+1</option>
                     <option value="+44">+44</option>
                     <option value="+61">+61</option>
-                    {/* Add any other codes you need */}
                   </select>
                   <input
                     type="phone"
@@ -892,7 +894,7 @@ export const SearchBar = () => {
                   />
                 </div>
 
-                {/* Your Name */}
+                {/* Name */}
                 <div className="flex-1 min-w-[180px]">
                   <input
                     type="text"
@@ -953,6 +955,8 @@ export const SearchBar = () => {
           <FilterAndFleetListing key={refreshKey} />
         )}
       </div>
+
+      {/* React-Toastify container */}
       <ToastContainer
         autoClose={5000}
         hideProgressBar={false}
@@ -963,10 +967,10 @@ export const SearchBar = () => {
         draggable
         pauseOnHover
         style={{
-          position: 'fixed',
-          top: '12%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
+          position: "fixed",
+          top: "12%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
           zIndex: 100,
         }}
       />
