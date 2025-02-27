@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 function generateWhatsAppMessage(data) {
+  console.log("data" , data);
   const name = data.userInfo.name;
   const passengers = data.segments[0].passengers;
   const email = data.userInfo.email;
@@ -24,6 +25,7 @@ Departure Time: ${segment.departureTime}
 `;
   });
 
+  
   return flightDetails;
 }
 export const POST = async (req) => {
@@ -63,7 +65,7 @@ export const POST = async (req) => {
                   {
                     type: "text",
                     text: msg,
-                  }
+                  },
                 ],
               },
             ],
@@ -74,6 +76,7 @@ export const POST = async (req) => {
 
     return NextResponse.json({ message: "success" });
   } catch (error) {
+    console.log("error",error)
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 };

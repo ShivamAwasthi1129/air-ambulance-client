@@ -331,38 +331,86 @@ const FlightCard = ({
       alert("No flights selected!");
       return;
     }
+  
     try {
+      // Convert DataURL to file
       const file = dataURLtoFile(combinedPreview, "combined_flights.png");
       const formData = new FormData();
       formData.append("profile", file);
-
+  
+      // 1) Upload image to S3 via /api/user/image
       const response = await fetch("/api/user/image", {
         method: "POST",
         body: formData,
       });
       const result = await response.json();
-
+  
       if (!result.success) {
         console.error("Upload error:", result);
         alert("Upload error: " + (result.error || "Unknown error"));
         return;
       }
+  
       const s3Link = result.secureUrl;
       console.log("WhatsApp S3 link:", s3Link);
       alert("Uploaded to S3:\n" + s3Link);
-
-
-      // optionally clear
+  
+      // 2) Determine user name & phone from loginData or searchData
+      let name = userSession?.name || "";
+      let phone = userSession?.phone || "";
+  
+      if (!name || !phone) {
+        // fallback to searchData userInfo
+        const fallbackName = parsedData?.userInfo?.name || "";
+        const fallbackPhone = parsedData?.userInfo?.phone || "";
+  
+        if (!name) name = fallbackName;
+        if (!phone) phone = fallbackPhone;
+      }
+  
+      // 3) Send name, phone, and imageUrl to fleet-enquiry API
+      try {
+        const fleetEnquiryResponse = await fetch("/api/fleet-enquiry", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            phone,
+            imageUrl: s3Link,
+          }),
+        });
+  
+        if (!fleetEnquiryResponse.ok) {
+          console.error("Error sending data to fleet-enquiry:", fleetEnquiryResponse);
+          alert("Something went wrong while sending data to fleet-enquiry API.");
+          return;
+        }
+  
+        const fleetEnquiryData = await fleetEnquiryResponse.json();
+        console.log("fleet-enquiry response:", fleetEnquiryData);
+  
+        alert("Successfully sent data to fleet-enquiry API!");
+      } catch (err) {
+        console.error("Error in POST request to fleet-enquiry API:", err);
+        alert("Failed to send data to fleet-enquiry API.");
+      }
+  
+      // Optionally clear your selections / state
       setCheckedFlights({});
       setSnapshots({});
       sessionStorage.removeItem("flightShots");
       setCombinedPreview(null);
       closeWhatsAppModal();
+  
     } catch (err) {
       console.error("Error in uploading (WhatsApp)", err);
       alert("Something went wrong uploading images.");
     }
   };
+  
+  
 
   // Send via Email
   const handleSendEmail = async () => {
@@ -950,7 +998,7 @@ const FlightCard = ({
 
             <input
               type="text"
-              defaultValue={userSession?.phone || ""}
+              defaultValue={userSession?.phone || parsedData?.userInfo?.phone}
               className="border border-gray-300 w-full p-2 rounded mb-4"
               placeholder="+1234567890"
             />

@@ -5,6 +5,8 @@ import { IoIosAirplane } from "react-icons/io";
 import { BsExclamationTriangle } from "react-icons/bs";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import { toast , ToastContainer } from "react-toastify";          // <-- import from react-toastify
+import "react-toastify/dist/ReactToastify.css";  // <-- also import the CSS
 import FlightCard from "../components/FleetCard";
 import { Banner } from "../components/SearchBanner";
 import { Bottom } from "../components/Bottom";
@@ -16,7 +18,7 @@ function cleanAirportName(str) {
   return str.replace(/\s*\(.*?\)\s*/, "").trim();
 }
 
-// Helper: format to US dollars, e.g. `$ 650,000`.
+// Helper: format to US dollars, e.g. `$ 650,000`
 function formatUSD(amount) {
   return `$ ${amount.toLocaleString("en-US")}`;
 }
@@ -24,9 +26,13 @@ function formatUSD(amount) {
 const FinalEnquiryPage = () => {
   const [searchData, setSearchData] = useState(null);
   const [fetchedSegmentsData, setFetchedSegmentsData] = useState([]);
-  const [userData, setUserData] = useState({}); // Will hold { name, phone, email }
+  const [userData, setUserData] = useState({});
   const [orderId, setOrderId] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Track WhatsApp "Sending..." state
+  const [isWhatsAppSending, setIsWhatsAppSending] = useState(false);
+
   const router = useRouter();
 
   // 1) Read searchData from sessionStorage & fallback to loginData for user details
@@ -78,9 +84,7 @@ const FinalEnquiryPage = () => {
 
         const url = `/api/search-flights?from=${encodeURIComponent(
           cleanedFrom
-        )}&to=${encodeURIComponent(
-          cleanedTo
-        )}&departureDate=${`${segment.departureDate}T${segment.departureTime}:00Z`}&travelerCount=${
+        )}&to=${encodeURIComponent(cleanedTo)}&departureDate=${`${segment.departureDate}T${segment.departureTime}:00Z`}&travelerCount=${
           segment.passengers
         }`;
 
@@ -137,7 +141,7 @@ const FinalEnquiryPage = () => {
       console.log("data", data);
 
       if (data.error) {
-        alert(data.error);
+        toast.error(data.error, { position: "top-center" });
         setLoading(false);
         return;
       }
@@ -149,7 +153,7 @@ const FinalEnquiryPage = () => {
       );
     } catch (err) {
       console.error(err);
-      alert("Payment initiation failed!");
+      toast.error("Payment initiation failed!", { position: "top-center" });
     }
     setLoading(false);
   };
@@ -169,9 +173,8 @@ const FinalEnquiryPage = () => {
     totalFlyingTimeMinutes % 60
   } Min`;
 
-  // 4) Summation for cost details
+  // Summation for cost details
   const allSelectedFlights = fetchedSegmentsData.flat();
-
   // Parse flight.totalPrice, e.g. "$ 650,000"
   const totalFlightCost = allSelectedFlights.reduce((acc, flight) => {
     if (!flight.totalPrice) return acc;
@@ -185,14 +188,72 @@ const FinalEnquiryPage = () => {
   const gstAmount = Math.round(subTotal * 0.18); // 18% tax
   const estimatedCost = subTotal + gstAmount;
 
-  const message = `Hello, I would like to get a quotation for my flight trip.\n\nName: ${userData.name}\nPhone: ${userData.phone}\nEmail: ${userData.email}\n\nPlease find the attached flight details.`;
-
-  const sendWhatsAppMessage = () => {
-    const phoneNumber = "+919999929832";
-    const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-    window.open(whatsappURL, "_blank");
+  // Updated: POST to /api/booking-request, using react-toastify
+  const sendWhatsAppMessage = async () => {
+    const phoneNumber = "+919999929832"; // The number to which we say we sent
+    setIsWhatsAppSending(true);
+  
+    // 1. Show an "info" toast with no autoClose
+    const toastId = toast.info("Sending your enquiry...", {
+      position: "top-center",
+      autoClose: false, // Keep it open until we dismiss or update
+      closeOnClick: false,
+      draggable: false,
+    });
+  
+    try {
+      // Check if 'loginData' session exists in sessionStorage
+      const loginDataStr = sessionStorage.getItem("loginData");
+      if (loginDataStr) {
+        // Parse the stored session data
+        const loginData = JSON.parse(loginDataStr);
+        // Update searchData.userInfo with login details
+        searchData.userInfo = {
+          name: loginData.name,
+          email: loginData.email,
+          phone: loginData.phone,
+        };
+      }
+      
+      // Log the payload before sending
+      console.log("Sending payload:", searchData);
+  
+      // 2. POST request to /api/booking-request with searchData payload
+      const response = await fetch("/api/booking-request", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ searchData }),
+      });
+  
+      if (!response.ok) {
+        // Force an error for the catch block below
+        throw new Error(`Server error: ${response.statusText}`);
+      }
+  
+      // 3. Dismiss the loading toast
+      toast.dismiss(toastId);
+  
+      // 4. Show success toast
+      toast.success(`Enquiry sent successfully to ${phoneNumber}`, {
+        position: "top-center",
+      });
+    } catch (err) {
+      // 5. Dismiss the loading toast
+      toast.dismiss(toastId);
+  
+      // 6. Show error toast
+      toast.error(`Something went wrong: ${err.message}`, {
+        position: "top-center",
+      });
+    } finally {
+      setIsWhatsAppSending(false);
+    }
   };
+  
 
+  // Email logic
   const sendEmailMessage = async () => {
     try {
       await fetch("/api/enquiry", {
@@ -203,16 +264,19 @@ const FinalEnquiryPage = () => {
         body: JSON.stringify({
           segments: searchData.segments,
           user: userData, // includes name, phone, email
-          tripType: searchData.tripType, 
+          tripType: searchData.tripType,
           airportHandling,
           subTotal,
           gstAmount,
           estimatedCost,
         }),
       });
-      alert("Mail sent to: " + userData.email);
+
+      toast.success(`Mail sent to: ${userData.email}`, {
+        position: "top-center",
+      });
     } catch (e) {
-      alert("Something went wrong");
+      toast.error("Something went wrong", { position: "top-center" });
       console.error("Error sending enquiry:", e);
     }
   };
@@ -230,8 +294,6 @@ const FinalEnquiryPage = () => {
   // PDF Download Function (Proforma Invoice)
   const generatePDF = () => {
     const doc = new jsPDF();
-
-    // Set default font
     doc.setFont("helvetica");
 
     // === Title Section ===
@@ -248,7 +310,6 @@ const FinalEnquiryPage = () => {
     );
     doc.text("Phone: +91-11-40845858 | Email: info@charterflightaviations.in", 14, 36);
 
-    // Greeting
     doc.text("Dear Sir/Madam,", 14, 44);
     doc.text(
       "We are Pleased to offer to you the Aircraft. The commercials for the same will be as follows:",
@@ -256,7 +317,7 @@ const FinalEnquiryPage = () => {
       49
     );
 
-    // === Flight Details Section ===
+    // === Flight Details ===
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.text("Flight Details", 14, 55);
@@ -280,7 +341,6 @@ const FinalEnquiryPage = () => {
       alternateRowStyles: { fillColor: [245, 245, 245] },
     });
 
-    // === Total Flying Hours ===
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
     doc.text(
@@ -289,7 +349,7 @@ const FinalEnquiryPage = () => {
       doc.lastAutoTable.finalY + 10
     );
 
-    // === Cost Breakdown Section ===
+    // === Cost Breakdown ===
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.text("Cost Breakdown", 14, doc.lastAutoTable.finalY + 20);
@@ -314,7 +374,6 @@ const FinalEnquiryPage = () => {
       alternateRowStyles: { fillColor: [245, 245, 245] },
     });
 
-    // === Notes Section ===
     doc.setFontSize(10);
     doc.setFont("helvetica", "italic");
     const notesText =
@@ -322,7 +381,7 @@ const FinalEnquiryPage = () => {
     const splitNotes = doc.splitTextToSize(notesText, 180);
     doc.text(splitNotes, 14, doc.lastAutoTable.finalY + 15);
 
-    // === Terms & Conditions Section ===
+    // === Terms & Conditions Page ===
     doc.addPage();
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
@@ -352,12 +411,12 @@ const FinalEnquiryPage = () => {
       margin: { left: 14 },
     });
 
-    // === Footer ===
     const finalY = doc.lastAutoTable.finalY + 10;
     doc.setFont("helvetica", "bold");
     doc.text("For Charter Flight Aviations Pvt. Ltd.", 14, finalY);
     doc.text("For Client", 14, finalY + 10);
 
+    // Save final PDF
     doc.save("Proforma_Invoice.pdf");
   };
 
@@ -432,14 +491,11 @@ const FinalEnquiryPage = () => {
               <span>GST (18%)</span>
               <span>{formatUSD(gstAmount)}</span>
             </div>
-
-            {/* Highlight the Estimated Cost */}
             <div className="flex justify-between items-center font-bold text-lg mb-6 bg-yellow-100 px-3 py-2 rounded-md text-yellow-800 shadow-inner">
               <span>Estimated Cost</span>
               <span>{formatUSD(estimatedCost)}</span>
             </div>
 
-            {/* JetSteals description */}
             <div className="text-gray-600 text-sm border border-gray-100 rounded p-3 mb-4 bg-gray-50">
               JetSteals grants you the opportunity to enjoy the luxury
               and convenience of flying private at commercial prices.
@@ -447,6 +503,7 @@ const FinalEnquiryPage = () => {
 
             {/* Buttons */}
             <div className="flex justify-between space-2 mb-4">
+              {/* PARTIAL PAYMENT Button */}
               <button
                 onClick={handlePayment}
                 disabled={loading}
@@ -456,14 +513,17 @@ const FinalEnquiryPage = () => {
                 <div className="text-xs font-normal">With Partial Payment</div>
               </button>
 
+              {/* WHATSAPP ENQUIRY Button */}
               <button
                 onClick={sendWhatsAppMessage}
+                disabled={isWhatsAppSending}
                 className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded transition-colors text-sm font-semibold"
               >
-                SEND Enquiry
+                {isWhatsAppSending ? "Sending..." : "SEND Enquiry"}
                 <div className="text-xs font-normal">via Whatsapp</div>
               </button>
 
+              {/* EMAIL ENQUIRY Button */}
               <button
                 onClick={sendEmailMessage}
                 className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:opacity-90 text-white px-3 py-2 rounded transition-colors text-sm font-semibold"
@@ -473,7 +533,7 @@ const FinalEnquiryPage = () => {
               </button>
             </div>
 
-            {/* Download Proforma Invoice button */}
+            {/* Download PDF Button */}
             <button
               className="border border-orange-400 text-orange-500 px-4 py-2 rounded-md hover:bg-orange-100 transition-colors w-full text-center"
               onClick={generatePDF}
@@ -485,6 +545,23 @@ const FinalEnquiryPage = () => {
       </div>
 
       <Bottom />
+      <ToastContainer
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        style={{
+          position: 'fixed',
+          top: '12%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 100,
+        }}
+      />
     </div>
   );
 };
