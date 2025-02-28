@@ -597,7 +597,9 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                 <p className="text-lg text-gray-600">No fleets available</p>
               </div>
             ) : (
+              
               <FlightCard
+              
                 // Pass entire array so user can check multiple flights
                 filteredData={filteredData}
                 onSelectFleet={(flight) => handleFleetSelection(segmentIndex, flight)}

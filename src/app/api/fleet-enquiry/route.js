@@ -14,7 +14,7 @@ export const POST = async (req) => {
         },
         body: JSON.stringify({
           messaging_product: "whatsapp",
-          to: `whatsapp:${phone}`,
+          to: phone,
           type: "template",
           template: {
             name: "fleet_enquiry",
@@ -40,9 +40,11 @@ export const POST = async (req) => {
         }),
       }
     );
+     console.log("phone number : " , phone)
 
     return NextResponse.json({ message: "success" });
   } catch (error) {
+    console.log("error" , error)
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 };
