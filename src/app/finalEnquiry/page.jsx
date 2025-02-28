@@ -8,6 +8,7 @@ import "jspdf-autotable";
 import FlightCard from "../components/FleetCard";
 import { Banner } from "../components/SearchBanner";
 import { Bottom } from "../components/Bottom";
+import PaymentModal from "../components/PaymentModal";
 
 // Remove parentheses from airport name
 function cleanAirportName(str) {
@@ -25,6 +26,7 @@ const FinalEnquiryPage = () => {
   const [userData, setUserData] = useState(null);
   const [orderId, setOrderId] = useState();
   const [loading, setLoading] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   // 1) Read searchData from sessionStorage
   useEffect(() => {
@@ -105,52 +107,53 @@ const FinalEnquiryPage = () => {
     );
   }
 
-  const handlePayment = async () => {
+  const handlePayment = async (amount) => {
     setLoading(true);
     try {
-        const response = await fetch("/api/ccavenue", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                order_id: orderId,
-                amount: (estimatedCost / 10).toFixed(2)
-            }),
-        });
+      const response = await fetch("/api/ccavenue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          order_id: orderId,
+          amount, // Use the amount from the modal
+        }),
+      });
 
-        const data = await response.json();
+      const data = await response.json();
 
-        if (data.error) {
-            alert(data.error);
-            setLoading(false);
-            return;
-        }
+      if (data.error) {
+        alert(data.error);
+        setLoading(false);
+        return;
+      }
 
-        // Create and submit a form dynamically
-        const form = document.createElement("form");
-        form.method = "post";
-        form.action = process.env.NEXT_PUBLIC_CCAVENUE_REDIRECT_URL;
-        form.target = "_self";
+      // Create and submit a form dynamically
+      const form = document.createElement("form");
+      form.method = "post";
+      form.action = process.env.NEXT_PUBLIC_CCAVENUE_REDIRECT_URL;
+      form.target = "_self";
 
-        // Hidden input fields
-        const encInput = document.createElement("input");
-        encInput.type = "hidden";
-        encInput.name = "encRequest";
-        encInput.value = data.encRequest;
-        form.appendChild(encInput);
+      // Hidden input fields
+      const encInput = document.createElement("input");
+      encInput.type = "hidden";
+      encInput.name = "encRequest";
+      encInput.value = data.encRequest;
+      form.appendChild(encInput);
 
-        const accessInput = document.createElement("input");
-        accessInput.type = "hidden";
-        accessInput.name = "access_code";
-        accessInput.value = data.accessCode;
-        form.appendChild(accessInput);
+      const accessInput = document.createElement("input");
+      accessInput.type = "hidden";
+      accessInput.name = "access_code";
+      accessInput.value = data.accessCode;
+      form.appendChild(accessInput);
 
-        document.body.appendChild(form);
-        form.submit();
+      document.body.appendChild(form);
+      form.submit();
     } catch (error) {
-        alert("Payment initiation failed!");
+      console.log("eror", error);
+      alert("Payment initiation failed!");
     }
     setLoading(false);
-};
+  };
 
   // Compute total flying time
   const parseTimeToMinutes = (timeStr) => {
@@ -362,6 +365,15 @@ const FinalEnquiryPage = () => {
     doc.save("Proforma_Invoice.pdf");
   };
 
+  const handlePaymentButtonClick = () => {
+    setIsPaymentModalOpen(true); // Open the modal when the payment button is clicked
+  };
+
+  const handlePaymentConfirm = (amount) => {
+    setIsPaymentModalOpen(false); // Close the modal
+    handlePayment(amount); // Proceed with the payment
+  };
+
   return (
     <div className="flex flex-col items-center">
       <Banner />
@@ -448,7 +460,15 @@ const FinalEnquiryPage = () => {
 
             {/* Existing "BOOK NOW" + "SEND Enquiry" buttons */}
             <div className="flex justify-between space-2 mb-4">
-              <button onClick={handlePayment} disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors text-sm font-semibold">
+              {/* <button onClick={handlePayment} disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors text-sm font-semibold">
+                {loading ? "Processing..." : "BOOK Now"}
+                <div className="text-xs font-normal">With Partial Payment</div>
+              </button> */}
+              <button
+                onClick={handlePaymentButtonClick} // Open the modal instead of directly handling payment
+                disabled={loading}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors text-sm font-semibold"
+              >
                 {loading ? "Processing..." : "BOOK Now"}
                 <div className="text-xs font-normal">With Partial Payment</div>
               </button>
@@ -480,6 +500,12 @@ const FinalEnquiryPage = () => {
           </div>
         </div>
       </div>
+      <PaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        onConfirm={handlePaymentConfirm}
+        loading={loading}
+      />
 
       <Bottom />
     </div>

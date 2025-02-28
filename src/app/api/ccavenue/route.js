@@ -12,7 +12,7 @@ export async function POST(req) {
     const orderId = `ORD${Date.now()}`; // Unique order ID
 
     // Prepare transaction request parameters
-    const data = `merchant_id=${MERCHANT_ID}&order_id=${orderId}&currency=INR&amount=${amount}`;
+    const data = `order_id=${orderId}&currency=INR&amount=${amount}`;
     // Encrypt request
     const encRequest = encrypt(data);
 

@@ -7,7 +7,7 @@ import { AiOutlineCheckCircle } from 'react-icons/ai';
 export default function PaymentSuccessPage() {
     const searchParams = useSearchParams();
  
-    const merchantId = searchParams.get('merchant_id');
+    // const merchantId = searchParams.get('merchant_id');
     const orderId = searchParams.get('order_id');
     const currency = searchParams.get('currency');
     const amount = searchParams.get('amount');
@@ -24,10 +24,10 @@ export default function PaymentSuccessPage() {
               <span className="text-gray-700 font-medium">Order ID:</span>
               <span className="text-gray-700">{orderId}</span>
             </div>
-            <div className="flex justify-between py-2 border-b border-gray-200">
+            {/* <div className="flex justify-between py-2 border-b border-gray-200">
               <span className="text-gray-700 font-medium">Merchant ID:</span>
               <span className="text-gray-700">{merchantId}</span>
-            </div>
+            </div> */}
             <div className="flex justify-between py-2 border-b border-gray-200">
               <span className="text-gray-700 font-medium">Currency:</span>
               <span className="text-gray-700">{currency}</span>
