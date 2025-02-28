@@ -10,8 +10,12 @@ import "react-toastify/dist/ReactToastify.css";          // <-- react-toastify C
 import FlightCard from "../components/FleetCard";
 import { Banner } from "../components/SearchBanner";
 import { Bottom } from "../components/Bottom";
+<<<<<<< HEAD
 import { useRouter } from "next/navigation";
 import { decrypt } from "@/lib/ccavenueEncryption";
+=======
+import PaymentModal from "../components/PaymentModal";
+>>>>>>> da577d0fa0fa14f0e1475e1a55c5be405b65656a
 
 // Remove parentheses from airport name
 function cleanAirportName(str) {
@@ -29,6 +33,7 @@ const FinalEnquiryPage = () => {
   const [userData, setUserData] = useState({});
   const [orderId, setOrderId] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   // Track WhatsApp "Sending..." state
   const [isWhatsAppSending, setIsWhatsAppSending] = useState(false);
@@ -126,8 +131,7 @@ const FinalEnquiryPage = () => {
     );
   }
 
-  // Payment logic
-  const handlePayment = async () => {
+  const handlePayment = async (amount) => {
     setLoading(true);
     try {
       const response = await fetch("/api/ccavenue", {
@@ -135,27 +139,42 @@ const FinalEnquiryPage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           order_id: orderId,
-          amount: (estimatedCost / 10).toFixed(2),
+          amount, // Use the amount from the modal
         }),
       });
 
       const data = await response.json();
-      console.log("data", data);
 
       if (data.error) {
-        toast.error(data.error, { position: "top-center" });
+        alert(data.error);
         setLoading(false);
         return;
       }
 
-      router.push(
-        `${process.env.NEXT_PUBLIC_CCAVENUE_REDIRECT_URL}?${decrypt(
-          data.encRequest
-        )}`
-      );
-    } catch (err) {
-      console.error(err);
-      toast.error("Payment initiation failed!", { position: "top-center" });
+      // Create and submit a form dynamically
+      const form = document.createElement("form");
+      form.method = "post";
+      form.action = process.env.NEXT_PUBLIC_CCAVENUE_REDIRECT_URL;
+      form.target = "_self";
+
+      // Hidden input fields
+      const encInput = document.createElement("input");
+      encInput.type = "hidden";
+      encInput.name = "encRequest";
+      encInput.value = data.encRequest;
+      form.appendChild(encInput);
+
+      const accessInput = document.createElement("input");
+      accessInput.type = "hidden";
+      accessInput.name = "access_code";
+      accessInput.value = data.accessCode;
+      form.appendChild(accessInput);
+
+      document.body.appendChild(form);
+      form.submit();
+    } catch (error) {
+      console.log("eror", error);
+      alert("Payment initiation failed!");
     }
     setLoading(false);
   };
@@ -435,6 +454,15 @@ const FinalEnquiryPage = () => {
     doc.save("Proforma_Invoice.pdf");
   };
 
+  const handlePaymentButtonClick = () => {
+    setIsPaymentModalOpen(true); // Open the modal when the payment button is clicked
+  };
+
+  const handlePaymentConfirm = (amount) => {
+    setIsPaymentModalOpen(false); // Close the modal
+    handlePayment(amount); // Proceed with the payment
+  };
+
   return (
     <div className="flex flex-col items-center">
       <Banner />
@@ -518,11 +546,14 @@ const FinalEnquiryPage = () => {
 
             {/* Buttons */}
             <div className="flex justify-between space-2 mb-4">
-              {/* PARTIAL PAYMENT Button */}
+              {/* <button onClick={handlePayment} disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors text-sm font-semibold">
+                {loading ? "Processing..." : "BOOK Now"}
+                <div className="text-xs font-normal">With Partial Payment</div>
+              </button> */}
               <button
-                onClick={handlePayment}
+                onClick={handlePaymentButtonClick} // Open the modal instead of directly handling payment
                 disabled={loading}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded transition-colors text-sm font-semibold"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors text-sm font-semibold"
               >
                 {loading ? "Processing..." : "BOOK Now"}
                 <div className="text-xs font-normal">With Partial Payment</div>
@@ -559,6 +590,12 @@ const FinalEnquiryPage = () => {
           </div>
         </div>
       </div>
+      <PaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        onConfirm={handlePaymentConfirm}
+        loading={loading}
+      />
 
       <Bottom />
 
