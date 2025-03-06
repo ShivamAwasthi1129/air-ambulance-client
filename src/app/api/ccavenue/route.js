@@ -10,9 +10,9 @@ export async function POST(req) {
     const orderId = `ORD${Date.now()}`; // Unique order ID
 
     // Prepare transaction request parameters
-    const data = `order_id=${orderId}&currency=INR&amount=${amount}`;
+    const data = `order_id=${orderId}&currency=USD&amount=${amount}`;
     // Encrypt request
-    const encRequest = encrypt(data);
+    const encRequest = encrypt(data);  
 
     return NextResponse.json({ encRequest, accessCode: ACCESS_CODE });
   } catch (error) {

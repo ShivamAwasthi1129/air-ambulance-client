@@ -10,12 +10,7 @@ import "react-toastify/dist/ReactToastify.css";          // <-- react-toastify C
 import FlightCard from "../components/FleetCard";
 import { Banner } from "../components/SearchBanner";
 import { Bottom } from "../components/Bottom";
-<<<<<<< HEAD
-import { useRouter } from "next/navigation";
-import { decrypt } from "@/lib/ccavenueEncryption";
-=======
 import PaymentModal from "../components/PaymentModal";
->>>>>>> da577d0fa0fa14f0e1475e1a55c5be405b65656a
 
 // Remove parentheses from airport name
 function cleanAirportName(str) {
@@ -40,7 +35,7 @@ const FinalEnquiryPage = () => {
   // Track Email "Sending..." state
   const [isEmailSending, setIsEmailSending] = useState(false);
 
-  const router = useRouter();
+  // const router = useRouter();
 
   // 1) Read searchData from sessionStorage & fallback to loginData for user details
   useEffect(() => {
@@ -595,6 +590,7 @@ const FinalEnquiryPage = () => {
         onClose={() => setIsPaymentModalOpen(false)}
         onConfirm={handlePaymentConfirm}
         loading={loading}
+        estimatedCost={estimatedCost} 
       />
 
       <Bottom />
