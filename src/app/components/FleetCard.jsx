@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";  // <-- Import the Next.js 13+ router
 import html2canvas from "html2canvas";
 
 // React-Toastify
@@ -129,31 +130,31 @@ const FlightCard = ({
   isMultiCity,
   readOnly = false,
 }) => {
+  const router = useRouter();          // <-- Next.js 13 router
   const [activeDetailsId, setActiveDetailsId] = useState(null);
   const [parsedData, setParsedData] = useState(null);
 
-  // flightId -> DOM node
-  const flightCardRefs = useRef({});
+  const flightCardRefs = useRef({});   // flightId -> DOM node
 
-  // checkbox state
+  // For screenshot selection
   const [checkedFlights, setCheckedFlights] = useState({});
-  // store screenshots in state + session
   const [snapshots, setSnapshots] = useState({});
-
-  // combined tall image
   const [combinedPreview, setCombinedPreview] = useState(null);
 
-  // user data
+  // For user data
   const [userSession, setUserSession] = useState({});
 
-  // Experience modal
+  // For "experience" modal
   const [showExperienceModal, setShowExperienceModal] = useState(false);
   const [experienceModalFlightId, setExperienceModalFlightId] = useState(null);
   const [activeTab, setActiveTab] = useState("interior");
 
-  // Share modals
+  // For share modals
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
+
+  // For "Proceed to Pay" spinner
+  const [isProceeding, setIsProceeding] = useState(false);
 
   // On mount, load searchData + user + old snapshots
   useEffect(() => {
@@ -174,16 +175,37 @@ const FlightCard = ({
     }
   }, []);
 
-  const setCardRef = (flightId, node) => {
-    if (node) {
-      flightCardRefs.current[flightId] = node;
+  // Combine snapshots to show them in share modals
+  const generateCombinedPreview = async () => {
+    if (!Object.keys(snapshots).length) {
+      setCombinedPreview(null);
+      return;
     }
+    const combined = await combineSnapshotsInOneColumn(snapshots);
+    setCombinedPreview(combined);
   };
 
+  // Share triggers
+  const openWhatsAppModal = async () => {
+    await generateCombinedPreview();
+    setShowWhatsAppModal(true);
+  };
+  const openEmailModal = async () => {
+    await generateCombinedPreview();
+    setShowEmailModal(true);
+  };
+  const closeWhatsAppModal = () => setShowWhatsAppModal(false);
+  const closeEmailModal = () => setShowEmailModal(false);
+
+  // For flight details expand/collapse
+  const setCardRef = (flightId, node) => {
+    if (node) flightCardRefs.current[flightId] = node;
+  };
   const toggleFlightDetails = (flightId) => {
     setActiveDetailsId((prev) => (prev === flightId ? null : flightId));
   };
 
+  // Show/Hide "Experience" modal
   const handleExperienceClick = (flightId, e) => {
     e.stopPropagation();
     setExperienceModalFlightId(flightId);
@@ -196,39 +218,43 @@ const FlightCard = ({
     setActiveTab("interior");
   };
 
-  // Combine all snapshots into one (top to bottom)
-  const generateCombinedPreview = async () => {
-    if (!Object.keys(snapshots).length) {
-      setCombinedPreview(null);
-      return;
+  // Handle screenshot selection
+  const handleCheckboxChange = async (flight, e) => {
+    const isChecked = e.target.checked;
+    setCheckedFlights((prev) => ({
+      ...prev,
+      [flight._id]: isChecked,
+    }));
+
+    // only capture if not existing yet
+    if (isChecked && !snapshots[flight._id]) {
+      try {
+        const node = flightCardRefs.current[flight._id];
+        if (node) {
+          const canvas = await html2canvas(node);
+          const dataUrl = canvas.toDataURL("image/png");
+          const newShots = { ...snapshots, [flight._id]: dataUrl };
+          setSnapshots(newShots);
+          sessionStorage.setItem("flightShots", JSON.stringify(newShots));
+        }
+      } catch (err) {
+        console.error("Screenshot failed: ", err);
+        toast.error("Screenshot capture failed!");
+      }
     }
-    const combined = await combineSnapshotsInOneColumn(snapshots);
-    setCombinedPreview(combined);
   };
 
-  // open share => generate
-  const openWhatsAppModal = async () => {
-    await generateCombinedPreview();
-    setShowWhatsAppModal(true);
-  };
-  const openEmailModal = async () => {
-    await generateCombinedPreview();
-    setShowEmailModal(true);
-  };
-  const closeWhatsAppModal = () => setShowWhatsAppModal(false);
-  const closeEmailModal = () => setShowEmailModal(false);
-
+  // Price conversion
   const convertPrice = (usdPrice, currency) => {
     const rate = exchangeRates[currency] || 1;
     return Math.round(usdPrice * rate);
   };
 
-  // parse e.g. "21:35"
+  // Helper to parse times
   function parseTimeString(timeStr) {
     const [hhStr, mmStr] = timeStr.split(":");
     return { hours: Number(hhStr), minutes: Number(mmStr) };
   }
-  // parse flightTime e.g. "9h 30m"
   function parseDurationString(durationStr) {
     let durationHours = 0;
     let durationMinutes = 0;
@@ -241,31 +267,23 @@ const FlightCard = ({
   function calculateArrivalTime(departureTimeStr, flightDurationStr) {
     const { hours: depH, minutes: depM } = parseTimeString(departureTimeStr);
     const { hours: durH, minutes: durM } = parseDurationString(flightDurationStr);
-
     let totalHours = depH + durH;
     let totalMinutes = depM + durM;
     totalHours += Math.floor(totalMinutes / 60);
     totalMinutes = totalMinutes % 60;
     totalHours = totalHours % 24;
-
     const hh = String(totalHours).padStart(2, "0");
     const mm = String(totalMinutes).padStart(2, "0");
     return `${hh}:${mm}`;
   }
 
-  // Simple slider
+  // Slide images
   const ImageSlider = ({ aircraftGallery }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const images = [
-      aircraftGallery?.exterior
-        ? Object.values(aircraftGallery.exterior)[0]
-        : null,
-      aircraftGallery?.interior
-        ? Object.values(aircraftGallery.interior)[0]
-        : null,
-      aircraftGallery?.cockpit
-        ? Object.values(aircraftGallery.cockpit)[0]
-        : null,
+      aircraftGallery?.exterior ? Object.values(aircraftGallery.exterior)[0] : null,
+      aircraftGallery?.interior ? Object.values(aircraftGallery.interior)[0] : null,
+      aircraftGallery?.cockpit ? Object.values(aircraftGallery.cockpit)[0] : null,
     ].filter(Boolean);
 
     useEffect(() => {
@@ -304,35 +322,7 @@ const FlightCard = ({
     );
   };
 
-  // user checks a flight => screenshot if not existing
-  const handleCheckboxChange = async (flight, e) => {
-    const isChecked = e.target.checked;
-    setCheckedFlights((prev) => ({
-      ...prev,
-      [flight.serialNumber]: isChecked,
-    }));
-
-    // only capture if we do not have it yet
-    if (isChecked && !snapshots[flight.serialNumber]) {
-      try {
-        const node = flightCardRefs.current[flight.serialNumber];
-        if (node) {
-          const canvas = await html2canvas(node);
-          const dataUrl = canvas.toDataURL("image/png");
-
-          // store in local + session
-          const newShots = { ...snapshots, [flight.serialNumber]: dataUrl };
-          setSnapshots(newShots);
-          sessionStorage.setItem("flightShots", JSON.stringify(newShots));
-        }
-      } catch (err) {
-        console.error("Screenshot failed: ", err);
-        toast.error("Screenshot capture failed!");
-      }
-    }
-  };
-
-  // Send via WhatsApp
+  // Sending images & data via WhatsApp
   const handleSendWhatsApp = async () => {
     if (!combinedPreview) {
       toast.error("No flights selected!");
@@ -340,53 +330,40 @@ const FlightCard = ({
     }
 
     try {
-      // Convert DataURL to file
       const file = dataURLtoFile(combinedPreview, "combined_flights.png");
       const formData = new FormData();
       formData.append("profile", file);
 
-      // 1) Upload image to S3 via /api/user/image
+      // 1) Upload image to S3
       const response = await fetch("/api/user/image", {
         method: "POST",
         body: formData,
       });
       const result = await response.json();
-
       if (!result.success) {
         console.error("Upload error:", result);
         toast.error(`Upload error: ${result.error || "Unknown error"}`);
         return;
       }
-
       const s3Link = result.secureUrl;
-      console.log("WhatsApp S3 link:", s3Link);
       toast.success("Image uploaded successfully to S3!");
 
-      // 2) Determine user name & phone from loginData or searchData
+      // 2) Determine user name & phone
       let name = userSession?.name || "";
       let phone = userSession?.phone || "";
-
       if (!name || !phone) {
-        // fallback to searchData userInfo
         const fallbackName = parsedData?.userInfo?.name || "";
         const fallbackPhone = parsedData?.userInfo?.phone || "";
-
         if (!name) name = fallbackName;
         if (!phone) phone = fallbackPhone;
       }
 
-      // 3) Send name, phone, and imageUrl to fleet-enquiry API
+      // 3) Send to fleet-enquiry
       try {
         const fleetEnquiryResponse = await fetch("/api/fleet-enquiry", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name,
-            phone,
-            imageUrl: s3Link,
-          }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, phone, imageUrl: s3Link }),
         });
 
         if (!fleetEnquiryResponse.ok) {
@@ -394,17 +371,15 @@ const FlightCard = ({
           toast.error("Failed to send data to fleet-enquiry API.");
           return;
         }
-
         const fleetEnquiryData = await fleetEnquiryResponse.json();
         console.log("fleet-enquiry response:", fleetEnquiryData);
-
         toast.success("Successfully sent data to fleet-enquiry API!");
       } catch (err) {
         console.error("Error in POST request to fleet-enquiry API:", err);
         toast.error("Failed to send data to fleet-enquiry API.");
       }
 
-      // Optionally clear your selections / state
+      // Clear states
       setCheckedFlights({});
       setSnapshots({});
       sessionStorage.removeItem("flightShots");
@@ -416,12 +391,13 @@ const FlightCard = ({
     }
   };
 
-  // Send via Email
+  // Sending images & data via Email
   const handleSendEmail = async () => {
     if (!combinedPreview) {
       toast.error("No flights selected!");
       return;
     }
+
     try {
       const file = dataURLtoFile(combinedPreview, "combined_flights.png");
       const formData = new FormData();
@@ -432,19 +408,17 @@ const FlightCard = ({
         body: formData,
       });
       const result = await response.json();
-
       if (!result.success) {
         console.error("Upload error:", result);
         toast.error(`Upload error: ${result.error || "Unknown error"}`);
         return;
       }
       const s3Link = result.secureUrl;
-      console.log("Email S3 link:", s3Link);
       toast.success("Image uploaded successfully to S3!");
 
-      // You might also send an email here or do another fetch call
-      // to your backend with the S3 link.
+      // (Optionally send an email or do more with s3Link)
 
+      // Clear states
       setCheckedFlights({});
       setSnapshots({});
       sessionStorage.removeItem("flightShots");
@@ -454,6 +428,15 @@ const FlightCard = ({
       console.error("Error in uploading (Email)", err);
       toast.error("Something went wrong uploading images.");
     }
+  };
+
+  // Handle "Proceed to Pay" button
+  const handleProceedToPay = () => {
+    setIsProceeding(true);
+    // For demonstration, wait ~1s then route:
+    setTimeout(() => {
+      router.push("/finalEnquiry");
+    }, 1000);
   };
 
   if (!filteredData.length) {
@@ -477,10 +460,10 @@ const FlightCard = ({
   };
 
   return (
-  <div>
+    <div>
       <div className="space-y-6 mb-4">
         {filteredData.map((flight) => {
-          const isOpen = activeDetailsId === flight.serialNumber;
+          const isOpen = activeDetailsId === flight._id;
           const allAmenities = Object.entries(flight.additionalAmenities || {});
           const freeAmenities = allAmenities.filter(
             ([, data]) => data.value === "free"
@@ -496,8 +479,8 @@ const FlightCard = ({
 
           return (
             <div
-              key={flight.serialNumber}
-              ref={(node) => setCardRef(flight.serialNumber, node)}
+              key={flight._id}
+              ref={(node) => setCardRef(flight._id, node)}
               className="relative flex flex-col md:flex-row items-center rounded-2xl p-4 overflow-hidden
                          hover:shadow-[0_0_8px_rgba(0,0,0,0.25)] transition-shadow duration-300"
             >
@@ -505,7 +488,7 @@ const FlightCard = ({
               <div className="relative w-full md:w-2/5">
                 <ImageSlider aircraftGallery={flight.aircraftGallery} />
                 <p
-                  onClick={(e) => handleExperienceClick(flight.serialNumber, e)}
+                  onClick={(e) => handleExperienceClick(flight._id, e)}
                   className="absolute bottom-2 left-2 text-white text-xl font-semibold italic px-2 py-1 cursor-pointer rounded"
                 >
                   See Flight Experience -&gt;
@@ -518,7 +501,7 @@ const FlightCard = ({
                   {/* Collapsed details */}
                   {!isOpen && (
                     <motion.div
-                      key="flight-details"
+                      key={`flight-details-${flight._id}`}
                       variants={flightDetailsVariants}
                       initial="hidden"
                       animate="show"
@@ -678,7 +661,7 @@ const FlightCard = ({
                                 );
                               })}
                               <button
-                                onClick={() => toggleFlightDetails(flight.serialNumber)}
+                                onClick={() => toggleFlightDetails(flight._id)}
                                 className="text-base text-blue-700 font-semibold hover:underline"
                               >
                                 See more...
@@ -701,7 +684,7 @@ const FlightCard = ({
                               <input
                                 type="checkbox"
                                 className="w-4 h-4"
-                                checked={checkedFlights[flight.serialNumber] || false}
+                                checked={checkedFlights[flight._id] || false}
                                 onChange={(e) => handleCheckboxChange(flight, e)}
                               />
                               <span className="text-xs">Select for sharing</span>
@@ -724,23 +707,25 @@ const FlightCard = ({
                             </button>
                           </div>
 
-                          {/* RIGHT: "Select Fleet" & possibly Next Enquiry */}
+                          {/* RIGHT: "Select Fleet" & possibly Next step */}
                           <div className="flex items-center space-x-4 mt-4 md:mt-0">
                             <button
                               onClick={() => onSelectFleet(flight)}
                               className={`${
-                                selectedFleet?.serialNumber === flight.serialNumber
+                                selectedFleet?._id === flight._id
                                   ? "bg-red-500 focus:ring-2 focus:ring-red-300"
                                   : "bg-gradient-to-r from-green-500 to-green-700"
                               } text-white text-base font-semibold px-4 py-2 rounded shadow-md`}
                             >
-                              {selectedFleet?.serialNumber === flight.serialNumber
+                              {selectedFleet?._id === flight._id
                                 ? "Fleet Selected"
                                 : "Select Flight"}
                             </button>
 
-                            {selectedFleet?.serialNumber === flight.serialNumber && (
+                            {/* If this flight is selected, show next step */}
+                            {selectedFleet?._id === flight._id && (
                               <>
+                                {/* If multi-city and more segments, show "Select Next Fleet" */}
                                 {isMultiCity ? (
                                   currentTripIndex < tripCount - 1 ? (
                                     <button
@@ -750,18 +735,39 @@ const FlightCard = ({
                                       Select Next Fleet
                                     </button>
                                   ) : (
-                                    <Link href="/finalEnquiry">
-                                      <button className="bg-green-600 text-white px-4 py-2 rounded shadow-md">
-                                        Proceed to Enquiry
-                                      </button>
-                                    </Link>
+                                    // Otherwise final step -> "Proceed to Pay"
+                                    <button
+                                      onClick={handleProceedToPay}
+                                      disabled={isProceeding}
+                                      className="bg-green-600 text-white px-4 py-2 rounded shadow-md flex items-center"
+                                    >
+                                      {isProceeding ? (
+                                        <>
+                                          {/* Tiny spinner */}
+                                          <span className="inline-block w-4 h-4 border-2 border-t-transparent border-white border-solid rounded-full animate-spin mr-2" />
+                                          Proceeding...
+                                        </>
+                                      ) : (
+                                        "Proceed to Pay"
+                                      )}
+                                    </button>
                                   )
                                 ) : (
-                                  <Link href="/finalEnquiry">
-                                    <button className="bg-green-600 text-white px-4 py-2 rounded shadow-md">
-                                      Proceed to Enquiry
-                                    </button>
-                                  </Link>
+                                  // For one-way, same final button
+                                  <button
+                                    onClick={handleProceedToPay}
+                                    disabled={isProceeding}
+                                    className="bg-green-600 text-white px-4 py-2 rounded shadow-md flex items-center"
+                                  >
+                                    {isProceeding ? (
+                                      <>
+                                        <span className="inline-block w-4 h-4 border-2 border-t-transparent border-white border-solid rounded-full animate-spin mr-2" />
+                                        Proceeding...
+                                      </>
+                                    ) : (
+                                      "Proceed to Pay"
+                                    )}
+                                  </button>
                                 )}
                               </>
                             )}
@@ -774,7 +780,7 @@ const FlightCard = ({
                   {/* Expanded Amenities */}
                   {isOpen && (
                     <motion.div
-                      key="amenities"
+                      key={`amenities-${flight._id}`}
                       variants={amenitiesVariants}
                       initial="hidden"
                       animate="show"
@@ -808,7 +814,7 @@ const FlightCard = ({
                             USD {convertPrice(flightPriceUSD, "USD").toLocaleString()}
                           </p>
                           <p className="text-sm text-gray-600 mt-1">
-                            INR {convertPrice(flightPriceUSD, "INR").toLocaleString()},
+                            INR {convertPrice(flightPriceUSD, "INR").toLocaleString()},{" "}
                             GBP {convertPrice(flightPriceUSD, "GBP").toLocaleString()}
                           </p>
                         </div>
@@ -821,7 +827,7 @@ const FlightCard = ({
                               Additional Services
                             </h3>
                             <button
-                              onClick={() => toggleFlightDetails(flight.serialNumber)}
+                              onClick={() => toggleFlightDetails(flight._id)}
                               className="text-base text-blue-500"
                             >
                               Hide Flight Details ^
@@ -943,10 +949,10 @@ const FlightCard = ({
             </div>
 
             {filteredData.map((f) => {
-              if (f.serialNumber !== experienceModalFlightId) return null;
+              if (f._id !== experienceModalFlightId) return null;
               const gallery = f.aircraftGallery || {};
               return (
-                <div key={f.serialNumber} className="overflow-auto h-full">
+                <div key={f._id} className="overflow-auto h-full">
                   {activeTab !== "video" && gallery[activeTab] && (
                     <div className="flex flex-wrap gap-4">
                       {Object.entries(gallery[activeTab]).map(([view, url]) => (
@@ -1074,10 +1080,10 @@ const FlightCard = ({
         hideProgressBar={false}
         newestOnTop={false}
         closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
+        // The two lines below ensure the toast definitely disappears after 5s
+        pauseOnHover={false}
+        pauseOnFocusLoss={false}
+        draggable={false}
         style={{
           position: "fixed",
           top: "12%",
@@ -1086,8 +1092,7 @@ const FlightCard = ({
           zIndex: 100,
         }}
       />
-      </div>
-   
+    </div>
   );
 };
 

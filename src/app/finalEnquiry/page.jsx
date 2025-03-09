@@ -5,8 +5,8 @@ import { IoIosAirplane } from "react-icons/io";
 import { BsExclamationTriangle } from "react-icons/bs";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
-import { toast, ToastContainer } from "react-toastify";  // <-- react-toastify
-import "react-toastify/dist/ReactToastify.css";          // <-- react-toastify CSS
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import FlightCard from "../components/FleetCard";
 import { Banner } from "../components/SearchBanner";
 import { Bottom } from "../components/Bottom";
@@ -34,8 +34,6 @@ const FinalEnquiryPage = () => {
   const [isWhatsAppSending, setIsWhatsAppSending] = useState(false);
   // Track Email "Sending..." state
   const [isEmailSending, setIsEmailSending] = useState(false);
-
-  // const router = useRouter();
 
   // 1) Read searchData from sessionStorage & fallback to loginData for user details
   useEffect(() => {
@@ -87,8 +85,8 @@ const FinalEnquiryPage = () => {
         const url = `/api/search-flights?from=${encodeURIComponent(
           cleanedFrom
         )}&to=${encodeURIComponent(cleanedTo)}&departureDate=${
-          `${segment.departureDate}T${segment.departureTime}:00Z`
-        }&travelerCount=${segment.passengers}`;
+          segment.departureDate
+        }T${segment.departureTime}:00Z&travelerCount=${segment.passengers}`;
 
         try {
           const res = await fetch(url);
@@ -205,19 +203,19 @@ const FinalEnquiryPage = () => {
 
   // Example: airport handling = 700 * number of segments
   const airportHandling = 700 * searchData.segments.length;
-  const subTotal = totalFlightCost + airportHandling;
-  const gstAmount = Math.round(subTotal * 0.18); // 18% tax
-  const estimatedCost = subTotal + gstAmount;
+  const estimatedCost = totalFlightCost + airportHandling;
+  // const gstAmount = Math.round(subTotal * 0.18); 
 
   // Updated: POST to /api/booking-request, using react-toastify
   const sendWhatsAppMessage = async () => {
     const phoneNumber = "+919958241284"; // The number to which we say we sent
     setIsWhatsAppSending(true);
 
-    // 1. Show an "info" toast with no autoClose
+    // 1. Show an "info" toast quickly
     const toastId = toast.info("Sending your enquiry...", {
       position: "top-center",
-      autoClose: true, // Keep it open until we dismiss or update
+      // We want to close it ourselves, so autoClose is false here.
+      autoClose: false,
       closeOnClick: true,
       draggable: false,
     });
@@ -255,7 +253,7 @@ const FinalEnquiryPage = () => {
       // 3. Dismiss the loading toast
       toast.dismiss(toastId);
 
-      // 4. Show success toast
+      // 4. Show success toast (autoClose after 5s)
       toast.success(`Enquiry sent successfully to ${phoneNumber}`, {
         position: "top-center",
         autoClose: 5000,
@@ -288,8 +286,8 @@ const FinalEnquiryPage = () => {
           user: userData, // includes name, phone, email
           tripType: searchData.tripType,
           airportHandling,
-          subTotal,
-          gstAmount,
+          // subTotal,
+          // gstAmount,
           estimatedCost,
         }),
       });
@@ -301,12 +299,15 @@ const FinalEnquiryPage = () => {
       // If everything goes well, show success toast
       toast.success(`Mail sent to: ${userData.email}`, {
         position: "top-center",
+        autoClose: 5000,
       });
     } catch (e) {
-      toast.error("Something went wrong", { position: "top-center" });
+      toast.error(`Something went wrong: ${e.message}`, {
+        position: "top-center",
+      });
       console.error("Error sending enquiry:", e);
     } finally {
-      setIsEmailSending(false); // Revert back to normal text
+      setIsEmailSending(false);
     }
   };
 
@@ -391,10 +392,10 @@ const FinalEnquiryPage = () => {
       body: [
         ["Total Flying Cost", totalFlightCost.toLocaleString()],
         ["Total Handling Cost", airportHandling.toLocaleString()],
-        ["Subtotal", subTotal.toLocaleString()],
-        ["GST @ 18%", gstAmount.toLocaleString()],
+        // ["Subtotal", subTotal.toLocaleString()],
+        // ["GST @ 18%", gstAmount.toLocaleString()],
         [
-          "All Inclusive Charter Package (with GST)",
+          "All Inclusive Charter Package ",
           estimatedCost.toLocaleString(),
         ],
       ],
@@ -469,7 +470,7 @@ const FinalEnquiryPage = () => {
             const flightsForSegment = fetchedSegmentsData[segmentIndex] || [];
             return (
               <div
-                key={segmentIndex}
+                key={segmentIndex} // "segmentIndex" is fine for segments
                 className="w-full bg-white flex flex-col items-start px-4 border border-blue-100 rounded-xl"
               >
                 <h3 className="text-lg font-bold flex items-center mt-4">
@@ -487,7 +488,8 @@ const FinalEnquiryPage = () => {
                   </div>
                 ) : (
                   flightsForSegment.map((flight) => (
-                    <div className="w-full my-1" key={flight.serialNumber}>
+                    <div className="w-full my-1" key={flight._id}>
+                      {/* Using flight._id as the key */}
                       <FlightCard filteredData={[flight]} readOnly />
                     </div>
                   ))
@@ -521,14 +523,8 @@ const FinalEnquiryPage = () => {
               <span>Airport Handling Charges</span>
               <span>{formatUSD(airportHandling)}</span>
             </div>
-            <div className="flex justify-between font-medium mb-2">
-              <span>Sub total</span>
-              <span>{formatUSD(subTotal)}</span>
-            </div>
-            <div className="flex justify-between mb-2">
-              <span>GST (18%)</span>
-              <span>{formatUSD(gstAmount)}</span>
-            </div>
+           
+           
             <div className="flex justify-between items-center font-bold text-lg mb-6 bg-yellow-100 px-3 py-2 rounded-md text-yellow-800 shadow-inner">
               <span>Estimated Cost</span>
               <span>{formatUSD(estimatedCost)}</span>
@@ -541,12 +537,8 @@ const FinalEnquiryPage = () => {
 
             {/* Buttons */}
             <div className="flex justify-between space-2 mb-4">
-              {/* <button onClick={handlePayment} disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors text-sm font-semibold">
-                {loading ? "Processing..." : "BOOK Now"}
-                <div className="text-xs font-normal">With Partial Payment</div>
-              </button> */}
               <button
-                onClick={handlePaymentButtonClick} // Open the modal instead of directly handling payment
+                onClick={handlePaymentButtonClick}
                 disabled={loading}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors text-sm font-semibold"
               >
@@ -585,25 +577,28 @@ const FinalEnquiryPage = () => {
           </div>
         </div>
       </div>
+
       <PaymentModal
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
         onConfirm={handlePaymentConfirm}
         loading={loading}
-        estimatedCost={estimatedCost} 
+        estimatedCost={estimatedCost}
       />
 
       <Bottom />
 
+      {/* React-Toastify container */}
       <ToastContainer
         autoClose={5000}
         hideProgressBar={false}
         newestOnTop={false}
         closeOnClick
         rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
+        // The three lines below ensure the toast definitely closes after 5s
+        pauseOnFocusLoss={false}
+        pauseOnHover={false}
+        draggable={false}
         style={{
           position: "fixed",
           top: "12%",

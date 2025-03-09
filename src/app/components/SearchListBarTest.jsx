@@ -30,7 +30,6 @@ export const SearchBar = () => {
   const [focusedSegmentIndex, setFocusedSegmentIndex] = useState(null);
   const [focusedField, setFocusedField] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
-
   const [flightType, setFlightType] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -545,9 +544,9 @@ export const SearchBar = () => {
                     focusedField === "from" &&
                     airports.length > 0 && (
                       <ul className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
-                        {airports.slice(0, 5).map((airport) => (
+                        {airports.slice(0, 5).map((airport, i) => (
                           <li
-                            key={airport.id}
+                            key={airport.id ?? `airport-from-${i}`}
                             onClick={() => handleSelectAirport(airport, 0, "from")}
                             className="p-2 cursor-pointer hover:bg-gray-200 border-b text-sm"
                           >
@@ -599,9 +598,9 @@ export const SearchBar = () => {
                     focusedField === "to" &&
                     airports.length > 0 && (
                       <ul className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
-                        {airports.slice(0, 5).map((airport) => (
+                        {airports.slice(0, 5).map((airport, i) => (
                           <li
-                            key={airport.id}
+                            key={airport.id ?? `airport-to-${i}`}
                             onClick={() => handleSelectAirport(airport, 0, "to")}
                             className="p-2 cursor-pointer hover:bg-gray-200 border-b text-sm"
                           >
@@ -716,9 +715,9 @@ export const SearchBar = () => {
                               focusedField === "from" &&
                               airports.length > 0 && (
                                 <ul className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
-                                  {airports.slice(0, 5).map((airport) => (
+                                  {airports.slice(0, 5).map((airport, i) => (
                                     <li
-                                      key={airport.id}
+                                      key={airport.id ?? `airport-from-${index}-${i}`}
                                       onClick={() =>
                                         handleSelectAirport(airport, index, "from")
                                       }
@@ -764,9 +763,9 @@ export const SearchBar = () => {
                               focusedField === "to" &&
                               airports.length > 0 && (
                                 <ul className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
-                                  {airports.slice(0, 5).map((airport) => (
+                                  {airports.slice(0, 5).map((airport, i) => (
                                     <li
-                                      key={airport.id}
+                                      key={airport.id ?? `airport-to-${index}-${i}`}
                                       onClick={() =>
                                         handleSelectAirport(airport, index, "to")
                                       }
