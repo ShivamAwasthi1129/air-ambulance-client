@@ -477,7 +477,7 @@ const FlightCard = ({
   };
 
   return (
-    <>
+  <div>
       <div className="space-y-6 mb-4">
         {filteredData.map((flight) => {
           const isOpen = activeDetailsId === flight.serialNumber;
@@ -1086,7 +1086,8 @@ const FlightCard = ({
           zIndex: 100,
         }}
       />
-    </>
+      </div>
+   
   );
 };
 
