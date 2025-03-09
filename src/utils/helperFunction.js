@@ -129,7 +129,9 @@ export async function searchStation(query) {
           country: 1,
           iata_code: 1,
           icao_code: 1,
-          score: 1, // Include the custom score in the output
+          score: 1, 
+          latitude: 1,
+          longitude: 1
         },
       },
       {
