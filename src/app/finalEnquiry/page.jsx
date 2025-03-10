@@ -8,9 +8,10 @@ import "jspdf-autotable";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import FlightCard from "../components/FleetCard";
-import { Banner } from "../components/SearchBanner";
+import { Banner } from "../components/Banner";
 import { Bottom } from "../components/Bottom";
 import PaymentModal from "../components/PaymentModal";
+import NavBar from "../components/Navbar";
 
 // Remove parentheses from airport name
 function cleanAirportName(str) {
@@ -84,9 +85,8 @@ const FinalEnquiryPage = () => {
 
         const url = `/api/search-flights?from=${encodeURIComponent(
           cleanedFrom
-        )}&to=${encodeURIComponent(cleanedTo)}&departureDate=${
-          segment.departureDate
-        }T${segment.departureTime}:00Z&travelerCount=${segment.passengers}`;
+        )}&to=${encodeURIComponent(cleanedTo)}&departureDate=${segment.departureDate
+          }T${segment.departureTime}:00Z&travelerCount=${segment.passengers}`;
 
         try {
           const res = await fetch(url);
@@ -188,9 +188,8 @@ const FinalEnquiryPage = () => {
     );
   }, 0);
 
-  const totalFlyingHours = `${Math.floor(totalFlyingTimeMinutes / 60)} Hrs ${
-    totalFlyingTimeMinutes % 60
-  } Min`;
+  const totalFlyingHours = `${Math.floor(totalFlyingTimeMinutes / 60)} Hrs ${totalFlyingTimeMinutes % 60
+    } Min`;
 
   // Summation for cost details
   const allSelectedFlights = fetchedSegmentsData.flat();
@@ -461,8 +460,17 @@ const FinalEnquiryPage = () => {
 
   return (
     <div className="flex flex-col items-center">
+      <div
+        className="w-full bg-cover"
+        style={{
+          backgroundImage:
+            "url('https://img.freepik.com/free-photo/airplane-runway-airport-sunset-travel-concept_587448-8154.jpg?t=st=1739105999~exp=1739109599~hmac=ab95500395c06198c3f2190d29da1b0c41ca0529e115404f07b822f31749eccc&w=1380')"
+        }}>
+        <NavBar />
+      </div>
       <Banner />
 
+      {/* trips and price calculation section */}
       <div className="flex flex-col md:flex-row justify-center gap-6 p-4">
         {/* LEFT COLUMN: Flights */}
         <div className="w-[60%] md:w-[65rem] flex flex-col space-y-4">
@@ -523,8 +531,8 @@ const FinalEnquiryPage = () => {
               <span>Airport Handling Charges</span>
               <span>{formatUSD(airportHandling)}</span>
             </div>
-           
-           
+
+
             <div className="flex justify-between items-center font-bold text-lg mb-6 bg-yellow-100 px-3 py-2 rounded-md text-yellow-800 shadow-inner">
               <span>Estimated Cost</span>
               <span>{formatUSD(estimatedCost)}</span>

@@ -543,7 +543,7 @@ const FlightCard = ({
                           <p className="text-xl font-bold text-gray-800">
                             USD {convertPrice(flightPriceUSD, "USD").toLocaleString()}
                           </p>
-                          <p className="text-xs text-gray-600 mt-1">
+                          <p className="text-sm text-gray-600 mt-1">
                             INR {convertPrice(flightPriceUSD, "INR").toLocaleString()},
                             GBP {convertPrice(flightPriceUSD, "GBP").toLocaleString()}
                           </p>

@@ -197,7 +197,7 @@ const NavBar = () => {
                 </div>
                 {/* Dropdown menu */}
                 {isDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-2 bg-white shadow-lg rounded-md py-2 w-48">
+                  <div className="absolute right-0 top-full mt-2 bg-white shadow-lg rounded-md py-2 w-48 z-10">
                     <Link href="/profile">
                       <div className="px-4 py-2 hover:bg-gray-100">
                         User Profile

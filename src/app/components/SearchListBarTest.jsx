@@ -957,7 +957,7 @@ export const SearchBar = () => {
 
       {/* React-Toastify container */}
       <ToastContainer
-        autoClose={5000}
+        autoClose={4000}
         hideProgressBar={false}
         newestOnTop={false}
         closeOnClick
