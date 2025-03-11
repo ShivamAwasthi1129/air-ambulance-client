@@ -1,25 +1,36 @@
 import { NextResponse } from "next/server";
-import { encrypt } from "@/lib/ccavenueEncryption";
-
-const MERCHANT_ID = process.env.CCA_MERCHANT_ID;
-const ACCESS_CODE = process.env.CCA_ACCESS_CODE;
+import { encrypt } from "@/utils/ccavutil";
 
 export async function POST(req) {
-  try {
-    const { amount } = await req.json();
-    const orderId = `ORD${Date.now()}`; // Unique order ID
+  const { amount } = await req.json();
 
-    // Prepare transaction request parameters
-    const data = `order_id=${orderId}&currency=USD&amount=${amount}`;
-    // Encrypt request
-    const encRequest = encrypt(data);  
+  // CCAvenue credentials
+  const merchantId = process.env.CCA_MERCHANT_ID;
+  const workingKey = process.env.CCA_WORKING_KEY;
+  const accessCode = process.env.CCA_ACCESS_CODE;
+  const redirectUrl = `${process.env.LOCAL_URL}/api/ccavenue/response`; // Redirect URL after payment
+  const cancelUrl = `${process.env.LOCAL_URL}/api/ccavenue/response`; // Cancel URL
+  const orderId = `ORD${Date.now()}`;
+  // Prepare payload
+  const payload = {
+    merchant_id: merchantId,
+    order_id: orderId,
+    amount: amount,
+    currency: "INR",
+    redirect_url: `${redirectUrl}?order_id=${orderId}&amount=${amount}&currency=INR&status=success`,
+    cancel_url: `${cancelUrl}?status=cancelled`,
+    language: "EN",
+  };
 
-    return NextResponse.json({ encRequest, accessCode: ACCESS_CODE });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { error: "Error processing request" },
-      { status: 500 }
-    );
-  }
+  const queryString = new URLSearchParams(payload).toString(); 
+
+  const encryptedPayload = encrypt(queryString, workingKey);
+
+  // URL encode the encrypted payload
+  const encodedPayload = encodeURIComponent(encryptedPayload);
+
+  // CCAvenue payment URL
+  const paymentUrl = `https://test.ccavenue.com/transaction/transaction.do?command=initiateTransaction&encRequest=${encodedPayload}&access_code=${accessCode}`;
+
+  return NextResponse.json({ paymentUrl });
 }

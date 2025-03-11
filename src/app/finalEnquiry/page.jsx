@@ -27,7 +27,6 @@ const FinalEnquiryPage = () => {
   const [searchData, setSearchData] = useState(null);
   const [fetchedSegmentsData, setFetchedSegmentsData] = useState([]);
   const [userData, setUserData] = useState({});
-  const [orderId, setOrderId] = useState("");
   const [loading, setLoading] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
@@ -68,8 +67,6 @@ const FinalEnquiryPage = () => {
       });
     }
 
-    // Generate a fresh orderId
-    setOrderId(`ORD-${Date.now()}`);
   }, []);
 
   // 2) Fetch flights for each segment, filter by selected registrationNo
@@ -131,40 +128,12 @@ const FinalEnquiryPage = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          order_id: orderId,
           amount, // Use the amount from the modal
         }),
       });
 
-      const data = await response.json();
-
-      if (data.error) {
-        alert(data.error);
-        setLoading(false);
-        return;
-      }
-
-      // Create and submit a form dynamically
-      const form = document.createElement("form");
-      form.method = "post";
-      form.action = process.env.NEXT_PUBLIC_CCAVENUE_REDIRECT_URL;
-      form.target = "_self";
-
-      // Hidden input fields
-      const encInput = document.createElement("input");
-      encInput.type = "hidden";
-      encInput.name = "encRequest";
-      encInput.value = data.encRequest;
-      form.appendChild(encInput);
-
-      const accessInput = document.createElement("input");
-      accessInput.type = "hidden";
-      accessInput.name = "access_code";
-      accessInput.value = data.accessCode;
-      form.appendChild(accessInput);
-
-      document.body.appendChild(form);
-      form.submit();
+      const { paymentUrl } = await response.json();
+      window.location.href = paymentUrl; 
     } catch (error) {
       console.log("eror", error);
       alert("Payment initiation failed!");
