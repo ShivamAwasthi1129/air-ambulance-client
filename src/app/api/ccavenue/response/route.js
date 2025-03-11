@@ -7,11 +7,9 @@ export async function POST(req) {
         const encryptedResponse = formData.get('encRequest');
         const decryptedResponse = decrypt(encryptedResponse);
 
-        console.log("Payment Response:", decryptedResponse);
-
         // return NextResponse.json({ status: 'success', data: decryptedResponse });
         return NextResponse.redirect(
-            new URL(`/payment-success?${decryptedResponse}`, req.url)
+            new URL(`/payment-success?${decryptedResponse}`, process.env.LOCAL_URL)
         );
     } catch (error) {
         console.error("error", error)
