@@ -8,6 +8,7 @@ import UserInfoModal from "../components/UserInfoModal";
 import Link from "next/link";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Icondiv } from "./Icondiv";
 
 export const SearchBar = () => {
   // === State ===
@@ -327,7 +328,7 @@ export const SearchBar = () => {
           if (data.message === "user already exists") {
             toast.info(
               data.message +
-                " with email : " + email + " Check your email for credentials"
+              " with email : " + email + " Check your email for credentials"
             );
             setIsLoading(false);
             return;
@@ -398,92 +399,7 @@ export const SearchBar = () => {
           ref={containerRef}
         >
           {/* (1) Flight-Type Icons row */}
-          <div className="flex flex-wrap items-center justify-around gap-3 mb-4 w-1/2 bg-white rounded-xl border-2 border-gray-300 p-2 -mt-20">
-            <div
-              onClick={() => setFlightType("Charter Flights")}
-              className={`cursor-pointer flex flex-col items-center p-2 
-                rounded-md transition-colors ${
-                  flightType === "Charter Flights"
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-700 hover:bg-gray-300"
-                }`}
-            >
-              <img
-                src="https://s3.ap-south-1.amazonaws.com/aviation.hexerve/header+icons+/0476ea74-7ccd-439b-8a06-38872370b597.png"
-                alt="Charter Flight"
-                className="w-8 h-8"
-              />
-              <span className="text-sm font-medium mt-1">Charter Flight</span>
-            </div>
-
-            <div
-              onClick={() => setFlightType("Private Jets")}
-              className={`cursor-pointer flex flex-col items-center p-2 
-                rounded-md transition-colors ${
-                  flightType === "Private Jets"
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-700 hover:bg-gray-300"
-                }`}
-            >
-              <img
-                src="https://s3.ap-south-1.amazonaws.com/aviation.hexerve/header+icons+/Screenshot_19-2-2025_12929_.jpeg"
-                alt="Private Jets"
-                className="w-12 h-10"
-              />
-              <span className="text-sm font-medium mt-1">Private Jets</span>
-            </div>
-
-            <div
-              onClick={() => setFlightType("Air Ambulance")}
-              className={`cursor-pointer flex flex-col items-center p-2 
-                rounded-md transition-colors ${
-                  flightType === "Air Ambulance"
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-700 hover:bg-gray-300"
-                }`}
-            >
-              <img
-                src="https://s3.ap-south-1.amazonaws.com/aviation.hexerve/header+icons+/91427a14-4335-48d7-9ee4-7e9fa6a4986c.png"
-                alt="Air Ambulance"
-                className="w-12 h-8"
-              />
-              <span className="text-sm font-medium mt-1">Air Ambulance</span>
-            </div>
-
-            <div
-              onClick={() => setFlightType("Air Cargo")}
-              className={`cursor-pointer flex flex-col items-center p-2 
-                rounded-md transition-colors ${
-                  flightType === "Air Cargo"
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-700 hover:bg-gray-300"
-                }`}
-            >
-              <img
-                src="https://s3.ap-south-1.amazonaws.com/aviation.hexerve/header+icons+/4785e20f-3e7e-43bd-a79e-8855af562028.png"
-                alt="Air Cargo"
-                className="w-10 h-8"
-              />
-              <span className="text-sm font-medium mt-1">Air Cargo</span>
-            </div>
-
-            <div
-              onClick={() => setFlightType("Sea Plane")}
-              className={`cursor-pointer flex flex-col items-center p-2 
-                rounded-md transition-colors ${
-                  flightType === "Sea Plane"
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-700 hover:bg-gray-300"
-                }`}
-            >
-              <img
-                src="https://s3.ap-south-1.amazonaws.com/aviation.hexerve/header+icons+/fa056278-43d3-402f-868f-771f2de17ebe.png"
-                alt="Sea Plane"
-                className="w-12 h-8"
-              />
-              <span className="text-sm font-medium mt-1">Sea Plane</span>
-            </div>
-          </div>
+          <Icondiv flightType={flightType} setFlightType={setFlightType} />
 
           {/* (2) Trip Type Radio Buttons */}
           <div className="flex items-center justify-start gap-6 mb-6">
@@ -624,9 +540,8 @@ export const SearchBar = () => {
                   </label>
                   <input
                     type="datetime-local"
-                    value={`${segments[0].departureDate}T${
-                      segments[0].departureTime || "12:00"
-                    }`}
+                    value={`${segments[0].departureDate}T${segments[0].departureTime || "12:00"
+                      }`}
                     onChange={(e) => {
                       const [date, time] = e.target.value.split("T");
                       handleSegmentChange(0, "departureDate", date);
@@ -792,9 +707,8 @@ export const SearchBar = () => {
                             </label>
                             <input
                               type="datetime-local"
-                              value={`${segment.departureDate}T${
-                                segment.departureTime || "12:00"
-                              }`}
+                              value={`${segment.departureDate}T${segment.departureTime || "12:00"
+                                }`}
                               onChange={(e) => {
                                 const [date, time] = e.target.value.split("T");
                                 handleSegmentChange(index, "departureDate", date);
