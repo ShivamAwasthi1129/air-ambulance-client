@@ -43,7 +43,7 @@ export async function POST(req) {
         },
         body: JSON.stringify({
           messaging_product: "whatsapp",
-          to: `whatsapp:${phone}`,
+          to: `${phone}`,
           type: "template",
           template: {
             name: "otp_verify",
@@ -166,6 +166,7 @@ export const GET = async (req) => {
     const { searchParams } = new URL(req.url);
     let email = searchParams.get("email");
     const otp = searchParams.get("otp");
+    const phone = searchParams.get("phone");
 
     if (!email || !otp) {
       return NextResponse.json(
@@ -176,7 +177,7 @@ export const GET = async (req) => {
 
     await connectToDatabase();
     // Find the latest OTP for the email
-    const result = await OTPTable.findOne({ email });
+    const result = await OTPTable.findOne({ $or: [{ email }, { phone }] });
 
     if (!result) {
       return NextResponse.json({ message: "OTP not found" }, { status: 400 });
