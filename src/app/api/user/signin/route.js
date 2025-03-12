@@ -43,7 +43,7 @@ export async function POST(req) {
         },
         body: JSON.stringify({
           messaging_product: "whatsapp",
-          to: `${phone}`,
+          to: phone,
           type: "template",
           template: {
             name: "otp_verify",
