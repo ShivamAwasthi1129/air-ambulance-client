@@ -1,41 +1,61 @@
+"use client";
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { FaEye, FaEyeSlash, FaSpinner } from "react-icons/fa"; // Added icons
+import { FaEye, FaEyeSlash, FaSpinner } from "react-icons/fa"; // For icons
 
 const NavBar = () => {
-  // State to control the login modal visibility
+  // ----------------------------------------------------------------
+  // States for normal login
+  // ----------------------------------------------------------------
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  // State to hold the logged in user info (token and email)
   const [user, setUser] = useState(null);
-  // State to hold the login form values
   const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
-  // State to hold any error message returned from the API
   const [errorMessage, setErrorMessage] = useState("");
-  // State to control the user dropdown visibility
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  // New state for toggling password visibility
   const [showPassword, setShowPassword] = useState(false);
-  // New state to indicate when login is in progress
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  // Create a ref for the dropdown container
+
+  // Dropdown ref
   const dropdownRef = useRef(null);
-  // Initial load: check session storage
+
+  // ----------------------------------------------------------------
+  // Effects
+  // ----------------------------------------------------------------
+
+  // On mount, load user from session
   useEffect(() => {
     loadUserFromSession();
   }, []);
 
-  // Listen for the custom "updateNavbar" event to refresh user info
+  // Listen for a custom event to re-load user
   useEffect(() => {
     const updateHandler = () => {
       loadUserFromSession();
     };
-
     window.addEventListener("updateNavbar", updateHandler);
     return () => {
       window.removeEventListener("updateNavbar", updateHandler);
     };
   }, []);
+
+  // Hide dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // ----------------------------------------------------------------
+  // Helpers
+  // ----------------------------------------------------------------
 
   const loadUserFromSession = () => {
     const storedUser = sessionStorage.getItem("user");
@@ -56,58 +76,65 @@ const NavBar = () => {
     }
   };
 
-  // Click outside detection to hide the dropdown menu
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
+  // ----------------------------------------------------------------
+  // Fetch phone number from your backend using email
+  // ----------------------------------------------------------------
+  const handleFetchUserPhone = async () => {
+    if (!email) return;
+    try {
+      const resp = await fetch(`/api/user/${encodeURIComponent(email)}`, {
+        method: "GET",
+      });
+      if (!resp.ok) {
+        throw new Error("Failed to get user phone info");
       }
-    };
+      const userData = await resp.json();
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+      // userData might be an array
+      if (Array.isArray(userData) && userData.length > 0 && userData[0].phone) {
+        setPhoneNumber(userData[0].phone);
+      } else {
+        setPhoneNumber("");
+      }
+    } catch (err) {
+      console.error("Error fetching phone number:", err);
+      setPhoneNumber("");
+    }
+  };
 
-  // Handler to submit login credentials
+  // ----------------------------------------------------------------
+  // Normal login with email/password
+  // ----------------------------------------------------------------
   const handleLoginClick = async () => {
-    // Clear any previous error message
     setErrorMessage("");
     setIsLoggingIn(true);
-  
+
     try {
+      // Attempt login
       const response = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-  
       const data = await response.json();
-  
+
       if (data.token) {
-        // Store the returned login details in a variable.
+        // If successful, store user info in session
         const userLoginData = {
           email,
           name: data.name,
-          phone: data.phone,
+          phone: phoneNumber,
           token: data.token,
         };
-  
-        // Retrieve any existing searchData from session storage.
+
+        // Merge into searchData
         const searchDataStr = sessionStorage.getItem("searchData");
         let searchData = searchDataStr ? JSON.parse(searchDataStr) : {};
-  
-        // Update the userInfo field with the new login data.
         searchData.userInfo = { ...searchData.userInfo, ...userLoginData };
-  
-        // Save the updated searchData back to session storage.
         sessionStorage.setItem("searchData", JSON.stringify(searchData));
-  
-        // Also store the login data separately so it can be used after page reload.
         sessionStorage.setItem("loginData", JSON.stringify(userLoginData));
-  
-        // Send the updated searchData to the API.
+
+        // Optionally send final data to API
         const finalDataFromSession = sessionStorage.getItem("searchData");
         if (finalDataFromSession) {
           const finalDataToSend = JSON.parse(finalDataFromSession);
@@ -118,14 +145,12 @@ const NavBar = () => {
             body: JSON.stringify(finalDataToSend),
           });
         }
-  
-        // Mark the user as verified.
+
+        // Mark user as verified
         sessionStorage.setItem("userVerified", "true");
-  
-        // Reload the page.
         window.location.reload();
-  
-        // Optionally close the modal and clear the form fields.
+
+        // Clear states
         setIsLoginModalOpen(false);
         setEmail("");
         setPassword("");
@@ -139,19 +164,21 @@ const NavBar = () => {
       setIsLoggingIn(false);
     }
   };
-  
 
-  // Handler for logging out
+  // ----------------------------------------------------------------
+  // Logout
+  // ----------------------------------------------------------------
   const handleLogout = () => {
     setUser(null);
-    // Remove the user details and verification key from session storage
     sessionStorage.removeItem("user");
     sessionStorage.removeItem("userVerified");
+    sessionStorage.removeItem("loginData");
     window.location.reload();
   };
 
   return (
     <>
+      {/* --------------------------------- NAV BAR --------------------------------- */}
       <nav className="w-full z-20">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           {/* Left side: Logo */}
@@ -162,6 +189,7 @@ const NavBar = () => {
               className="h-16 object-contain mr-2"
             />
           </Link>
+
           {/* Center: Navigation links */}
           <div className="space-x-6 hidden md:inline-block text-xl">
             <Link href="/" className="text-white hover:text-slate-300">
@@ -176,10 +204,14 @@ const NavBar = () => {
             <Link href="/partners" className="text-white hover:text-slate-300">
               Partners
             </Link>
-            <Link href="/termsAnsCondition" className="text-white hover:text-slate-300">
+            <Link
+              href="/termsAnsCondition"
+              className="text-white hover:text-slate-300"
+            >
               Terms and Conditions
             </Link>
           </div>
+
           {/* Right side: Login button or user info with dropdown */}
           <div className="relative" ref={dropdownRef}>
             {user ? (
@@ -190,12 +222,11 @@ const NavBar = () => {
                 >
                   <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
                     <span className="text-gray-700">
-                      {user.email.charAt(0).toUpperCase()}
+                      {user.email?.charAt(0).toUpperCase()}
                     </span>
                   </div>
                   <span className="text-white">{user.email}</span>
                 </div>
-                {/* Dropdown menu */}
                 {isDropdownOpen && (
                   <div className="absolute right-0 top-full mt-2 bg-white shadow-lg rounded-md py-2 w-48 z-10">
                     <Link href="/profile">
@@ -229,17 +260,17 @@ const NavBar = () => {
         </div>
       </nav>
 
-      {/* Modal for login */}
+      {/* --------------------------------- MODAL --------------------------------- */}
       {isLoginModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg w-96 relative">
-            {/* Cross icon to close the modal */}
+            {/* Close modal */}
             <button
               onClick={() => {
                 setIsLoginModalOpen(false);
-                // Clear any error message and form values on close
                 setErrorMessage("");
                 setEmail("");
+                setPhoneNumber("");
                 setPassword("");
               }}
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl"
@@ -247,16 +278,33 @@ const NavBar = () => {
             >
               &times;
             </button>
-            <h2 className="text-xl font-bold mb-4">Login via credentials</h2>
+
+            <h2 className="text-xl font-bold mb-4">Login with Email/Password</h2>
+
+            {/* Email input */}
             <div className="mb-4">
               <input
                 type="email"
-                placeholder="Email"
+                placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onBlur={handleFetchUserPhone}
                 className="w-full p-2 border rounded"
               />
             </div>
+
+            {/* Fetched phone number (read-only) */}
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Phone number"
+                value={phoneNumber}
+                readOnly
+                className="w-full p-2 border rounded bg-gray-100"
+              />
+            </div>
+
+            {/* Password input */}
             <div className="mb-4 relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -276,9 +324,11 @@ const NavBar = () => {
                 )}
               </div>
             </div>
+
+            {/* Normal (password) Login button */}
             <button
               onClick={handleLoginClick}
-              className="w-full py-4 bg-blue-500 text-white rounded hover:bg-blue-600 flex justify-center items-center"
+              className="w-full py-3 bg-blue-500 text-white rounded hover:bg-blue-600 flex justify-center items-center"
               disabled={isLoggingIn}
             >
               {isLoggingIn ? (
@@ -290,7 +340,8 @@ const NavBar = () => {
                 "Login"
               )}
             </button>
-            {/* Display error message (if any) below the login button */}
+
+            {/* Error message if login fails */}
             {errorMessage && (
               <p className="mt-2 text-red-500 text-center">{errorMessage}</p>
             )}

@@ -2,7 +2,6 @@
 import React from "react";
 import NavBar from "./components/Navbar";
 import { SearchBar } from "./components/SearchListBarTest";
-import FilterAndFleetListing from "./components/FilterAndFleetListing";
 import { Bottom } from "./components/Bottom";
 
 const Home = () => {

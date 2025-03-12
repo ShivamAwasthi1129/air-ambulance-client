@@ -1,159 +1,273 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
-import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
+import React, { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import { FaEye, FaEyeSlash, FaSpinner } from "react-icons/fa";
 
-export default function UserInfoModal({ show, onClose }) {
-  // ========== Left-side slides (optional) ==========
-  const slides = [
-    {
-      title: "Trust Us to Digitise Your Business Travel,",
-      subtitle: "Just Like 59K+ Organisations Have!",
-      points: [],
-      image:
-        "https://go-assets.ibcdn.com/u/MMT/images/1729481581086-mybizloginSlider1.webp",
-    },
-    {
-      title: "Business Travel Solutions",
-      subtitle: "TAILORED FOR YOU.",
-      points: [
-        "Smart Dashboard - Real-time Reporting & Analytics",
-        "Seamless Integrations - ERP, HRMS & SSO Integrations",
-        "Policy Compliance - Easy Setup with Automated/Quick Approvals",
-      ],
-      image:
-        "https://go-assets.ibcdn.com/u/MMT/images/1729481621895-mybizloginSlider2.webp",
-    },
-    {
-      title: "All Your Business Travel Needs,",
-      subtitle: "AT ONE PLACE.",
-      points: [
-        "myBiz Special Fare - Lowest Flight Cancellation Fees",
-        "78K+ Corporate-friendly Hotels - Wide Inventory Across Prime Locations",
-        "Assured GST Invoices - One-click Download for ITC Claim",
-      ],
-      image:
-        "https://go-assets.ibcdn.com/u/MMT/images/1729481645105-mybizloginSlider3.webp",
-    },
-  ];
-  const [currentSlide, setCurrentSlide] = useState(0);
-
-  // ========== OTP states ==========
-  // Email
-  const [emailOTP, setEmailOTP] = useState("");
-  const [emailVerified, setEmailVerified] = useState(false);
-  const [emailOTPError, setEmailOTPError] = useState("");
-  const [emailOtpTimeLeft, setEmailOtpTimeLeft] = useState(300);
-  const emailTimerRef = useRef(null);
-
-  // Phone
-  const [phoneOTP, setPhoneOTP] = useState("");
-  const [phoneVerified, setPhoneVerified] = useState(false);
-  const [phoneOTPError, setPhoneOTPError] = useState("");
-  const [phoneOtpTimeLeft, setPhoneOtpTimeLeft] = useState(300);
-  const phoneTimerRef = useRef(null);
-
-  // We'll read the actual email/phone from userInfo in sessionStorage
+const NavBar = () => {
+  // ----------------------------------------------------------------
+  // Existing login state
+  // ----------------------------------------------------------------
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [user, setUser] = useState(null);
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // ----------------------------------------------------------------
+  // OTP-related states
+  // ----------------------------------------------------------------
+  const [showOTPSection, setShowOTPSection] = useState(false);
+
+  // We store phone number from the backend
   const [phoneNumber, setPhoneNumber] = useState("");
 
-  // ========== On mount, load userInfo.email & userInfo.phoneNumber from sessionStorage ==========
-  useEffect(() => {
-    if (!show) return; // If modal not showing, skip
+  // Single “Send OTP” button that sends both phone & email OTP
+  const [isSendingBothOTP, setIsSendingBothOTP] = useState(false);
 
-    // Load userInfo from sessionStorage
-    const saved = sessionStorage.getItem("searchData");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed?.userInfo) {
-          if (parsed.userInfo.email) setEmail(parsed.userInfo.email);
-          if (parsed.userInfo.phoneNumber) setPhoneNumber(parsed.userInfo.phoneNumber);
+  // Phone OTP
+  const [phoneOTP, setPhoneOTP] = useState("");
+  const [phoneOTPError, setPhoneOTPError] = useState("");
+  const [phoneVerified, setPhoneVerified] = useState(false);
+
+  // Email OTP
+  const [emailOTP, setEmailOTP] = useState("");
+  const [emailOTPError, setEmailOTPError] = useState("");
+  const [emailVerified, setEmailVerified] = useState(false);
+
+  // Optionally for timers, if you want them
+  // const [phoneOtpTimeLeft, setPhoneOtpTimeLeft] = useState(0);
+  // const [emailOtpTimeLeft, setEmailOtpTimeLeft] = useState(0);
+  // const phoneTimerRef = useRef(null);
+  // const emailTimerRef = useRef(null);
+
+  // Dropdown ref
+  const dropdownRef = useRef(null);
+
+  // ----------------------------------------------------------------
+  // Effects
+  // ----------------------------------------------------------------
+  useEffect(() => {
+    loadUserFromSession();
+  }, []);
+
+  useEffect(() => {
+    const updateHandler = () => {
+      loadUserFromSession();
+    };
+    window.addEventListener("updateNavbar", updateHandler);
+    return () => {
+      window.removeEventListener("updateNavbar", updateHandler);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // ----------------------------------------------------------------
+  // Helper: load user from session (existing logic)
+  // ----------------------------------------------------------------
+  const loadUserFromSession = () => {
+    const storedUser = sessionStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    } else if (sessionStorage.getItem("userVerified") === "true") {
+      const storedSearchData = sessionStorage.getItem("searchData");
+      if (storedSearchData) {
+        try {
+          const searchData = JSON.parse(storedSearchData);
+          if (searchData.userInfo && searchData.userInfo.email) {
+            setUser({ email: searchData.userInfo.email });
+          }
+        } catch (error) {
+          console.error("Error parsing searchData:", error);
         }
-      } catch (err) {
-        console.error("Error parsing userInfo from sessionStorage:", err);
       }
     }
-
-    // Start a 5-minute countdown (300s) for email OTP
-    emailTimerRef.current = setInterval(() => {
-      setEmailOtpTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(emailTimerRef.current);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    // Start a 5-minute countdown (300s) for phone OTP
-    phoneTimerRef.current = setInterval(() => {
-      setPhoneOtpTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(phoneTimerRef.current);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => {
-      clearInterval(emailTimerRef.current);
-      clearInterval(phoneTimerRef.current);
-    };
-  }, [show]);
-
-  // ========== Slide navigation ==========
-  const handlePrevSlide = () => {
-    setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
-  };
-  const handleNextSlide = () => {
-    setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
   };
 
-  // ========== Verify Email OTP (GET) ==========
-  const handleVerifyEmailOTP = async () => {
-    // If no OTP, or length not 6, or timer expired
-    if (!emailOTP || emailOTP.length !== 6 || emailOtpTimeLeft <= 0) {
-      setEmailOTPError("OTP is expired or invalid.");
+  // ----------------------------------------------------------------
+  // Handler: normal email/password login (existing logic)
+  // ----------------------------------------------------------------
+  const handleLoginClick = async () => {
+    setErrorMessage("");
+    setIsLoggingIn(true);
+
+    try {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json();
+
+      if (data.token) {
+        // If successful, store user info
+        const userLoginData = {
+          email,
+          name: data.name,
+          phone: data.phone,
+          token: data.token,
+        };
+
+        const searchDataStr = sessionStorage.getItem("searchData");
+        let searchData = searchDataStr ? JSON.parse(searchDataStr) : {};
+        searchData.userInfo = { ...searchData.userInfo, ...userLoginData };
+        sessionStorage.setItem("searchData", JSON.stringify(searchData));
+        sessionStorage.setItem("loginData", JSON.stringify(userLoginData));
+
+        // Optionally post final data
+        const finalDataFromSession = sessionStorage.getItem("searchData");
+        if (finalDataFromSession) {
+          const finalDataToSend = JSON.parse(finalDataFromSession);
+          console.log("Final Payload (sent immediately):", finalDataToSend);
+          await fetch("/api/query", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(finalDataToSend),
+          });
+        }
+
+        sessionStorage.setItem("userVerified", "true");
+        window.location.reload();
+
+        // Cleanup
+        setIsLoginModalOpen(false);
+        setEmail("");
+        setPassword("");
+      } else if (data.error) {
+        setErrorMessage(data.error);
+      }
+    } catch (err) {
+      console.error("Error during login:", err);
+      setErrorMessage("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  // ----------------------------------------------------------------
+  // Handler: logout (existing logic)
+  // ----------------------------------------------------------------
+  const handleLogout = () => {
+    setUser(null);
+    sessionStorage.removeItem("user");
+    sessionStorage.removeItem("userVerified");
+    sessionStorage.removeItem("loginData");
+    window.location.reload();
+  };
+
+  // ----------------------------------------------------------------
+  // Handler: fetch user phone from backend for given email
+  // ----------------------------------------------------------------
+  const handleFetchUserPhone = async () => {
+    if (!email) return;
+    try {
+      const resp = await fetch(`/api/user/${encodeURIComponent(email)}`, {
+        method: "GET",
+      });
+      if (!resp.ok) {
+        throw new Error("Failed to get user phone info");
+      }
+      const userData = await resp.json();
+
+      // userData might be an array
+      if (Array.isArray(userData) && userData.length > 0 && userData[0].phone) {
+        setPhoneNumber(userData[0].phone);
+      } else {
+        setPhoneNumber("");
+      }
+    } catch (err) {
+      console.error("Error fetching phone number:", err);
+      setPhoneNumber("");
+    }
+  };
+
+  // ----------------------------------------------------------------
+  // Handler: single "Send OTP" for both phone & email
+  // ----------------------------------------------------------------
+  const handleSendOTP = async () => {
+    // Clear previous errors
+    setPhoneOTPError("");
+    setEmailOTPError("");
+    setPhoneOTP("");
+    setEmailOTP("");
+    setPhoneVerified(false);
+    setEmailVerified(false);
+
+    // If there's no email or phone, we can't send
+    if (!email && !phoneNumber) {
+      setEmailOTPError("Email or phone not found. Please enter valid email.");
       return;
     }
 
-    try {
-      // Make GET request to verify
-      const resp = await fetch(
-        `/api/otp?email=${encodeURIComponent(email)}&otp=${encodeURIComponent(emailOTP)}`,
-        { method: "GET" }
-      );
-      const data = await resp.json();
+    setIsSendingBothOTP(true);
 
-      if (resp.ok && data.message === "OTP verified successfully") {
-        setEmailVerified(true);
-        setEmailOTPError("");
-        // Stop the timer
-        clearInterval(emailTimerRef.current);
-      } else {
-        setEmailOTPError(data.message || "Invalid or expired OTP.");
+    // 1) Send OTP to phone (if phoneNumber is present)
+    try {
+      if (phoneNumber) {
+        const respPhone = await fetch(
+          `/api/otp/whatsapp?phoneNumber=${encodeURIComponent(phoneNumber)}`,
+          { method: "GET" }
+        );
+        const phoneData = await respPhone.json();
+        if (!respPhone.ok) {
+          throw new Error(phoneData.message || "Failed to send phone OTP");
+        }
+        console.log("Phone OTP sent to:", phoneNumber);
+        // Optionally start a countdown timer for phone OTP
       }
     } catch (err) {
       console.error(err);
-      setEmailOTPError("Error verifying Email OTP.");
+      setPhoneOTPError("Failed to send phone OTP. You can still verify email.");
     }
+
+    // 2) Send OTP to email (if email is present)
+    try {
+      if (email) {
+        const respEmail = await fetch(
+          `/api/otp?email=${encodeURIComponent(email)}`,
+          { method: "GET" }
+        );
+        const emailData = await respEmail.json();
+        if (!respEmail.ok) {
+          throw new Error(emailData.message || "Failed to send email OTP");
+        }
+        console.log("Email OTP sent to:", email);
+        // Optionally start a countdown timer for email OTP
+      }
+    } catch (err) {
+      console.error(err);
+      setEmailOTPError("Failed to send email OTP. You can still verify phone.");
+    }
+
+    setIsSendingBothOTP(false);
   };
 
-  // ========== Verify Phone OTP (GET) ==========
+  // ----------------------------------------------------------------
+  // Verify phone OTP. If successful => do final login steps
+  // ----------------------------------------------------------------
   const handleVerifyPhoneOTP = async () => {
-    // If no OTP, or length not 6, or timer expired
-    if (!phoneOTP || phoneOTP.length !== 6 || phoneOtpTimeLeft <= 0) {
-      setPhoneOTPError("OTP is expired or invalid.");
+    if (!phoneOTP || phoneOTP.length !== 6) {
+      setPhoneOTPError("Phone OTP must be 6 digits.");
       return;
     }
-
     try {
-      // Make GET request to verify
       const resp = await fetch(
-        `/api/otp/whatsapp?otp=${encodeURIComponent(phoneOTP)}&phoneNumber=%2B91${encodeURIComponent(
-          phoneNumber
-        )}`,
+        `/api/otp/whatsapp?otp=${encodeURIComponent(
+          phoneOTP
+        )}&phoneNumber=${encodeURIComponent(phoneNumber)}`,
         { method: "GET" }
       );
       const data = await resp.json();
@@ -161,197 +275,368 @@ export default function UserInfoModal({ show, onClose }) {
       if (resp.ok && data.message === "OTP verified successfully") {
         setPhoneVerified(true);
         setPhoneOTPError("");
-        // Stop the timer
-        clearInterval(phoneTimerRef.current);
+
+        // === Final login logic if *either* OTP is verified ===
+        await finalizeOTPLogin({
+          token: data.token || "",
+          // You might also get name from data, if your backend returns it
+          name: data.name || "",
+          phone: phoneNumber,
+        });
       } else {
-        setPhoneOTPError(data.message || "Invalid or expired OTP.");
+        setPhoneOTPError(data.message || "Invalid/expired phone OTP.");
       }
     } catch (err) {
       console.error(err);
-      setPhoneOTPError("Error verifying Phone OTP.");
+      setPhoneOTPError("Error verifying phone OTP.");
     }
   };
 
-  // ========== Format time helper (mm:ss) ==========
-  const formatTime = (sec) => {
-    const m = Math.floor(sec / 60);
-    const s = sec % 60;
-    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  // ----------------------------------------------------------------
+  // Verify email OTP. If successful => do final login steps
+  // ----------------------------------------------------------------
+  const handleVerifyEmailOTP = async () => {
+    if (!emailOTP || emailOTP.length !== 6) {
+      setEmailOTPError("Email OTP must be 6 digits.");
+      return;
+    }
+    try {
+      const resp = await fetch(
+        `/api/otp?email=${encodeURIComponent(
+          email
+        )}&otp=${encodeURIComponent(emailOTP)}`,
+        { method: "GET" }
+      );
+      const data = await resp.json();
+
+      if (resp.ok && data.message === "OTP verified successfully") {
+        setEmailVerified(true);
+        setEmailOTPError("");
+
+        // === Final login logic if *either* OTP is verified ===
+        await finalizeOTPLogin({
+          token: data.token || "",
+          name: data.name || "",
+          phone: phoneNumber,
+        });
+      } else {
+        setEmailOTPError(data.message || "Invalid/expired email OTP.");
+      }
+    } catch (err) {
+      console.error(err);
+      setEmailOTPError("Error verifying email OTP.");
+    }
   };
 
-  // If show=false or we've already closed => don't render
-  if (!show) return null;
+  // ----------------------------------------------------------------
+  // Helper: merges into searchData, sets userVerified, reloads
+  // ----------------------------------------------------------------
+  const finalizeOTPLogin = async ({ token, name, phone }) => {
+    // Combine with existing session logic
+    const userLoginData = {
+      email,
+      phone,
+      name,
+      token,
+    };
 
-  // We only require EITHER email OR phone verified
-  const canClose = emailVerified || phoneVerified;
+    const searchDataStr = sessionStorage.getItem("searchData");
+    let searchData = searchDataStr ? JSON.parse(searchDataStr) : {};
+    searchData.userInfo = { ...searchData.userInfo, ...userLoginData };
+    sessionStorage.setItem("searchData", JSON.stringify(searchData));
+    sessionStorage.setItem("loginData", JSON.stringify(userLoginData));
 
-  // If user clicks "Done," mark userVerified in session
-  const handleCloseOrDone = () => {
-    if (canClose) {
-      sessionStorage.setItem("userVerified", "true");
-      window.dispatchEvent(new Event("updateNavbar"));
+    // Optionally send final data
+    const finalDataFromSession = sessionStorage.getItem("searchData");
+    if (finalDataFromSession) {
+      const finalDataToSend = JSON.parse(finalDataFromSession);
+      console.log("Final Payload (sent via OTP flow):", finalDataToSend);
+      await fetch("/api/query", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(finalDataToSend),
+      });
     }
-    onClose();
+
+    sessionStorage.setItem("userVerified", "true");
+    window.location.reload();
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="relative w-[90%] max-w-4xl h-[38rem] rounded-lg shadow-md overflow-hidden flex justify-center items-center">
-        {/* ========= Left side slides ========= */}
-        <div className="w-[43%] h-[95%] overflow-hidden bg-gray-800 text-white rounded-xl absolute left-0">
-          <div
-            key={currentSlide}
-            className="absolute inset-0 h-full w-full transition-all duration-500 ease-in-out flex flex-col justify-center items-center p-8"
-            style={{
-              backgroundImage: `url(${slides[currentSlide].image})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }}
-          >
-            {/* Dark overlay */}
-            <div className="bg-black bg-opacity-50 absolute inset-0 z-0" />
+    <>
+      {/* --------------------------------- NAV BAR --------------------------------- */}
+      <nav className="w-full z-20">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+          {/* Left side: Logo */}
+          <Link href="/" className="flex items-center">
+            <img
+              src="https://www.charterflightsaviation.com/images/logo.png"
+              alt="Logo"
+              className="h-16 object-contain mr-2"
+            />
+          </Link>
 
-            <div className="relative z-10 w-[75%]">
-              <h2 className="text-2xl font-bold mb-2">
-                {slides[currentSlide].title}
-              </h2>
-              <h3 className="text-xl font-semibold mb-4">
-                {slides[currentSlide].subtitle}
-              </h3>
-              {!!slides[currentSlide].points.length && (
-                <ul className="space-y-2">
-                  {slides[currentSlide].points.map((p, idx) => (
-                    <li key={idx} className="text-sm">
-                      {p}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+          {/* Center: Navigation links */}
+          <div className="space-x-6 hidden md:inline-block text-xl">
+            <Link href="/" className="text-white hover:text-slate-300">
+              Home
+            </Link>
+            <Link href="/about" className="text-white hover:text-slate-300">
+              About
+            </Link>
+            <Link href="/aircrafts" className="text-white hover:text-slate-300">
+              Aircrafts
+            </Link>
+            <Link href="/partners" className="text-white hover:text-slate-300">
+              Partners
+            </Link>
+            <Link
+              href="/termsAnsCondition"
+              className="text-white hover:text-slate-300"
+            >
+              Terms and Conditions
+            </Link>
           </div>
 
-          {/* Slide nav arrows */}
-          <button
-            className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-black bg-opacity-30 p-2 rounded-full hover:bg-opacity-50 z-20"
-            onClick={handlePrevSlide}
-          >
-            <AiOutlineLeft size={20} className="text-white" />
-          </button>
-          <button
-            className="absolute top-1/2 right-8 transform -translate-y-1/2 bg-black bg-opacity-30 p-2 rounded-full hover:bg-opacity-50 z-20"
-            onClick={handleNextSlide}
-          >
-            <AiOutlineRight size={20} className="text-white" />
-          </button>
+          {/* Right side: Login button or user info w/ dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            {user ? (
+              <>
+                <div
+                  className="flex items-center space-x-2 cursor-pointer"
+                  onClick={() => setIsDropdownOpen((prev) => !prev)}
+                >
+                  <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                    <span className="text-gray-700">
+                      {user.email?.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <span className="text-white">{user.email}</span>
+                </div>
+                {isDropdownOpen && (
+                  <div className="absolute right-0 top-full mt-2 bg-white shadow-lg rounded-md py-2 w-48 z-10">
+                    <Link href="/profile">
+                      <div className="px-4 py-2 hover:bg-gray-100">
+                        User Profile
+                      </div>
+                    </Link>
+                    <Link href="/travel-history">
+                      <div className="px-4 py-2 hover:bg-gray-100">
+                        Travel History
+                      </div>
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <button
+                onClick={() => setIsLoginModalOpen(true)}
+                className="px-4 py-2 rounded-xl text-white bg-gradient-to-r from-sky-300 to-green-500 hover:from-sky-400 hover:to-green-600"
+              >
+                Login
+              </button>
+            )}
+          </div>
         </div>
+      </nav>
 
-        {/* ========= Right side: OTP inputs ========= */}
-        <div className="w-[60%] h-full p-6 flex flex-col justify-between rounded-xl bg-white absolute right-0 shadow-black shadow-lg">
-          {/* Top area */}
-          <div className="overflow-auto">
-            {/* Close button */}
+      {/* --------------------------------- MODAL --------------------------------- */}
+      {isLoginModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg w-96 relative">
+            {/* Close modal */}
             <button
-              className="ml-auto mb-4 block text-gray-500 hover:text-gray-700 text-2xl leading-none"
-              onClick={onClose} // If user clicks X, we just close
+              onClick={() => {
+                setIsLoginModalOpen(false);
+                setErrorMessage("");
+                setEmail("");
+                setPassword("");
+                setShowOTPSection(false);
+                setPhoneNumber("");
+                setPhoneOTP("");
+                setEmailOTP("");
+                setPhoneOTPError("");
+                setEmailOTPError("");
+                setEmailVerified(false);
+                setPhoneVerified(false);
+              }}
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl"
+              aria-label="Close login modal"
             >
               &times;
             </button>
 
-            <h2 className="text-2xl font-bold mb-6">OTP Verification</h2>
+            <h2 className="text-xl font-bold mb-4">Login via credentials</h2>
 
-            {/* Email OTP */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Enter the OTP sent to your Whatsapp / Mobile No. or Email
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  maxLength={6}
-                  value={emailOTP}
-                  onChange={(e) => setEmailOTP(e.target.value)}
-                  placeholder="6-digit OTP"
-                  className="border border-gray-300 rounded px-3 py-2 focus:outline-none w-32"
-                />
-                <button
-                  onClick={handleVerifyEmailOTP}
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded"
-                  disabled={emailVerified}
-                >
-                  Verify
-                </button>
+            {/* Email input */}
+            <div className="mb-4">
+              <input
+                type="email"
+                placeholder="Enter registered email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full p-2 border rounded"
+              />
+            </div>
+
+            {/* Password input */}
+            <div className="mb-4 relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-2 border rounded pr-10"
+              />
+              <div
+                className="absolute inset-y-0 right-0 flex items-center pr-2 cursor-pointer"
+                onClick={() => setShowPassword((prev) => !prev)}
+              >
+                {showPassword ? (
+                  <FaEye className="text-gray-500" />
+                ) : (
+                  <FaEyeSlash className="text-gray-500" />
+                )}
               </div>
-              {/* Timer & errors */}
-              {!emailVerified && (
-                <p className="text-sm text-gray-500 mt-1">
-                  Time left: {formatTime(emailOtpTimeLeft)}
-                </p>
-              )}
-              {emailOTPError && (
-                <p className="text-red-500 text-sm mt-1">{emailOTPError}</p>
-              )}
-              {emailVerified && (
-                <p className="text-green-600 text-sm mt-1">
-                  OTP verified successfully!
-                </p>
-              )}
             </div>
 
-            {/* Phone OTP */}
-            <div className="mb-6">
-              {/* <label className="block text-sm font-medium text-gray-700 mb-1">
-                Enter the OTP sent to your WhatsApp
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  maxLength={6}
-                  value={phoneOTP}
-                  onChange={(e) => setPhoneOTP(e.target.value)}
-                  placeholder="6-digit OTP"
-                  className="border border-gray-300 rounded px-3 py-2 focus:outline-none w-32"
-                />
-                <button
-                  onClick={handleVerifyPhoneOTP}
-                  className="bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-2 rounded"
-                  disabled={phoneVerified}
-                >
-                  Verify
-                </button>
-              </div> */}
-              {/* Timer & errors */}
-              {/* {!phoneVerified && (
-                <p className="text-sm text-gray-500 mt-1">
-                  Time left: {formatTime(phoneOtpTimeLeft)}
-                </p>
-              )}
-              {phoneOTPError && (
-                <p className="text-red-500 text-sm mt-1">{phoneOTPError}</p>
-              )}
-              {phoneVerified && (
-                <p className="text-green-600 text-sm mt-1">
-                  Phone OTP verified successfully!
-                </p>
-              )} */}
-            </div>
-          </div>
-
-          {/* Bottom area: Done/Close button */}
-          <div>
-            <button
-              onClick={handleCloseOrDone}
-              disabled={!canClose}
-              className={`w-full px-4 py-2 text-white font-semibold rounded ${
-                canClose
-                  ? "bg-green-500 hover:bg-green-600"
-                  : "bg-gray-300 cursor-not-allowed"
-              }`}
+            {/* Toggle “Login via OTP” Section */}
+            <p
+              className="text-blue-500 text-sm underline cursor-pointer mb-4"
+              onClick={async () => {
+                // When toggling OTP section on, fetch phone if not already
+                setShowOTPSection((prev) => {
+                  const willShow = !prev;
+                  if (willShow) {
+                    handleFetchUserPhone();
+                  }
+                  return willShow;
+                });
+              }}
             >
-              {canClose ? "Done" : "Verify to Continue"}
+              Login via OTP
+            </p>
+
+            {/* -------------------------- OTP SECTION -------------------------- */}
+            {showOTPSection && (
+              <div className="p-3 border border-gray-300 rounded mb-4">
+                {/* Display phone + email (non-editable) */}
+                <div className="mb-2">
+                  <label className="block text-gray-700 text-sm mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    type="text"
+                    value={phoneNumber || ""}
+                    disabled
+                    placeholder="No phone found"
+                    className="w-full p-2 border rounded bg-gray-100 cursor-not-allowed"
+                  />
+                </div>
+
+                <div className="mb-2">
+                  <label className="block text-gray-700 text-sm mb-1">
+                    Email
+                  </label>
+                  <input
+                    type="text"
+                    value={email || ""}
+                    disabled
+                    placeholder="No email?"
+                    className="w-full p-2 border rounded bg-gray-100 cursor-not-allowed"
+                  />
+                </div>
+
+                {/* Single button to send BOTH OTPs */}
+                <button
+                  onClick={handleSendOTP}
+                  disabled={isSendingBothOTP || (!phoneNumber && !email)}
+                  className="px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600 w-full"
+                >
+                  {isSendingBothOTP ? "Sending OTP to both..." : "Send OTP"}
+                </button>
+
+                {/* Phone OTP verify */}
+                <div className="mt-4">
+                  <label className="block text-gray-700 text-sm mb-1">
+                    Enter Phone OTP
+                  </label>
+                  <input
+                    type="text"
+                    value={phoneOTP}
+                    onChange={(e) => setPhoneOTP(e.target.value)}
+                    placeholder="6-digit phone OTP"
+                    className="w-full p-2 border rounded mb-2"
+                  />
+                  <button
+                    onClick={handleVerifyPhoneOTP}
+                    disabled={!phoneOTP}
+                    className="px-4 py-2 rounded bg-green-500 text-white hover:bg-green-600"
+                  >
+                    Verify Phone OTP
+                  </button>
+                  {phoneOTPError && (
+                    <p className="text-red-500 text-sm mt-2">{phoneOTPError}</p>
+                  )}
+                </div>
+
+                {/* Email OTP verify */}
+                <div className="mt-4">
+                  <label className="block text-gray-700 text-sm mb-1">
+                    Enter Email OTP
+                  </label>
+                  <input
+                    type="text"
+                    value={emailOTP}
+                    onChange={(e) => setEmailOTP(e.target.value)}
+                    placeholder="6-digit email OTP"
+                    className="w-full p-2 border rounded mb-2"
+                  />
+                  <button
+                    onClick={handleVerifyEmailOTP}
+                    disabled={!emailOTP}
+                    className="px-4 py-2 rounded bg-green-500 text-white hover:bg-green-600"
+                  >
+                    Verify Email OTP
+                  </button>
+                  {emailOTPError && (
+                    <p className="text-red-500 text-sm mt-2">{emailOTPError}</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Normal Login button */}
+            <button
+              onClick={handleLoginClick}
+              className="w-full py-3 bg-blue-500 text-white rounded hover:bg-blue-600 flex justify-center items-center"
+              disabled={isLoggingIn}
+            >
+              {isLoggingIn ? (
+                <>
+                  <FaSpinner className="animate-spin mr-2" />
+                  Logging in...
+                </>
+              ) : (
+                "Login"
+              )}
             </button>
+
+            {/* Show error if normal login fails */}
+            {errorMessage && (
+              <p className="mt-2 text-red-500 text-center">{errorMessage}</p>
+            )}
           </div>
         </div>
-      </div>
-    </div>
+      )}
+    </>
   );
-}
+};
+
+export default NavBar;
