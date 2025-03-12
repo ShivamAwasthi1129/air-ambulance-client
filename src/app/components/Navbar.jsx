@@ -316,23 +316,7 @@ const NavBar = () => {
 
   return (
     <>
-      {/* ToastContainer at the top level */}
-      <ToastContainer
-        autoClose={4000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        pauseOnHover={false}
-        pauseOnFocusLoss={false}
-        draggable={false}
-        style={{
-          position: "fixed",
-          top: "12%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          zIndex: 100,
-        }}
-      />
+     
 
       {/* --------------------------------- NAV BAR --------------------------------- */}
       <nav className="w-full z-20">
@@ -589,6 +573,23 @@ const NavBar = () => {
           </div>
         </div>
       )}
+       {/* ToastContainer at the top level */}
+       <ToastContainer
+        autoClose={4000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnHover={false}
+        pauseOnFocusLoss={false}
+        draggable={false}
+        style={{
+          position: "fixed",
+          top: "12%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          zIndex: 100,
+        }}
+      />
     </>
   );
 };

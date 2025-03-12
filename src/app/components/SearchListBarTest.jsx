@@ -564,7 +564,7 @@ export const SearchBar = () => {
                     }
                     className="block w-full p-2 border rounded focus:outline-none"
                   >
-                    {[...Array(10).keys()].map((num) => (
+                    {[...Array(30).keys()].map((num) => (
                       <option key={num + 1} value={num + 1}>
                         {num + 1}
                       </option>
