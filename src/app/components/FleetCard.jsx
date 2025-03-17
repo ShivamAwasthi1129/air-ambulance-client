@@ -161,6 +161,9 @@ const FlightCard = ({
   const [whatsAppSendState, setWhatsAppSendState] = useState("idle");
   const [emailSendState, setEmailSendState] = useState("idle");
 
+  // NEW: Track email input from the modal
+  const [emailModalInput, setEmailModalInput] = useState("");
+
   useEffect(() => {
     const data = sessionStorage.getItem("searchData");
     if (data) setParsedData(JSON.parse(data));
@@ -178,6 +181,13 @@ const FlightCard = ({
       }
     }
   }, []);
+
+  // Initialize email input if userSession has an email
+  useEffect(() => {
+    if (userSession?.email) {
+      setEmailModalInput(userSession.email);
+    }
+  }, [userSession]);
 
   // Combine snapshots to show them in share modals
   const generateCombinedPreview = async () => {
@@ -316,13 +326,11 @@ const FlightCard = ({
 
     const handlePrev = (e) => {
       e.stopPropagation();
-      // If you want to disable auto-sliding on manual click, you can do so here
       setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
     };
 
     const handleNext = (e) => {
       e.stopPropagation();
-      // If you want to disable auto-sliding on manual click, you can do so here
       setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
     };
 
@@ -455,7 +463,9 @@ const FlightCard = ({
     }
   };
 
-  // Sending images & data via Email
+  // ---------------------------------------------------------------------------------
+  // Sending images & data via Email (NEW: add POST to /api/feviamail with S3 link)
+  // ---------------------------------------------------------------------------------
   const handleSendEmail = async () => {
     if (!combinedPreview) {
       toast.error("No flights selected!");
@@ -469,6 +479,7 @@ const FlightCard = ({
       const formData = new FormData();
       formData.append("profile", file);
 
+      // 1) Upload image to S3
       const response = await fetch("/api/user/image", {
         method: "POST",
         body: formData,
@@ -483,8 +494,34 @@ const FlightCard = ({
       const s3Link = result.secureUrl;
       toast.success("Image uploaded successfully to S3!");
 
-      // (Optionally send an actual email, etc.)
-      setEmailSendState("sent");
+      // 2) Send the link + email address to /api/feviamail
+      try {
+        // If user typed a different email, we use `emailModalInput`
+        const feviamailResponse = await fetch("/api/feviamail", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: emailModalInput,
+            imageURL: s3Link,
+          }),
+        });
+
+        if (!feviamailResponse.ok) {
+          console.error("Error sending data to /api/feviamail:", feviamailResponse);
+          toast.error("Failed to send data to feviamail API.");
+          setEmailSendState("idle");
+          return;
+        }
+
+        const feviamailData = await feviamailResponse.json();
+        console.log("feviamail response:", feviamailData);
+        toast.success("Successfully sent data to feviamail API!");
+        setEmailSendState("sent");
+      } catch (err) {
+        console.error("Error in POST request to feviamail API:", err);
+        toast.error("Failed to send data to feviamail API.");
+        setEmailSendState("idle");
+      }
 
       // Clean up
       setCheckedFlights({});
@@ -749,7 +786,6 @@ const FlightCard = ({
                         <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-4 mt-4 pt-2 border-t border-gray-300">
                           {/* LEFT: checkbox + share */}
                           <div className="flex items-center mt-2">
-                            {/* Add some space between the checkbox and the label text */}
                             <label className="flex items-center cursor-pointer">
                               <input
                                 type="checkbox"
@@ -813,7 +849,6 @@ const FlightCard = ({
                                     >
                                       {isProceeding ? (
                                         <>
-                                          {/* Tiny spinner */}
                                           <span className="inline-block w-4 h-4 border-2 border-t-transparent border-white border-solid rounded-full animate-spin mr-2" />
                                           Proceeding...
                                         </>
@@ -1142,9 +1177,11 @@ const FlightCard = ({
               <p className="text-gray-600 mb-4">No flights selected.</p>
             )}
 
+            {/* We bind the input to emailModalInput */}
             <input
               type="email"
-              defaultValue={userSession?.email || ""}
+              value={emailModalInput}
+              onChange={(e) => setEmailModalInput(e.target.value)}
               className="border border-gray-300 w-full p-2 rounded mb-4"
               placeholder="name@example.com"
             />
