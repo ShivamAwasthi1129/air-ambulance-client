@@ -27,20 +27,24 @@ const FinalEnquiryPage = () => {
   const [fetchedSegmentsData, setFetchedSegmentsData] = useState([]);
   const [userData, setUserData] = useState({});
   const [loading, setLoading] = useState(false);
+
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isWhatsAppSending, setIsWhatsAppSending] = useState(false);
   const [isEmailSending, setIsEmailSending] = useState(false);
+
   // 1) Read searchData from sessionStorage & fallback to loginData for user details
   useEffect(() => {
     const storedData = sessionStorage.getItem("searchData");
     if (storedData) {
       const parsedSearchData = JSON.parse(storedData);
       setSearchData(parsedSearchData);
+
       // Extract user info from searchData.userInfo
       const userInfo = parsedSearchData.userInfo || {};
       let foundName = userInfo.name || "";
       let foundPhone = userInfo.phone || "";
       let foundEmail = userInfo.email || "";
+
       // If name/phone is missing, try to get from loginData
       if (!foundName || !foundPhone) {
         const storedLoginData = sessionStorage.getItem("loginData");
@@ -58,23 +62,20 @@ const FinalEnquiryPage = () => {
         email: foundEmail,
       });
     }
-
   }, []);
+
   // 2) Fetch flights for each segment, filter by selected registrationNo
   useEffect(() => {
     const fetchAllSegments = async () => {
       if (!searchData || !searchData.segments) return;
-
       const resultsArr = [];
+
       for (let i = 0; i < searchData.segments.length; i++) {
         const segment = searchData.segments[i];
         const cleanedFrom = cleanAirportName(segment.from);
         const cleanedTo = cleanAirportName(segment.to);
 
-        const url = `/api/search-flights?from=${encodeURIComponent(
-          cleanedFrom
-        )}&to=${encodeURIComponent(cleanedTo)}&departureDate=${segment.departureDate
-          }T${segment.departureTime}:00Z&travelerCount=${segment.passengers}`;
+        const url = `/api/search-flights?from=${encodeURIComponent(cleanedFrom)}&to=${encodeURIComponent(cleanedTo)}&departureDate=${segment.departureDate}T${segment.departureTime}:00Z&travelerCount=${segment.passengers}`;
 
         try {
           const res = await fetch(url);
@@ -103,6 +104,7 @@ const FinalEnquiryPage = () => {
       fetchAllSegments();
     }
   }, [searchData]);
+
   if (!searchData) {
     return (
       <div className="p-4 text-center">
@@ -111,24 +113,32 @@ const FinalEnquiryPage = () => {
     );
   }
 
-  const handlePayment = async (amount) => {
+  // Payment API call - now accepts both amount and currency
+  const handlePayment = async (amount, currency) => {
     setLoading(true);
     try {
       const response = await fetch("/api/ccavenue", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount, // Use the amount from the modal
+          amount,
+          currency, 
         }),
       });
 
       const { paymentUrl } = await response.json();
       window.location.href = paymentUrl; 
     } catch (error) {
-      console.log("eror", error);
+      console.log("Error", error);
       alert("Payment initiation failed!");
     }
     setLoading(false);
+  };
+
+  // Called by PaymentModal onConfirm
+  const handlePaymentConfirm = (amount, currency) => {
+    setIsPaymentModalOpen(false);
+    handlePayment(amount, currency);
   };
 
   // Compute total flying time
@@ -147,36 +157,36 @@ const FinalEnquiryPage = () => {
     );
   }, 0);
 
-  const totalFlyingHours = `${Math.floor(totalFlyingTimeMinutes / 60)} Hrs ${totalFlyingTimeMinutes % 60
-    } Min`;
+  const totalFlyingHours = `${Math.floor(totalFlyingTimeMinutes / 60)} Hrs ${
+    totalFlyingTimeMinutes % 60
+  } Min`;
 
   // Summation for cost details
   const allSelectedFlights = fetchedSegmentsData.flat();
-  // Parse flight.totalPrice, e.g. "$ 650,000"
+  // Parse flight.totalPrice, e.g. "$ 650,000" => numeric
   const estimatedCost = allSelectedFlights.reduce((acc, flight) => {
     if (!flight.totalPrice) return acc;
     const numericPrice = parseInt(flight.totalPrice.replace(/\D+/g, ""), 10) || 0;
     return acc + numericPrice;
   }, 0);
-  // Updated: POST to /api/booking-request, using react-toastify
+
+  // WhatsApp Enquiry
   const sendWhatsAppMessage = async () => {
-    const phoneNumber = "91 9958241284"; // The number to which we say we sent
+    const phoneNumber = "91 9958241284"; // example number
     setIsWhatsAppSending(true);
 
-    // 1. Show an "info" toast quickly
+    // Show an "info" toast quickly
     const toastId = toast.info("Sending your enquiry...", {
       position: "top-center",
-      // We want to close it ourselves, so autoClose is false here.
       autoClose: false,
       closeOnClick: true,
       draggable: false,
     });
 
     try {
-      // Check if 'loginData' session exists in sessionStorage
+      // Merge with loginData if it exists
       const loginDataStr = sessionStorage.getItem("loginData");
       if (loginDataStr) {
-        // Parse the stored session data and update searchData.userInfo with login details
         const loginData = JSON.parse(loginDataStr);
         searchData.userInfo = {
           name: loginData.name,
@@ -185,10 +195,6 @@ const FinalEnquiryPage = () => {
         };
       }
 
-      // Log the payload before sending
-      console.log("Sending payload:", searchData);
-
-      // 2. POST request to /api/booking-request with searchData payload
       const response = await fetch("/api/booking-request", {
         method: "POST",
         headers: {
@@ -198,23 +204,16 @@ const FinalEnquiryPage = () => {
       });
 
       if (!response.ok) {
-        // Force an error for the catch block below
         throw new Error(`Server error: ${response.statusText}`);
       }
 
-      // 3. Dismiss the loading toast
       toast.dismiss(toastId);
-
-      // 4. Show success toast (autoClose after 5s)
       toast.success(`Enquiry sent successfully to ${phoneNumber}`, {
         position: "top-center",
         autoClose: 5000,
       });
     } catch (err) {
-      // 5. Dismiss the loading toast
       toast.dismiss(toastId);
-
-      // 6. Show error toast
       toast.error(`Something went wrong: ${err.message}`, {
         position: "top-center",
       });
@@ -223,7 +222,7 @@ const FinalEnquiryPage = () => {
     }
   };
 
-  // Email logic
+  // Email enquiry
   const sendEmailMessage = async () => {
     setIsEmailSending(true); // Show "Sending..." on the button
 
@@ -245,7 +244,6 @@ const FinalEnquiryPage = () => {
         throw new Error("Failed to send email");
       }
 
-      // If everything goes well, show success toast
       toast.success(`Mail sent to: ${userData.email}`, {
         position: "top-center",
         autoClose: 5000,
@@ -260,7 +258,7 @@ const FinalEnquiryPage = () => {
     }
   };
 
-  // Grab dynamic details from the first and last segments
+  // Extract details from first/last segments
   const firstSegment = searchData.segments[0];
   const lastSegment = searchData.segments[searchData.segments.length - 1];
 
@@ -340,11 +338,8 @@ const FinalEnquiryPage = () => {
       head: [["Description", "Amount (₹)"]],
       body: [
         ["Total Flying Cost", estimatedCost.toLocaleString()],
-        // ["Total Handling Cost", airportHandling.toLocaleString()],
-        // ["Subtotal", subTotal.toLocaleString()],
-        // ["GST @ 18%", gstAmount.toLocaleString()],
         [
-          "All Inclusive Charter Package ",
+          "All Inclusive Charter Package",
           estimatedCost.toLocaleString(),
         ],
       ],
@@ -353,6 +348,7 @@ const FinalEnquiryPage = () => {
       alternateRowStyles: { fillColor: [245, 245, 245] },
     });
 
+    // Note text
     doc.setFontSize(10);
     doc.setFont("helvetica", "italic");
     const notesText =
@@ -399,23 +395,15 @@ const FinalEnquiryPage = () => {
     doc.save("Proforma_Invoice.pdf");
   };
 
-  const handlePaymentButtonClick = () => {
-    setIsPaymentModalOpen(true); // Open the modal when the payment button is clicked
-  };
-
-  const handlePaymentConfirm = (amount) => {
-    setIsPaymentModalOpen(false); // Close the modal
-    handlePayment(amount); // Proceed with the payment
-  };
-
   return (
     <div className="flex flex-col items-center">
       <div
         className="w-full bg-cover"
         style={{
           backgroundImage:
-            "url('https://img.freepik.com/free-photo/airplane-runway-airport-sunset-travel-concept_587448-8154.jpg?t=st=1739105999~exp=1739109599~hmac=ab95500395c06198c3f2190d29da1b0c41ca0529e115404f07b822f31749eccc&w=1380')"
-        }}>
+            "url('https://img.freepik.com/free-photo/airplane-runway-airport-sunset-travel-concept_587448-8154.jpg?w=1380')",
+        }}
+      >
         <NavBar />
       </div>
       <Banner />
@@ -428,7 +416,7 @@ const FinalEnquiryPage = () => {
             const flightsForSegment = fetchedSegmentsData[segmentIndex] || [];
             return (
               <div
-                key={segmentIndex} // "segmentIndex" is fine for segments
+                key={segmentIndex}
                 className="w-full bg-white flex flex-col items-start px-4 border border-blue-100 rounded-xl"
               >
                 <h3 className="text-lg font-bold flex items-center mt-4">
@@ -447,7 +435,6 @@ const FinalEnquiryPage = () => {
                 ) : (
                   flightsForSegment.map((flight) => (
                     <div className="w-full my-1" key={flight._id}>
-                      {/* Using flight._id as the key */}
                       <FlightCard filteredData={[flight]} readOnly />
                     </div>
                   ))
@@ -485,10 +472,11 @@ const FinalEnquiryPage = () => {
               JetSteals grants you the opportunity to enjoy the luxury
               and convenience of flying private at commercial prices.
             </div>
+
             {/* Buttons */}
             <div className="flex justify-between space-2 mb-4">
               <button
-                onClick={handlePaymentButtonClick}
+                onClick={() => setIsPaymentModalOpen(true)}
                 disabled={loading}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors text-sm font-semibold"
               >
@@ -528,6 +516,7 @@ const FinalEnquiryPage = () => {
         </div>
       </div>
 
+      {/* PaymentModal with currency dropdown */}
       <PaymentModal
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
@@ -535,7 +524,9 @@ const FinalEnquiryPage = () => {
         loading={loading}
         estimatedCost={estimatedCost}
       />
+
       <Bottom />
+
       {/* React-Toastify container */}
       <ToastContainer
         autoClose={5000}

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { encrypt } from "@/utils/ccavutil";
 
 export async function POST(req) {
-  const { amount } = await req.json();
+  const { amount , currency } = await req.json();
 
   // CCAvenue credentials
   const merchantId = process.env.CCA_MERCHANT_ID;
@@ -15,9 +15,9 @@ export async function POST(req) {
   const payload = {
     merchant_id: merchantId,
     order_id: orderId,
-    amount: amount,
-    currency: "INR",
-    redirect_url: `${redirectUrl}?order_id=${orderId}&amount=${amount}&currency=INR&status=success`,
+    amount,
+    currency,
+    redirect_url: `${redirectUrl}?order_id=${orderId}&amount=${amount}&currency=${currency}&status=success`,
     cancel_url: `${cancelUrl}?status=cancelled`,
     language: "EN",
   };
