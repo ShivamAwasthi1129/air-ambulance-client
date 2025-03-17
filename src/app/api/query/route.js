@@ -7,7 +7,7 @@ export const POST = async (req) => {
   try {
     await connectToDatabase();
 
-    const { segments, userInfo, tripType } = await req.json();
+    const { segments, userInfo, tripType , flightType } = await req.json();
     const { name, email, phone, ip, city, region, country, loc, postal, timezone } = userInfo;
 
     const newUserQuery = new UserQuery({
@@ -23,7 +23,8 @@ export const POST = async (req) => {
         postal
       },
       tripType,
-      segments
+      segments,
+      flightType,
     });
 
     await newUserQuery.save();
@@ -90,6 +91,7 @@ export const POST = async (req) => {
     <h3>Trip Details</h3>
     <div class="details">
         <p><strong>Trip Type:</strong> ${tripType}</p>
+        <p><strong>Flight Type:</strong> ${flightType}</p>
 
         ${segments.map(
           (segment) => `<div class="segment">

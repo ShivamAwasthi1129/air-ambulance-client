@@ -10,7 +10,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 // Icons
-import { FaWhatsapp } from "react-icons/fa";
+import { FaWhatsapp, FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { AiOutlineMail, AiOutlineCheckCircle } from "react-icons/ai";
 import { IoIosAirplane, IoMdSpeedometer } from "react-icons/io";
 import { BsFillLuggageFill, BsFillLightningFill } from "react-icons/bs";
@@ -130,7 +130,7 @@ const FlightCard = ({
   isMultiCity,
   readOnly = false,
 }) => {
-  const router = useRouter();          // <-- Next.js 13 router
+  const router = useRouter();          
   const [activeDetailsId, setActiveDetailsId] = useState(null);
   const [parsedData, setParsedData] = useState(null);
 
@@ -156,7 +156,11 @@ const FlightCard = ({
   // For "Proceed to Pay" spinner
   const [isProceeding, setIsProceeding] = useState(false);
 
-  // On mount, load searchData + user + old snapshots
+  // Send button states
+  // 'idle' | 'sending' | 'sent'
+  const [whatsAppSendState, setWhatsAppSendState] = useState("idle");
+  const [emailSendState, setEmailSendState] = useState("idle");
+
   useEffect(() => {
     const data = sessionStorage.getItem("searchData");
     if (data) setParsedData(JSON.parse(data));
@@ -185,7 +189,7 @@ const FlightCard = ({
     setCombinedPreview(combined);
   };
 
-  // Share triggers
+  // SHARE triggers
   const openWhatsAppModal = async () => {
     await generateCombinedPreview();
     setShowWhatsAppModal(true);
@@ -194,8 +198,14 @@ const FlightCard = ({
     await generateCombinedPreview();
     setShowEmailModal(true);
   };
-  const closeWhatsAppModal = () => setShowWhatsAppModal(false);
-  const closeEmailModal = () => setShowEmailModal(false);
+  const closeWhatsAppModal = () => {
+    setShowWhatsAppModal(false);
+    setWhatsAppSendState("idle"); // reset state
+  };
+  const closeEmailModal = () => {
+    setShowEmailModal(false);
+    setEmailSendState("idle"); // reset state
+  };
 
   // For flight details expand/collapse
   const setCardRef = (flightId, node) => {
@@ -241,6 +251,12 @@ const FlightCard = ({
         console.error("Screenshot failed: ", err);
         toast.error("Screenshot capture failed!");
       }
+    } else if (!isChecked) {
+      // If user unchecks, remove from snapshots:
+      const newShots = { ...snapshots };
+      delete newShots[flight._id];
+      setSnapshots(newShots);
+      sessionStorage.setItem("flightShots", JSON.stringify(newShots));
     }
   };
 
@@ -277,7 +293,9 @@ const FlightCard = ({
     return `${hh}:${mm}`;
   }
 
-  // Slide images
+  // ---------------------------
+  //  Image Slider with arrows
+  // ---------------------------
   const ImageSlider = ({ aircraftGallery }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const images = [
@@ -286,6 +304,7 @@ const FlightCard = ({
       aircraftGallery?.cockpit ? Object.values(aircraftGallery.cockpit)[0] : null,
     ].filter(Boolean);
 
+    // Auto-slide every 4s
     useEffect(() => {
       if (images.length > 1) {
         const interval = setInterval(() => {
@@ -294,6 +313,18 @@ const FlightCard = ({
         return () => clearInterval(interval);
       }
     }, [images]);
+
+    const handlePrev = (e) => {
+      e.stopPropagation();
+      // If you want to disable auto-sliding on manual click, you can do so here
+      setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    };
+
+    const handleNext = (e) => {
+      e.stopPropagation();
+      // If you want to disable auto-sliding on manual click, you can do so here
+      setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+    };
 
     if (!images.length) {
       return (
@@ -305,8 +336,9 @@ const FlightCard = ({
 
     return (
       <div className="relative w-full h-[22rem] overflow-hidden rounded-2xl">
+        {/* Slide container */}
         <div
-          className="flex transition-transform duration-700"
+          className="flex transition-transform duration-700 h-full"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
         >
           {images.map((imgSrc, i) => (
@@ -314,10 +346,34 @@ const FlightCard = ({
               key={i}
               src={imgSrc}
               alt={`Aircraft view ${i}`}
-              className="h-[22rem] object-cover flex-shrink-0"
+              className="w-full h-full object-cover flex-shrink-0"
             />
           ))}
         </div>
+
+        {/* Left Arrow */}
+        {images.length > 1 && (
+          <button
+            onClick={handlePrev}
+            className="absolute top-1/2 left-2 transform -translate-y-1/2 
+                       bg-black/30 text-white p-2 rounded-full 
+                       hover:bg-black/50 z-10"
+          >
+            <FaArrowLeft size={20} />
+          </button>
+        )}
+
+        {/* Right Arrow */}
+        {/* {images.length > 1 && (
+          <button
+            onClick={handleNext}
+            className="absolute top-1/2 right-2 transform -translate-y-1/2 
+                       bg-black/30 text-white p-2 rounded-full 
+                       hover:bg-black/50 z-10"
+          >
+            <FaArrowRight size={20} />
+          </button>
+        )} */}
       </div>
     );
   };
@@ -330,6 +386,8 @@ const FlightCard = ({
     }
 
     try {
+      setWhatsAppSendState("sending");
+
       const file = dataURLtoFile(combinedPreview, "combined_flights.png");
       const formData = new FormData();
       formData.append("profile", file);
@@ -343,6 +401,7 @@ const FlightCard = ({
       if (!result.success) {
         console.error("Upload error:", result);
         toast.error(`Upload error: ${result.error || "Unknown error"}`);
+        setWhatsAppSendState("idle");
         return;
       }
       const s3Link = result.secureUrl;
@@ -369,25 +428,30 @@ const FlightCard = ({
         if (!fleetEnquiryResponse.ok) {
           console.error("Error sending data to fleet-enquiry:", fleetEnquiryResponse);
           toast.error("Failed to send data to fleet-enquiry API.");
+          setWhatsAppSendState("idle");
           return;
         }
         const fleetEnquiryData = await fleetEnquiryResponse.json();
         console.log("fleet-enquiry response:", fleetEnquiryData);
         toast.success("Successfully sent data to fleet-enquiry API!");
+
+        // Done sending
+        setWhatsAppSendState("sent");
       } catch (err) {
         console.error("Error in POST request to fleet-enquiry API:", err);
         toast.error("Failed to send data to fleet-enquiry API.");
+        setWhatsAppSendState("idle");
       }
 
-      // Clear states
+      // Clean up if you want:
       setCheckedFlights({});
       setSnapshots({});
       sessionStorage.removeItem("flightShots");
       setCombinedPreview(null);
-      closeWhatsAppModal();
     } catch (err) {
       console.error("Error in uploading (WhatsApp)", err);
       toast.error("Something went wrong uploading images.");
+      setWhatsAppSendState("idle");
     }
   };
 
@@ -399,6 +463,8 @@ const FlightCard = ({
     }
 
     try {
+      setEmailSendState("sending");
+
       const file = dataURLtoFile(combinedPreview, "combined_flights.png");
       const formData = new FormData();
       formData.append("profile", file);
@@ -411,22 +477,24 @@ const FlightCard = ({
       if (!result.success) {
         console.error("Upload error:", result);
         toast.error(`Upload error: ${result.error || "Unknown error"}`);
+        setEmailSendState("idle");
         return;
       }
       const s3Link = result.secureUrl;
       toast.success("Image uploaded successfully to S3!");
 
-      // (Optionally send an email or do more with s3Link)
+      // (Optionally send an actual email, etc.)
+      setEmailSendState("sent");
 
-      // Clear states
+      // Clean up
       setCheckedFlights({});
       setSnapshots({});
       sessionStorage.removeItem("flightShots");
       setCombinedPreview(null);
-      closeEmailModal();
     } catch (err) {
       console.error("Error in uploading (Email)", err);
       toast.error("Something went wrong uploading images.");
+      setEmailSendState("idle");
     }
   };
 
@@ -555,7 +623,8 @@ const FlightCard = ({
                         {/* FROM */}
                         <div>
                           <p className="font-semibold">
-                            {parsedData?.segments?.[currentTripIndex]?.fromIATA || "DEL"}{" "}
+                            {parsedData?.segments?.[currentTripIndex]?.fromIATA ||
+                              "DEL"}{" "}
                             -{" "}
                             {parsedData?.segments?.[currentTripIndex]?.departureTime ||
                               "21:35"}
@@ -609,13 +678,13 @@ const FlightCard = ({
                             <MdAirlineSeatReclineExtra size={22} className="mr-1" />
                             {flight.fleetDetails.seatCapacity} | 
                           </span>
-                          <span className="text-base md:text-lg font-bold text-gray-600 flex items-center mr-2">
-                            <IoMdSpeedometer size={22} className="mr-1" />
-                            {flight.fleetDetails.maxSpeed} nm |
-                          </span>
                           <span className="text-base md:text-lg font-bold text-gray-600 flex items-center">
                             <BsFillLuggageFill size={22} className="mr-1" />
-                            {flight.fleetDetails.luggage}
+                            {flight.fleetDetails.luggage} | 
+                          </span>
+                          <span className="text-base md:text-lg font-bold text-gray-600 flex items-center mr-2 ml-2">
+                            <IoMdSpeedometer size={22} className="mr-1" />
+                            {flight.fleetDetails.maxSpeed} nm 
                           </span>
                         </div>
                       </div>
@@ -677,22 +746,23 @@ const FlightCard = ({
 
                       {/* Bottom actions: check/share/select */}
                       {!readOnly && (
-                        <div className="flex items-start justify-between mb-4 mt-4 pt-2 border-t border-gray-300">
+                        <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-4 mt-4 pt-2 border-t border-gray-300">
                           {/* LEFT: checkbox + share */}
-                          <div className="flex items-end">
-                            <label className="flex items-start flex-col">
+                          <div className="flex items-center mt-2">
+                            {/* Add some space between the checkbox and the label text */}
+                            <label className="flex items-center cursor-pointer">
                               <input
                                 type="checkbox"
-                                className="w-4 h-4"
+                                className="w-4 h-4 mr-2"
                                 checked={checkedFlights[flight._id] || false}
                                 onChange={(e) => handleCheckboxChange(flight, e)}
                               />
-                              <span className="text-xs">Select for sharing</span>
+                              <span className="text-sm">Select for sharing</span>
                             </label>
 
                             <button
                               onClick={openWhatsAppModal}
-                              className="flex flex-col items-center text-green-600 hover:text-green-700 mx-2"
+                              className="flex flex-col items-center text-green-600 hover:text-green-700 mx-3"
                             >
                               <FaWhatsapp className="text-2xl" />
                               <span className="text-xs mt-1">Send via WhatsApp</span>
@@ -1018,11 +1088,25 @@ const FlightCard = ({
               className="border border-gray-300 w-full p-2 rounded mb-4"
               placeholder="+1234567890"
             />
+
             <button
               onClick={handleSendWhatsApp}
-              className="bg-green-600 text-white px-4 py-2 rounded"
+              disabled={whatsAppSendState === "sending" || whatsAppSendState === "sent"}
+              className="bg-green-600 text-white px-4 py-2 rounded flex items-center justify-center"
             >
-              Send
+              {whatsAppSendState === "sending" ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  Sending...
+                </>
+              ) : whatsAppSendState === "sent" ? (
+                <>
+                  <AiOutlineCheckCircle className="text-white mr-2" />
+                  Sent
+                </>
+              ) : (
+                "Send"
+              )}
             </button>
           </div>
         </div>
@@ -1064,11 +1148,25 @@ const FlightCard = ({
               className="border border-gray-300 w-full p-2 rounded mb-4"
               placeholder="name@example.com"
             />
+
             <button
               onClick={handleSendEmail}
-              className="bg-blue-600 text-white px-4 py-2 rounded"
+              disabled={emailSendState === "sending" || emailSendState === "sent"}
+              className="bg-blue-600 text-white px-4 py-2 rounded flex items-center justify-center"
             >
-              Send
+              {emailSendState === "sending" ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  Sending...
+                </>
+              ) : emailSendState === "sent" ? (
+                <>
+                  <AiOutlineCheckCircle className="text-white mr-2" />
+                  Sent
+                </>
+              ) : (
+                "Send"
+              )}
             </button>
           </div>
         </div>
@@ -1080,7 +1178,6 @@ const FlightCard = ({
         hideProgressBar={false}
         newestOnTop={false}
         closeOnClick
-        // The two lines below ensure the toast definitely disappears after 5s
         pauseOnHover={false}
         pauseOnFocusLoss={false}
         draggable={false}

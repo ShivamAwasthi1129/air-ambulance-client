@@ -67,15 +67,41 @@ const NavBar = () => {
   // ----------------------------------------------------------------
   const loadUserFromSession = () => {
     try {
-      const storedUser = sessionStorage.getItem("user");
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-      } else if (sessionStorage.getItem("userVerified") === "true") {
+      // 1) First, see if "user" object was stored directly
+      // const storedUser = sessionStorage.getItem("user");
+      // if (storedUser) {
+      //   setUser(JSON.parse(storedUser));
+      //   return;
+      // }
+
+      // 2) If no direct "user", but userVerified = true, try retrieving from searchData
+      if (sessionStorage.getItem("userVerified") === "true") {
         const storedSearchData = sessionStorage.getItem("searchData");
+        const storedLoginData = sessionStorage.getItem("loginData");
         if (storedSearchData) {
           const searchData = JSON.parse(storedSearchData);
-          if (searchData.userInfo && searchData.userInfo.email) {
-            setUser({ email: searchData.userInfo.email });
+
+          // Attempt to get email from userInfo
+          let finalEmail = searchData?.userInfo?.email || "";
+          // If that fails, fallback to loginData
+          if (!finalEmail && storedLoginData) {
+            const loginData = JSON.parse(storedLoginData);
+            finalEmail = loginData?.email || "";
+          }
+
+          if (finalEmail) {
+            // We can store user object with just the email (or phone, name, etc.)
+            setUser({ email: finalEmail });
+            return;
+          }
+        }
+
+        // If we only have loginData
+        if (storedLoginData) {
+          const loginData = JSON.parse(storedLoginData);
+          if (loginData?.email) {
+            setUser({ email: loginData.email });
+            return;
           }
         }
       }
@@ -120,7 +146,6 @@ const NavBar = () => {
   // Normal login with email/password
   // ----------------------------------------------------------------
   const handleLoginClick = async () => {
-    // Clear any existing error state
     setIsLoggingIn(true);
 
     // Check for empty fields
@@ -138,7 +163,6 @@ const NavBar = () => {
       });
 
       if (!response.ok) {
-        // If the response is not 200, handle it
         const errorData = await response.json();
         if (errorData.error) {
           toast.error(errorData.error);
@@ -179,7 +203,7 @@ const NavBar = () => {
         // Mark user as verified
         sessionStorage.setItem("userVerified", "true");
         toast.success("Logged in successfully!");
-        
+
         // Close and reset
         setIsLoginModalOpen(false);
         setEmail("");
@@ -316,8 +340,6 @@ const NavBar = () => {
 
   return (
     <>
-     
-
       {/* --------------------------------- NAV BAR --------------------------------- */}
       <nav className="w-full z-20">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -573,8 +595,9 @@ const NavBar = () => {
           </div>
         </div>
       )}
-       {/* ToastContainer at the top level */}
-       <ToastContainer
+
+      {/* ToastContainer at the top level */}
+      <ToastContainer
         autoClose={4000}
         hideProgressBar={false}
         newestOnTop={false}

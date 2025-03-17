@@ -1,5 +1,4 @@
-"use client"; // Next.js App Router
-
+"use client";
 import React, { useEffect, useState } from "react";
 import { IoIosAirplane } from "react-icons/io";
 import { BsExclamationTriangle } from "react-icons/bs";
@@ -29,25 +28,19 @@ const FinalEnquiryPage = () => {
   const [userData, setUserData] = useState({});
   const [loading, setLoading] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-
-  // Track WhatsApp "Sending..." state
   const [isWhatsAppSending, setIsWhatsAppSending] = useState(false);
-  // Track Email "Sending..." state
   const [isEmailSending, setIsEmailSending] = useState(false);
-
   // 1) Read searchData from sessionStorage & fallback to loginData for user details
   useEffect(() => {
     const storedData = sessionStorage.getItem("searchData");
     if (storedData) {
       const parsedSearchData = JSON.parse(storedData);
       setSearchData(parsedSearchData);
-
       // Extract user info from searchData.userInfo
       const userInfo = parsedSearchData.userInfo || {};
       let foundName = userInfo.name || "";
       let foundPhone = userInfo.phone || "";
       let foundEmail = userInfo.email || "";
-
       // If name/phone is missing, try to get from loginData
       if (!foundName || !foundPhone) {
         const storedLoginData = sessionStorage.getItem("loginData");
@@ -58,7 +51,6 @@ const FinalEnquiryPage = () => {
           foundEmail = foundEmail || parsedLoginData.email || "";
         }
       }
-
       // Finally set userData in state
       setUserData({
         name: foundName,
@@ -68,7 +60,6 @@ const FinalEnquiryPage = () => {
     }
 
   }, []);
-
   // 2) Fetch flights for each segment, filter by selected registrationNo
   useEffect(() => {
     const fetchAllSegments = async () => {
@@ -112,7 +103,6 @@ const FinalEnquiryPage = () => {
       fetchAllSegments();
     }
   }, [searchData]);
-
   if (!searchData) {
     return (
       <div className="p-4 text-center">
@@ -163,20 +153,14 @@ const FinalEnquiryPage = () => {
   // Summation for cost details
   const allSelectedFlights = fetchedSegmentsData.flat();
   // Parse flight.totalPrice, e.g. "$ 650,000"
-  const totalFlightCost = allSelectedFlights.reduce((acc, flight) => {
+  const estimatedCost = allSelectedFlights.reduce((acc, flight) => {
     if (!flight.totalPrice) return acc;
     const numericPrice = parseInt(flight.totalPrice.replace(/\D+/g, ""), 10) || 0;
     return acc + numericPrice;
   }, 0);
-
-  // Example: airport handling = 700 * number of segments
-  const airportHandling = 700 * searchData.segments.length;
-  const estimatedCost = totalFlightCost + airportHandling;
-  // const gstAmount = Math.round(subTotal * 0.18); 
-
   // Updated: POST to /api/booking-request, using react-toastify
   const sendWhatsAppMessage = async () => {
-    const phoneNumber = "+919958241284"; // The number to which we say we sent
+    const phoneNumber = "91 9958241284"; // The number to which we say we sent
     setIsWhatsAppSending(true);
 
     // 1. Show an "info" toast quickly
@@ -253,9 +237,6 @@ const FinalEnquiryPage = () => {
           segments: searchData.segments,
           user: userData, // includes name, phone, email
           tripType: searchData.tripType,
-          airportHandling,
-          // subTotal,
-          // gstAmount,
           estimatedCost,
         }),
       });
@@ -358,8 +339,8 @@ const FinalEnquiryPage = () => {
       startY: doc.lastAutoTable.finalY + 25,
       head: [["Description", "Amount (₹)"]],
       body: [
-        ["Total Flying Cost", totalFlightCost.toLocaleString()],
-        ["Total Handling Cost", airportHandling.toLocaleString()],
+        ["Total Flying Cost", estimatedCost.toLocaleString()],
+        // ["Total Handling Cost", airportHandling.toLocaleString()],
         // ["Subtotal", subTotal.toLocaleString()],
         // ["GST @ 18%", gstAmount.toLocaleString()],
         [
@@ -494,24 +475,16 @@ const FinalEnquiryPage = () => {
             {/* Cost breakdown */}
             <div className="flex justify-between mb-2">
               <span>Flying Cost</span>
-              <span>{formatUSD(totalFlightCost)}</span>
-            </div>
-            <div className="flex justify-between mb-2">
-              <span>Airport Handling Charges</span>
-              <span>{formatUSD(airportHandling)}</span>
-            </div>
-
-
-            <div className="flex justify-between items-center font-bold text-lg mb-6 bg-yellow-100 px-3 py-2 rounded-md text-yellow-800 shadow-inner">
-              <span>Estimated Cost</span>
               <span>{formatUSD(estimatedCost)}</span>
             </div>
-
+            <div className="flex justify-between items-center font-bold text-lg mb-6 bg-yellow-100 px-3 py-2 rounded-md text-yellow-800 shadow-inner">
+              <span>Approx cost ~</span>
+              <span>{formatUSD(estimatedCost)}</span>
+            </div>
             <div className="text-gray-600 text-sm border border-gray-100 rounded p-3 mb-4 bg-gray-50">
               JetSteals grants you the opportunity to enjoy the luxury
               and convenience of flying private at commercial prices.
             </div>
-
             {/* Buttons */}
             <div className="flex justify-between space-2 mb-4">
               <button
@@ -562,9 +535,7 @@ const FinalEnquiryPage = () => {
         loading={loading}
         estimatedCost={estimatedCost}
       />
-
       <Bottom />
-
       {/* React-Toastify container */}
       <ToastContainer
         autoClose={5000}
@@ -572,7 +543,6 @@ const FinalEnquiryPage = () => {
         newestOnTop={false}
         closeOnClick
         rtl={false}
-        // The three lines below ensure the toast definitely closes after 5s
         pauseOnFocusLoss={false}
         pauseOnHover={false}
         draggable={false}

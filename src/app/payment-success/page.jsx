@@ -3,6 +3,7 @@
 import React, { Suspense } from 'react';
 import { useSearchParams } from "next/navigation";
 import { AiOutlineCheckCircle } from 'react-icons/ai';
+import NavBar from '../components/Navbar';
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
@@ -11,8 +12,17 @@ function PaymentSuccessContent() {
   const amount = searchParams.get('amount');
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-green-400 to-blue-500">
+    <div className="min-h-screen flex items-center justify-center flex-col bg-gradient-to-r from-green-400 to-blue-500">
+      <div
+        className="w-full bg-cover absolute top-0"
+        style={{
+          backgroundImage:
+            "url('https://img.freepik.com/free-photo/airplane-runway-airport-sunset-travel-concept_587448-8154.jpg?t=st=1739105999~exp=1739109599~hmac=ab95500395c06198c3f2190d29da1b0c41ca0529e115404f07b822f31749eccc&w=1380')"
+        }}>
+        <NavBar />
+      </div>
       <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
+
         <div className="flex flex-col items-center">
           <AiOutlineCheckCircle className="text-green-500 animate-bounce" size={64} />
           <h1 className="mt-4 text-3xl font-bold text-gray-800">Payment Successful!</h1>

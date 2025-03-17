@@ -31,13 +31,18 @@ export const SearchBar = () => {
   const [focusedSegmentIndex, setFocusedSegmentIndex] = useState(null);
   const [focusedField, setFocusedField] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [flightType, setFlightType] = useState("");
+
+  // Default flightType
+  const [flightType, setFlightType] = useState("Private Jet");
+
+  // Personal info fields
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [countryCode, setCountryCode] = useState("+91");
   const [email, setEmail] = useState("");
   const [agreedToPolicy, setAgreedToPolicy] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
+
   const [refreshKey, setRefreshKey] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isUserInfoModalOpen, setIsUserInfoModalOpen] = useState(false);
@@ -51,70 +56,60 @@ export const SearchBar = () => {
   useEffect(() => {
     const savedSearchData = sessionStorage.getItem("searchData");
     if (savedSearchData) {
-      // If session data exists, load it
       const parsed = JSON.parse(savedSearchData);
+
       if (parsed.tripType) setTripType(parsed.tripType);
       if (parsed.segments) setSegments(parsed.segments);
+
+      // if flightType was stored at top-level in older sessions or inside userInfo
+      if (parsed.flightType) {
+        setFlightType(parsed.flightType);
+      } else if (parsed.userInfo && parsed.userInfo.flightType) {
+        setFlightType(parsed.userInfo.flightType);
+      }
+
       if (parsed.userInfo) setUserInfo(parsed.userInfo);
       if (parsed.tripType === "multicity") {
         setShowMultiCityDetails(true);
       }
     } else {
-      // No session data => set default "from" (Dubai) and "to" (Delhi)
+      // No session data => set default airports for "from" & "to"
       setSegments((prev) => {
         const updated = [...prev];
-
-        const dxbAirport = {
-          name: "Dubai International Airport",
-          iata_code: "DXB",
-          icao_code: "OMDB",
-          city: "Dubai",
-          country: "UAE",
-        };
         updated[0] = {
           ...updated[0],
-          from: `${dxbAirport.name} (${dxbAirport.iata_code})`,
-          fromCity: dxbAirport.city,
-          fromIATA: dxbAirport.iata_code,
-          fromICAO: dxbAirport.icao_code,
-        };
-
-        const delAirport = {
-          name: "Indira Gandhi International Airport",
-          iata_code: "DEL",
-          icao_code: "VIDP",
-          city: "New Delhi",
-          country: "India",
-        };
-        updated[0] = {
-          ...updated[0],
-          to: `${delAirport.name} (${delAirport.iata_code})`,
-          toCity: delAirport.city,
-          toIATA: delAirport.iata_code,
-          toICAO: delAirport.icao_code,
+          from: "Dubai International Airport (DXB)",
+          fromCity: "Dubai",
+          fromIATA: "DXB",
+          fromICAO: "OMDB",
+          to: "Indira Gandhi International Airport (DEL)",
+          toCity: "New Delhi",
+          toIATA: "DEL",
+          toICAO: "VIDP",
         };
         return updated;
       });
     }
 
-    // Also check if user is verified
+    // Check if user is verified
     const userHasVerified = sessionStorage.getItem("userVerified");
     if (userHasVerified === "true") {
       setIsVerified(true);
     }
   }, []);
 
-  // (B) Whenever tripType, segments, or userInfo changes, store in session
+  // (B) Whenever tripType, segments, userInfo, or flightType changes, save to session
   useEffect(() => {
     const dataToSave = {
       tripType,
+      flightType,
       segments,
       userInfo,
     };
     sessionStorage.setItem("searchData", JSON.stringify(dataToSave));
-  }, [tripType, segments, userInfo]);
+  }, [tripType, flightType, segments, userInfo]);
 
-  // (C) Collapse multi-city when user clicks outside
+  // (C) Collapse multi-city when user clicks outside container
   useEffect(() => {
     function handleDocClick(e) {
       if (!containerRef.current) return;
@@ -170,7 +165,7 @@ export const SearchBar = () => {
     fetchAirports();
   }, [searchQuery]);
 
-  // (F) Fetch IP info on mount
+  // (F) Fetch IP info on mount (optional / fallback)
   useEffect(() => {
     async function fetchIP() {
       try {
@@ -229,7 +224,6 @@ export const SearchBar = () => {
     if (index === null || !field) return;
 
     const updatedSegments = [...segments];
-
     if (field === "from") {
       updatedSegments[index] = {
         ...updatedSegments[index],
@@ -264,17 +258,27 @@ export const SearchBar = () => {
     setSegments(updated);
   };
 
+  // Multi-city: next day's date for newly added segment
   const handleAddCity = () => {
-    setSegments((prev) => [
-      ...prev,
-      {
-        from: prev[prev.length - 1].to || "",
-        to: "",
-        departureDate: new Date().toISOString().split("T")[0],
-        departureTime: "12:00",
-        passengers: 1,
-      },
-    ]);
+    setSegments((prev) => {
+      const lastSegment = prev[prev.length - 1];
+      let lastDateObj = new Date(lastSegment.departureDate);
+      if (isNaN(lastDateObj.getTime())) {
+        lastDateObj = new Date();
+      }
+      lastDateObj.setDate(lastDateObj.getDate() + 1);
+      const nextDayISO = lastDateObj.toISOString().split("T")[0];
+      return [
+        ...prev,
+        {
+          from: lastSegment.to || "",
+          to: "",
+          departureDate: nextDayISO,
+          departureTime: "12:00",
+          passengers: 1,
+        },
+      ];
+    });
   };
 
   const handleRemoveCity = (index) => {
@@ -284,55 +288,72 @@ export const SearchBar = () => {
   const handleSearch = async () => {
     setIsLoading(true);
     try {
-      // (A) If user not verified, ensure personal fields are filled
-      if (!isVerified) {
-        if (
-          !name.trim() ||
-          !phone.trim() ||
-          !email.trim() ||
-          !flightType ||
-          !agreedToPolicy
-        ) {
-          toast.error(
-            "Please fill out all fields and agree to the policy before searching."
-          );
-          setIsLoading(false);
-          return;
+      // If user IS verified, fetch name/email/phone from loginData session
+      if (isVerified) {
+        const storedLoginData = sessionStorage.getItem("loginData");
+        if (storedLoginData) {
+          const parsedLoginData = JSON.parse(storedLoginData);
+          // Overwrite your local states (or fallback if empty):
+          if (!name.trim()) setName(parsedLoginData.name || "");
+          if (!phone.trim()) setPhone(parsedLoginData.phone || "");
+          if (!email.trim()) setEmail(parsedLoginData.email || "");
         }
       }
 
+      // Because we might have just updated state, let's gather fresh fields from local state:
+      // (A small delay ensures setState is processed. Or just use fresh references below.)
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const currentName = name.trim();
+      const currentPhone = phone.trim();
+      const currentEmail = email.trim();
+
+      // If user is NOT verified, we do normal checks for the placeholders:
+      // Or if user is verified but the fields are still missing (just in case).
+      if (!currentName || !currentPhone || !currentEmail || !flightType) {
+        toast.error("Name, phone, and email are required fields.");
+        setIsLoading(false);
+        return;
+      }
+
       // Append the selected country code to the phone number
-      const fullPhoneNumber = `${countryCode}${phone}`;
+      const fullPhoneNumber = `${countryCode}${currentPhone}`;
+
+      // Merge user info
       const mergedUserInfo = {
         ...userInfo,
-        flightType,
-        name,
+        name: currentName,
         phone: fullPhoneNumber,
-        email,
+        email: currentEmail,
         agreedToPolicy,
       };
 
-      // (B) If not verified, attempt to send OTP
+      // (B) If user is NOT verified, attempt to send OTP
       if (!isVerified) {
         try {
           const response = await fetch("/api/otp", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              name,
+              name: currentName,
               phone: fullPhoneNumber,
-              email,
+              email: currentEmail,
             }),
           });
           const data = await response.json();
+
           if (data.message === "user already exists") {
             toast.info(
               data.message +
-              " with email : " + email + " Check your email for credentials"
+                " with email : " +
+                currentEmail +
+                " Check your email for credentials"
             );
             setIsLoading(false);
             return;
           }
+
+          // Show the OTP modal
           setIsUserInfoModalOpen(true);
         } catch (err) {
           console.error("Error sending OTP request:", err);
@@ -340,9 +361,10 @@ export const SearchBar = () => {
         }
       }
 
-      // (C) Prepare final data and store it
+      // (C) Prepare final data, store it, and optionally POST
       const finalData = {
         tripType,
+        flightType,
         segments,
         userInfo: mergedUserInfo,
       };
@@ -540,8 +562,9 @@ export const SearchBar = () => {
                   </label>
                   <input
                     type="datetime-local"
-                    value={`${segments[0].departureDate}T${segments[0].departureTime || "12:00"
-                      }`}
+                    value={`${segments[0].departureDate}T${
+                      segments[0].departureTime || "12:00"
+                    }`}
                     onChange={(e) => {
                       const [date, time] = e.target.value.split("T");
                       handleSegmentChange(0, "departureDate", date);
@@ -560,15 +583,16 @@ export const SearchBar = () => {
                   <select
                     value={segments[0].passengers}
                     onChange={(e) =>
-                      handleSegmentChange(0, "passengers", +e.target.value)
+                      handleSegmentChange(0, "passengers", e.target.value)
                     }
                     className="block w-full p-2 border rounded focus:outline-none"
                   >
-                    {[...Array(30).keys()].map((num) => (
+                    {[...Array(32).keys()].map((num) => (
                       <option key={num + 1} value={num + 1}>
                         {num + 1}
                       </option>
                     ))}
+                    <option value="33+">33+</option>
                   </select>
                 </div>
               </div>
@@ -632,7 +656,9 @@ export const SearchBar = () => {
                                 <ul className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
                                   {airports.slice(0, 5).map((airport, i) => (
                                     <li
-                                      key={airport.id ?? `airport-from-${index}-${i}`}
+                                      key={
+                                        airport.id ?? `airport-from-${index}-${i}`
+                                      }
                                       onClick={() =>
                                         handleSelectAirport(airport, index, "from")
                                       }
@@ -707,8 +733,9 @@ export const SearchBar = () => {
                             </label>
                             <input
                               type="datetime-local"
-                              value={`${segment.departureDate}T${segment.departureTime || "12:00"
-                                }`}
+                              value={`${segment.departureDate}T${
+                                segment.departureTime || "12:00"
+                              }`}
                               onChange={(e) => {
                                 const [date, time] = e.target.value.split("T");
                                 handleSegmentChange(index, "departureDate", date);
@@ -727,15 +754,16 @@ export const SearchBar = () => {
                             <select
                               value={segment.passengers}
                               onChange={(e) =>
-                                handleSegmentChange(index, "passengers", +e.target.value)
+                                handleSegmentChange(index, "passengers", e.target.value)
                               }
                               className="block w-full p-2 border rounded focus:outline-none"
                             >
-                              {[...Array(10).keys()].map((num) => (
+                              {[...Array(32).keys()].map((num) => (
                                 <option key={num + 1} value={num + 1}>
                                   {num + 1}
                                 </option>
                               ))}
+                              <option value="33+">33+</option>
                             </select>
                           </div>
 
@@ -772,7 +800,7 @@ export const SearchBar = () => {
               </>
             )}
 
-            {/* User Info Fields (shown if not verified) */}
+            {/* Show these fields only if NOT verified */}
             {!isVerified && (
               <div className="flex flex-wrap items-center justify-center gap-4 mb-4">
                 {/* Email */}
@@ -864,9 +892,7 @@ export const SearchBar = () => {
         </div>
 
         {/* (6) Conditionally render FilterAndFleetListing */}
-        {!isLoading && isVerified && (
-          <FilterAndFleetListing key={refreshKey} />
-        )}
+        {!isLoading && isVerified && <FilterAndFleetListing key={refreshKey} />}
       </div>
 
       {/* React-Toastify container */}

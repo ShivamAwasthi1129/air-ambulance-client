@@ -395,10 +395,7 @@ export const POST = async (req) => {
           <div style="padding:20px; border-top:1px solid #444;">
             <h3 style="margin-top:0; font-size:1rem; color:#fff;">Cost Breakdown</h3>
             <div style="font-size:0.9rem; color:#ccc; line-height:1.6;">
-              <p><strong>Airport Handling:</strong> $${airportHandling.toLocaleString()}</p>
-              <p><strong>Subtotal:</strong> $${subTotal.toLocaleString()}</p>
-              <p><strong>GST (18%):</strong> $${gstAmount.toLocaleString()}</p>
-              <p><strong style="color:#ffcc00;">Estimated Cost:</strong> $${estimatedCost.toLocaleString()}</p>
+              <p><strong style="color:#ffcc00;">Approx cost:</strong> $${estimatedCost.toLocaleString()}</p>
             </div>
           </div>
 

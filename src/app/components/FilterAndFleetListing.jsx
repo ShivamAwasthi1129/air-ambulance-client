@@ -450,7 +450,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                           hover:bg-green-500 focus:outline-none focus:ring-2 
                           focus:ring-green-400 focus:ring-offset-2 transition-all text-sm font-medium ml-2"
                       >
-                        Proceed to Enquiry
+                        Proceed to Pay
                       </button>
                     </Link>
                   )}
@@ -467,7 +467,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
-          className="w-[30%] p-6 bg-white px-10 mr-4 border border-blue-100 rounded-xl"
+          className="w-[25%] p-6 bg-white px-10 mr-4 border border-blue-100 rounded-xl"
         >
           <div className="flex items-center justify-between mb-6 border-b pb-2">
             <motion.h2

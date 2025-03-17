@@ -1,4 +1,5 @@
-"use client"; 
+// Icondiv.js
+"use client";
 import { GiCommercialAirplane } from "react-icons/gi";
 import { FaHelicopter } from "react-icons/fa6";
 import { RiFlightTakeoffLine } from "react-icons/ri";
@@ -8,34 +9,7 @@ import { CgAirplane } from "react-icons/cg";
 export const Icondiv = ({ flightType, setFlightType }) => {
   return (
     <div className="flex flex-wrap items-center justify-around gap-3 mb-4 w-1/2 bg-white rounded-xl border-2 border-gray-300 p-2 -mt-20">
-      <div
-        onClick={() => setFlightType("Helicopter")}
-        className={`cursor-pointer flex flex-col items-center p-2 rounded-md transition-colors ${
-          flightType === "Helicopter"
-            ? "bg-blue-600 text-white"
-            : "text-gray-700 hover:bg-gray-300"
-        }`}
-      >
-        <span
-          className={`cursor-pointer ${
-            flightType === "Helicopter"
-              ? "text-white"
-              : "text-[#a3a3a3] group-hover:text-[#2db0fc]"
-          }`}
-        >
-          <FaHelicopter style={{ fontSize: 40, padding: 4 }} />
-        </span>
-        <p
-          className={`text-[13px] m-0 ${
-            flightType === "Helicopter"
-              ? "text-white"
-              : "text-[#555454] group-hover:text-[#2db0fc]"
-          }`}
-        >
-          Helicopter
-        </p>
-      </div>
-
+      {/* Private Jet (Default) */}
       <div
         onClick={() => setFlightType("Private Jet")}
         className={`cursor-pointer flex flex-col items-center p-2 rounded-md transition-colors ${
@@ -64,6 +38,7 @@ export const Icondiv = ({ flightType, setFlightType }) => {
         </span>
       </div>
 
+      {/* Air Ambulance */}
       <div
         onClick={() => setFlightType("Air Ambulance")}
         className={`cursor-pointer flex flex-col items-center p-2 rounded-md transition-colors ${
@@ -92,6 +67,36 @@ export const Icondiv = ({ flightType, setFlightType }) => {
         </span>
       </div>
 
+      {/* Helicopter */}
+      <div
+        onClick={() => setFlightType("Helicopter")}
+        className={`cursor-pointer flex flex-col items-center p-2 rounded-md transition-colors ${
+          flightType === "Helicopter"
+            ? "bg-blue-600 text-white"
+            : "text-gray-700 hover:bg-gray-300"
+        }`}
+      >
+        <span
+          className={`cursor-pointer ${
+            flightType === "Helicopter"
+              ? "text-white"
+              : "text-[#a3a3a3] group-hover:text-[#2db0fc]"
+          }`}
+        >
+          <FaHelicopter style={{ fontSize: 40, padding: 4 }} />
+        </span>
+        <p
+          className={`text-[13px] m-0 ${
+            flightType === "Helicopter"
+              ? "text-white"
+              : "text-[#555454] group-hover:text-[#2db0fc]"
+          }`}
+        >
+          Helicopter
+        </p>
+      </div>
+
+      {/* Air Cargo */}
       <div
         onClick={() => setFlightType("Air Cargo")}
         className={`cursor-pointer flex flex-col items-center p-2 rounded-md transition-colors ${
@@ -120,6 +125,7 @@ export const Icondiv = ({ flightType, setFlightType }) => {
         </span>
       </div>
 
+      {/* Sea Plane */}
       <div
         onClick={() => setFlightType("Sea Plane")}
         className={`cursor-pointer flex flex-col items-center p-2 rounded-md transition-colors ${
