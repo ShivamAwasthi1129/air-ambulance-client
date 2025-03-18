@@ -12,18 +12,23 @@ const NavBar = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [user, setUser] = useState(null);
 
+  // Single input for either email or phone:
+  const [identifier, setIdentifier] = useState(""); // user-typed: email or phone
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [password, setPassword] = useState("");
   const [fetchedName, setFetchedName] = useState("");
+
+  // For password login
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // OTP states
-  const [returnedOtp, setReturnedOtp] = useState(""); 
+  const [returnedOtp, setReturnedOtp] = useState("");
   const [enteredOtp, setEnteredOtp] = useState("");
-  const [isOtpMode, setIsOtpMode] = useState(false);
-  const [otpSendStatus, setOtpSendStatus] = useState("idle"); 
+  // We want to show "Login via OTP" first, so default:
+  const [isOtpMode, setIsOtpMode] = useState(true);
+  const [otpSendStatus, setOtpSendStatus] = useState("idle");
 
   // Dropdown
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -33,12 +38,12 @@ const NavBar = () => {
   // Effects
   // ----------------------------------------------------------------
 
-  // On mount, load user from session
+  // Load user from session on mount
   useEffect(() => {
     loadUserFromSession();
   }, []);
 
-  // Listen for a custom event to re-load user
+  // Listen for custom event to re-load user
   useEffect(() => {
     const updateHandler = () => {
       loadUserFromSession();
@@ -67,36 +72,21 @@ const NavBar = () => {
   // ----------------------------------------------------------------
   const loadUserFromSession = () => {
     try {
-      // 1) First, see if "user" object was stored directly
-      // const storedUser = sessionStorage.getItem("user");
-      // if (storedUser) {
-      //   setUser(JSON.parse(storedUser));
-      //   return;
-      // }
-
-      // 2) If no direct "user", but userVerified = true, try retrieving from searchData
       if (sessionStorage.getItem("userVerified") === "true") {
         const storedSearchData = sessionStorage.getItem("searchData");
         const storedLoginData = sessionStorage.getItem("loginData");
         if (storedSearchData) {
           const searchData = JSON.parse(storedSearchData);
-
-          // Attempt to get email from userInfo
           let finalEmail = searchData?.userInfo?.email || "";
-          // If that fails, fallback to loginData
           if (!finalEmail && storedLoginData) {
             const loginData = JSON.parse(storedLoginData);
             finalEmail = loginData?.email || "";
           }
-
           if (finalEmail) {
-            // We can store user object with just the email (or phone, name, etc.)
             setUser({ email: finalEmail });
             return;
           }
         }
-
-        // If we only have loginData
         if (storedLoginData) {
           const loginData = JSON.parse(storedLoginData);
           if (loginData?.email) {
@@ -111,46 +101,174 @@ const NavBar = () => {
   };
 
   // ----------------------------------------------------------------
-  // Fetch phone number & name from your backend using email
+  // Fetch user data (email/phone) from your backend
   // ----------------------------------------------------------------
-  const handleFetchUserPhone = async () => {
-    if (!email) {
+  const handleFetchUserData = async () => {
+    if (!identifier) {
+      // If cleared, reset
+      setEmail("");
       setPhoneNumber("");
       setFetchedName("");
       return;
     }
+
     try {
-      const resp = await fetch(`/api/user/${encodeURIComponent(email)}`, {
-        method: "GET",
-      });
+      // This uses the same API route you mentioned:
+      // /api/user/${encodeURIComponent(emailOrPhone)}
+      const resp = await fetch(
+        `/api/user/${encodeURIComponent(identifier)}`,
+        { method: "GET" }
+      );
       if (!resp.ok) {
-        throw new Error("Failed to get user phone info");
+        throw new Error("Failed to get user info");
       }
       const userData = await resp.json();
 
+      // If your API returns an array:
       if (Array.isArray(userData) && userData.length > 0) {
-        setPhoneNumber(userData[0].phone || "");
-        setFetchedName(userData[0].name || "");
+        const userObj = userData[0];
+        setPhoneNumber(userObj.phone || "");
+        setEmail(userObj.email || "");
+        setFetchedName(userObj.name || "");
+      }
+      // If your API returns an object, adjust accordingly:
+      else if (userData && userData.phone) {
+        setPhoneNumber(userData.phone || "");
+        setEmail(userData.email || "");
+        setFetchedName(userData.name || "");
       } else {
+        // No data found
         setPhoneNumber("");
+        setEmail("");
         setFetchedName("");
       }
     } catch (err) {
-      console.error("Error fetching phone number:", err);
+      console.error("Error fetching user data:", err);
       setPhoneNumber("");
+      setEmail("");
       setFetchedName("");
     }
   };
 
   // ----------------------------------------------------------------
-  // Normal login with email/password
+  // Send OTP
+  // ----------------------------------------------------------------
+  const handleSendOtp = async () => {
+    // We need at least phone or email to send OTP
+    // For example, if your OTP is phone-based, phoneNumber must exist
+    if (!phoneNumber && !email) {
+      toast.error("Please enter a valid phone or email first.");
+      return;
+    }
+
+    setOtpSendStatus("sending");
+    try {
+      // Using the same path you had in your snippet:
+      const resp = await fetch("/api/user/signin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: fetchedName,
+          phone: phoneNumber,
+          email: email,
+        }),
+      });
+
+      if (!resp.ok) {
+        throw new Error("Failed to send OTP");
+      }
+      const data = await resp.json();
+      if (data.success) {
+        setReturnedOtp(data.otp?.toString() || "");
+        toast.success("OTP sent successfully");
+        setOtpSendStatus("sent");
+      } else {
+        toast.error("Failed to send OTP");
+        setOtpSendStatus("idle");
+      }
+    } catch (err) {
+      console.error("Error sending OTP:", err);
+      toast.error("Error sending OTP. Please try again.");
+      setOtpSendStatus("idle");
+    }
+  };
+
+  // ----------------------------------------------------------------
+  // Verify OTP
+  // ----------------------------------------------------------------
+  const handleVerifyOtp = async () => {
+    // Need phone or email plus the OTP
+    if ((!phoneNumber && !email) || !enteredOtp) {
+      toast.error("Please provide phone/email and OTP.");
+      return;
+    }
+
+    try {
+      // Example using your snippet's approach
+      const query = `/api/user/signin?email=${encodeURIComponent(
+        email
+      )}&otp=${encodeURIComponent(enteredOtp)}&phone=${encodeURIComponent(
+        phoneNumber
+      )}`;
+
+      const resp = await fetch(query, { method: "GET" });
+      if (!resp.ok) {
+        throw new Error("Failed to verify OTP");
+      }
+      const data = await resp.json();
+      if (
+        data.message &&
+        data.message.toLowerCase().includes("otp verified successfully")
+      ) {
+        toast.success("OTP verified successfully! Logging in...");
+
+        // Mark user as verified in session
+        const userLoginData = {
+          email,
+          phone: phoneNumber,
+          name: fetchedName,
+        };
+
+        const searchDataStr = sessionStorage.getItem("searchData");
+        let searchData = searchDataStr ? JSON.parse(searchDataStr) : {};
+        searchData.userInfo = { ...searchData.userInfo, ...userLoginData };
+        sessionStorage.setItem("searchData", JSON.stringify(searchData));
+        sessionStorage.setItem("loginData", JSON.stringify(userLoginData));
+        sessionStorage.setItem("userVerified", "true");
+
+        // Close and reset
+        setIsLoginModalOpen(false);
+        setIdentifier("");
+        setEmail("");
+        setPhoneNumber("");
+        setFetchedName("");
+        setEnteredOtp("");
+        setIsOtpMode(true);
+        setOtpSendStatus("idle");
+
+        window.location.reload();
+      } else {
+        toast.error("OTP verification failed. Please try again.");
+      }
+    } catch (err) {
+      console.error("Error verifying OTP:", err);
+      toast.error("Error verifying OTP. Please try again.");
+    }
+  };
+
+  // ----------------------------------------------------------------
+  // Normal (Password) login
   // ----------------------------------------------------------------
   const handleLoginClick = async () => {
     setIsLoggingIn(true);
 
-    // Check for empty fields
-    if (!email || !password) {
-      toast.error("Email and password are required.");
+    if (!email) {
+      toast.error("A valid email is required for password login.");
+      setIsLoggingIn(false);
+      return;
+    }
+    if (!password) {
+      toast.error("Password is required.");
       setIsLoggingIn(false);
       return;
     }
@@ -174,10 +292,10 @@ const NavBar = () => {
 
       const data = await response.json();
       if (data.token) {
-        // If successful, store user info
+        // If successful
         const userLoginData = {
           email,
-          name: data.name,
+          name: data.name || fetchedName,
           phone: phoneNumber,
           token: data.token,
         };
@@ -188,8 +306,9 @@ const NavBar = () => {
         searchData.userInfo = { ...searchData.userInfo, ...userLoginData };
         sessionStorage.setItem("searchData", JSON.stringify(searchData));
         sessionStorage.setItem("loginData", JSON.stringify(userLoginData));
+        sessionStorage.setItem("userVerified", "true");
 
-        // Optionally send final data to API
+        // Optionally send final data
         const finalDataFromSession = sessionStorage.getItem("searchData");
         if (finalDataFromSession) {
           const finalDataToSend = JSON.parse(finalDataFromSession);
@@ -200,14 +319,16 @@ const NavBar = () => {
           });
         }
 
-        // Mark user as verified
-        sessionStorage.setItem("userVerified", "true");
         toast.success("Logged in successfully!");
-
-        // Close and reset
         setIsLoginModalOpen(false);
+
+        // Reset
+        setIdentifier("");
         setEmail("");
+        setPhoneNumber("");
         setPassword("");
+        setFetchedName("");
+
         window.location.reload();
       } else if (data.error) {
         toast.error(data.error);
@@ -217,113 +338,6 @@ const NavBar = () => {
       toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoggingIn(false);
-    }
-  };
-
-  // ----------------------------------------------------------------
-  // Send OTP
-  // ----------------------------------------------------------------
-  const handleSendOtp = async () => {
-    if (!email) {
-      toast.error("Please enter an email first.");
-      return;
-    }
-    if (!phoneNumber) {
-      toast.error("Unable to fetch phone number. Please check your email.");
-      return;
-    }
-
-    setOtpSendStatus("sending");
-    try {
-      const resp = await fetch("/api/user/signin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: fetchedName,
-          phone: phoneNumber,
-          email: email,
-        }),
-      });
-
-      if (!resp.ok) {
-        throw new Error("Failed to send OTP");
-      }
-
-      const data = await resp.json();
-      if (data.success) {
-        setReturnedOtp(data.otp?.toString() || "");
-        toast.success("OTP sent successfully");
-        setOtpSendStatus("sent");
-      } else {
-        toast.error("Failed to send OTP");
-        setOtpSendStatus("idle");
-      }
-    } catch (err) {
-      console.error("Error sending OTP:", err);
-      toast.error("Error sending OTP. Please try again.");
-      setOtpSendStatus("idle");
-    }
-  };
-
-  // ----------------------------------------------------------------
-  // Verify OTP
-  // ----------------------------------------------------------------
-  const handleVerifyOtp = async () => {
-    if (!email || !phoneNumber || !enteredOtp) {
-      toast.error("Please ensure email, phone, and OTP are all provided.");
-      return;
-    }
-
-    try {
-      const query = `/api/user/signin?email=${encodeURIComponent(
-        email
-      )}&otp=${encodeURIComponent(enteredOtp)}&phone=${encodeURIComponent(
-        phoneNumber
-      )}`;
-
-      const resp = await fetch(query, { method: "GET" });
-      if (!resp.ok) {
-        throw new Error("Failed to verify OTP");
-      }
-
-      const data = await resp.json();
-      if (
-        data.message &&
-        data.message.toLowerCase().includes("otp verified successfully")
-      ) {
-        toast.success("OTP verified successfully! Logging in...");
-
-        // Now treat like normal login
-        const userLoginData = {
-          email,
-          name: fetchedName,
-          phone: phoneNumber,
-        };
-
-        const searchDataStr = sessionStorage.getItem("searchData");
-        let searchData = searchDataStr ? JSON.parse(searchDataStr) : {};
-        searchData.userInfo = { ...searchData.userInfo, ...userLoginData };
-        sessionStorage.setItem("searchData", JSON.stringify(searchData));
-        sessionStorage.setItem("loginData", JSON.stringify(userLoginData));
-        sessionStorage.setItem("userVerified", "true");
-
-        // Close and reset
-        setIsLoginModalOpen(false);
-        setEmail("");
-        setPhoneNumber("");
-        setPassword("");
-        setFetchedName("");
-        setEnteredOtp("");
-        setIsOtpMode(false);
-        setOtpSendStatus("idle");
-
-        window.location.reload();
-      } else {
-        toast.error("OTP verification failed. Please try again.");
-      }
-    } catch (err) {
-      console.error("Error verifying OTP:", err);
-      toast.error("Error verifying OTP. Please try again.");
     }
   };
 
@@ -430,12 +444,13 @@ const NavBar = () => {
             <button
               onClick={() => {
                 setIsLoginModalOpen(false);
+                setIdentifier("");
                 setEmail("");
                 setPhoneNumber("");
                 setPassword("");
                 setFetchedName("");
-                setIsOtpMode(false);
                 setEnteredOtp("");
+                setIsOtpMode(true);
                 setOtpSendStatus("idle");
               }}
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl"
@@ -444,46 +459,61 @@ const NavBar = () => {
               &times;
             </button>
 
-            {/* ---------------------- Toggle normal vs OTP mode --------------------- */}
+            {/* Toggle between OTP and Password modes */}
             <div className="flex justify-center mb-4">
-              <button
-                onClick={() => {
-                  setIsOtpMode(false);
-                  setOtpSendStatus("idle");
-                }}
-                className={`mr-2 px-3 py-1 border ${
-                  !isOtpMode ? "bg-gray-300" : "bg-white"
-                }`}
-              >
-                Login via Password
-              </button>
+              {/* First: OTP Login */}
               <button
                 onClick={() => {
                   setIsOtpMode(true);
                   setOtpSendStatus("idle");
                 }}
-                className={`px-3 py-1 border ${
+                className={`mr-2 px-3 py-1 border ${
                   isOtpMode ? "bg-gray-300" : "bg-white"
                 }`}
               >
                 Login via OTP
               </button>
+
+              {/* Second: Password Login */}
+              <button
+                onClick={() => {
+                  setIsOtpMode(false);
+                  setOtpSendStatus("idle");
+                }}
+                className={`px-3 py-1 border ${
+                  !isOtpMode ? "bg-gray-300" : "bg-white"
+                }`}
+              >
+                Login via Password
+              </button>
             </div>
 
-            {/* --------------------------- COMMON FIELDS ---------------------------- */}
-            {/* Email input */}
+            {/* The single identifier field (email or phone) */}
             <div className="mb-4">
               <input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onBlur={handleFetchUserPhone}
+                type="text"
+                placeholder="Enter phone or email"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                onBlur={handleFetchUserData}
                 className="w-full p-2 border rounded"
               />
             </div>
 
-            {/* Fetched phone number (read-only) */}
+            {/* If we fetched an email (when user typed phone), show it read-only */}
+            {email && (
+              <div className="mb-4">
+                <input
+                  type="text"
+                  placeholder="Email"
+                  value={email}
+                  readOnly
+                  className="w-full p-2 border rounded bg-gray-100"
+                />
+              </div>
+            )}
+
+            {/* If we fetched a phone (when user typed email), show it read-only */}
             {phoneNumber && (
               <div className="mb-4">
                 <input
@@ -496,14 +526,63 @@ const NavBar = () => {
               </div>
             )}
 
-            {/* --------------------------- NORMAL LOGIN ---------------------------- */}
+            {/* ----------------- OTP LOGIN SECTION ----------------- */}
+            {isOtpMode && (
+              <>
+                <h2 className="text-xl font-bold mb-4">Login via OTP</h2>
+
+                {/* Send OTP button */}
+                <button
+                  onClick={handleSendOtp}
+                  className="w-full py-3 bg-blue-500 text-white rounded hover:bg-blue-600 mb-4 flex items-center justify-center"
+                  disabled={
+                    otpSendStatus === "sending" || otpSendStatus === "sent"
+                  }
+                >
+                  {otpSendStatus === "sending" ? (
+                    <>
+                      <FaSpinner className="animate-spin mr-2" />
+                      Sending OTP...
+                    </>
+                  ) : otpSendStatus === "sent" ? (
+                    <>
+                      OTP Sent
+                      <FaCheckCircle className="ml-2 text-green-500" />
+                    </>
+                  ) : (
+                    "Send OTP"
+                  )}
+                </button>
+
+                {/* After OTP is sent, show verification field */}
+                {otpSendStatus === "sent" && (
+                  <>
+                    <div className="mb-4">
+                      <input
+                        type="text"
+                        placeholder="Enter OTP"
+                        value={enteredOtp}
+                        onChange={(e) => setEnteredOtp(e.target.value)}
+                        className="w-full p-2 border rounded"
+                      />
+                    </div>
+
+                    <button
+                      onClick={handleVerifyOtp}
+                      className="w-full py-3 bg-green-500 text-white rounded hover:bg-green-600"
+                    >
+                      Verify OTP
+                    </button>
+                  </>
+                )}
+              </>
+            )}
+
+            {/* ----------------- PASSWORD LOGIN SECTION ----------------- */}
             {!isOtpMode && (
               <>
-                <h2 className="text-xl font-bold mb-4">
-                  Login with Email/Password
-                </h2>
+                <h2 className="text-xl font-bold mb-4">Login with Password</h2>
 
-                {/* Password input */}
                 <div className="mb-4 relative">
                   <input
                     type={showPassword ? "text" : "password"}
@@ -524,7 +603,6 @@ const NavBar = () => {
                   </div>
                 </div>
 
-                {/* Normal (password) Login button */}
                 <button
                   onClick={handleLoginClick}
                   className="w-full py-3 bg-blue-500 text-white rounded hover:bg-blue-600 flex justify-center items-center"
@@ -541,62 +619,11 @@ const NavBar = () => {
                 </button>
               </>
             )}
-
-            {/* --------------------------- OTP LOGIN ---------------------------- */}
-            {isOtpMode && (
-              <>
-                <h2 className="text-xl font-bold mb-4">Login via OTP</h2>
-
-                {/* Button to send OTP */}
-                <button
-                  onClick={handleSendOtp}
-                  className="w-full py-3 bg-blue-500 text-white rounded hover:bg-blue-600 mb-4 flex items-center justify-center"
-                  disabled={otpSendStatus === "sending" || otpSendStatus === "sent"}
-                >
-                  {otpSendStatus === "sending" ? (
-                    <>
-                      <FaSpinner className="animate-spin mr-2" />
-                      Sending OTP..
-                    </>
-                  ) : otpSendStatus === "sent" ? (
-                    <>
-                      OTP Sent
-                      <FaCheckCircle className="ml-2 text-green-500" />
-                    </>
-                  ) : (
-                    "Send OTP"
-                  )}
-                </button>
-
-                {/* Show the verify fields only if OTP was sent successfully */}
-                {otpSendStatus === "sent" && (
-                  <>
-                    <div className="mb-4">
-                      <input
-                        type="text"
-                        placeholder="Enter OTP"
-                        value={enteredOtp}
-                        onChange={(e) => setEnteredOtp(e.target.value)}
-                        className="w-full p-2 border rounded"
-                      />
-                    </div>
-
-                    {/* Button to verify OTP */}
-                    <button
-                      onClick={handleVerifyOtp}
-                      className="w-full py-3 bg-green-500 text-white rounded hover:bg-green-600"
-                    >
-                      Verify OTP
-                    </button>
-                  </>
-                )}
-              </>
-            )}
           </div>
         </div>
       )}
 
-      {/* ToastContainer at the top level */}
+      {/* Toast notifications */}
       <ToastContainer
         autoClose={4000}
         hideProgressBar={false}
