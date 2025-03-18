@@ -332,9 +332,7 @@ const NavBar = () => {
   // ----------------------------------------------------------------
   const handleLogout = () => {
     setUser(null);
-    sessionStorage.removeItem("user");
-    sessionStorage.removeItem("userVerified");
-    sessionStorage.removeItem("loginData");
+    sessionStorage.clear();
     window.location.reload();
   };
 

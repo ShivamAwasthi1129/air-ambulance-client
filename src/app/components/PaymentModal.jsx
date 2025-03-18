@@ -59,7 +59,7 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, loading, estimatedCost }) =>
   // When user clicks Confirm Payment:
   //  - Send both `amount` and the chosen `selectedCurrency` to the parent
   const handleConfirmClick = () => {
-    onConfirm(amount, selectedCurrency);
+    onConfirm(amount, selectedCurrency, convertedCost);
   };
 
   return (

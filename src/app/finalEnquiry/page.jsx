@@ -114,14 +114,16 @@ const FinalEnquiryPage = () => {
   }
 
   // Payment API call - now accepts both amount and currency
-  const handlePayment = async (amount, currency) => {
+  const handlePayment = async (amount, currency, totalAmount) => {
     setLoading(true);
     try {
       const response = await fetch("/api/ccavenue", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          ...searchData,
           amount,
+          totalAmount,
           currency, 
         }),
       });
@@ -136,9 +138,9 @@ const FinalEnquiryPage = () => {
   };
 
   // Called by PaymentModal onConfirm
-  const handlePaymentConfirm = (amount, currency) => {
+  const handlePaymentConfirm = (amount, currency, totalAmount) => {
     setIsPaymentModalOpen(false);
-    handlePayment(amount, currency);
+    handlePayment(amount, currency, totalAmount);
   };
 
   // Compute total flying time
