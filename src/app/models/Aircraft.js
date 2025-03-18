@@ -88,7 +88,8 @@ const TravelModesSchema = new mongoose.Schema({
 
 const AircraftSchema = new mongoose.Schema({
     serialNumber: { type: Number, required: true },
-    additionalAmenities: { type: Map, of: AmenitiesSchema },
+    // additionalAmenities: { type: Map, of: AmenitiesSchema },
+    additionalAmenities: mongoose.Schema.Types.Mixed,
     aircraftGallery: AircraftGallerySchema,
     fleetDetails: FleetDetailsSchema,
     travelModes: TravelModesSchema
