@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { encrypt } from "@/utils/ccavutil";
+import Booking from "@/app/models/Booking";
 
 export async function POST(req) {
-  const { amount , currency } = await req.json();
+  const { amount , currency, flightType, segments, tripType, userInfo, totalAmount } = await req.json();
 
   // CCAvenue credentials
   const merchantId = process.env.CCA_MERCHANT_ID;
@@ -10,7 +11,21 @@ export async function POST(req) {
   const accessCode = process.env.CCA_ACCESS_CODE;
   const redirectUrl = `${process.env.LOCAL_URL}/api/ccavenue/response`; // Redirect URL after payment
   const cancelUrl = `${process.env.LOCAL_URL}/api/ccavenue/response`; // Cancel URL
-  const orderId = `ORD${Date.now()}`;
+
+  const bookingInfo = {
+    amount_paid: amount,
+    currency,
+    flight_type: flightType,
+    segments,
+    trip_type: tripType,
+    user_info: userInfo,
+    total_amount: totalAmount,
+    status: "pending"
+  }
+
+  // await Booking.create(bookingInfo);
+  const createdBooking = await Booking.create(bookingInfo);
+  const orderId = createdBooking._id.toString();
   // Prepare payload
   const payload = {
     merchant_id: merchantId,
