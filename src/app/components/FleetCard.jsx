@@ -599,7 +599,6 @@ const FlightCard = ({
                   See Flight Experience -&gt;
                 </p>
               </div>
-
               {/* RIGHT: flight details or amenities */}
               <div className="w-full md:w-[65%] absolute right-4 rounded-xl bg-stone-50 border border-stone-100">
                 <AnimatePresence mode="wait">
@@ -661,14 +660,14 @@ const FlightCard = ({
                         <div>
                           <p className="font-semibold">
                             {parsedData?.segments?.[currentTripIndex]?.fromIATA ||
-                              "DEL"}{" "}
+                              "DXB"}{" "}
                             -{" "}
                             {parsedData?.segments?.[currentTripIndex]?.departureTime ||
                               "21:35"}
                           </p>
                           <p className="text-sm text-gray-500">
                             {parsedData?.segments?.[currentTripIndex]?.fromCity ||
-                              "New Delhi"}
+                              "Dubai"}
                           </p>
                         </div>
 
@@ -697,12 +696,12 @@ const FlightCard = ({
                               <>
                                 <p className="font-semibold">
                                   {parsedData?.segments?.[currentTripIndex]?.toIATA ||
-                                    "LHR"}{" "}
+                                    "DEL"}{" "}
                                   - {arrivalTime}
                                 </p>
                                 <p className="text-sm text-gray-500">
                                   {parsedData?.segments?.[currentTripIndex]?.toCity ||
-                                    "Not found"}
+                                    "New Delhi"}
                                 </p>
                               </>
                             );

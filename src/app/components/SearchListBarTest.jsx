@@ -310,8 +310,8 @@ export const SearchBar = () => {
 
       // If user is NOT verified, we do normal checks for the placeholders:
       // Or if user is verified but the fields are still missing (just in case).
-      if (!currentName || !currentPhone || !currentEmail || !flightType) {
-        toast.error("Name, phone, and email are required fields.");
+      if (!currentName || !currentPhone || !currentEmail || !flightType || !agreedToPolicy) {
+        toast.error("Name, phone, email and Terms and condition are required fields.");
         setIsLoading(false);
         return;
       }

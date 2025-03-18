@@ -16,7 +16,6 @@ import NavBar from "../components/Navbar";
 function cleanAirportName(str) {
   return str.replace(/\s*\(.*?\)\s*/, "").trim();
 }
-
 // Helper: format to US dollars, e.g. `$ 650,000`
 function formatUSD(amount) {
   return `$ ${amount.toLocaleString("en-US")}`;
@@ -172,7 +171,7 @@ const FinalEnquiryPage = () => {
 
   // WhatsApp Enquiry
   const sendWhatsAppMessage = async () => {
-    const phoneNumber = "91 9958241284"; // example number
+    const phoneNumber = userData?.phone;
     setIsWhatsAppSending(true);
 
     // Show an "info" toast quickly
