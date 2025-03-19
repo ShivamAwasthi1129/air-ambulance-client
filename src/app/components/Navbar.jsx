@@ -17,19 +17,16 @@ const NavBar = () => {
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [fetchedName, setFetchedName] = useState("");
-
   // For password login
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-
   // OTP states
   const [returnedOtp, setReturnedOtp] = useState("");
   const [enteredOtp, setEnteredOtp] = useState("");
   // We want to show "Login via OTP" first, so default:
   const [isOtpMode, setIsOtpMode] = useState(true);
   const [otpSendStatus, setOtpSendStatus] = useState("idle");
-
   // Dropdown
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -37,12 +34,10 @@ const NavBar = () => {
   // ----------------------------------------------------------------
   // Effects
   // ----------------------------------------------------------------
-
   // Load user from session on mount
   useEffect(() => {
     loadUserFromSession();
   }, []);
-
   // Listen for custom event to re-load user
   useEffect(() => {
     const updateHandler = () => {
@@ -66,7 +61,6 @@ const NavBar = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
   // ----------------------------------------------------------------
   // Helpers
   // ----------------------------------------------------------------
@@ -235,6 +229,17 @@ const NavBar = () => {
         sessionStorage.setItem("searchData", JSON.stringify(searchData));
         sessionStorage.setItem("loginData", JSON.stringify(userLoginData));
         sessionStorage.setItem("userVerified", "true");
+
+          // Optionally send final data
+          const finalDataFromSession = sessionStorage.getItem("searchData");
+          if (finalDataFromSession) {
+            const finalDataToSend = JSON.parse(finalDataFromSession);
+            await fetch("/api/query", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(finalDataToSend),
+            });
+          }
 
         // Close and reset
         setIsLoginModalOpen(false);
