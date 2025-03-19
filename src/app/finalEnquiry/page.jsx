@@ -45,7 +45,7 @@ const FinalEnquiryPage = () => {
       let foundEmail = userInfo.email || "";
 
       // If name/phone is missing, try to get from loginData
-      if (!foundName || !foundPhone) {
+      if (!foundName || !foundPhone || !foundEmail) {
         const storedLoginData = sessionStorage.getItem("loginData");
         if (storedLoginData) {
           const parsedLoginData = JSON.parse(storedLoginData);
@@ -54,7 +54,7 @@ const FinalEnquiryPage = () => {
           foundEmail = foundEmail || parsedLoginData.email || "";
         }
       }
-      // Finally set userData in state
+
       setUserData({
         name: foundName,
         phone: foundPhone,
@@ -63,7 +63,7 @@ const FinalEnquiryPage = () => {
     }
   }, []);
 
-  // 2) Fetch flights for each segment, filter by selected registrationNo
+  // 2) Fetch flights for each segment, filtered by chosen registrationNo
   useEffect(() => {
     const fetchAllSegments = async () => {
       if (!searchData || !searchData.segments) return;
@@ -74,7 +74,11 @@ const FinalEnquiryPage = () => {
         const cleanedFrom = cleanAirportName(segment.from);
         const cleanedTo = cleanAirportName(segment.to);
 
-        const url = `/api/search-flights?from=${encodeURIComponent(cleanedFrom)}&to=${encodeURIComponent(cleanedTo)}&departureDate=${segment.departureDate}T${segment.departureTime}:00Z&travelerCount=${segment.passengers}`;
+        const url = `/api/search-flights?from=${encodeURIComponent(
+          cleanedFrom
+        )}&to=${encodeURIComponent(cleanedTo)}&departureDate=${
+          segment.departureDate
+        }T${segment.departureTime}:00Z&travelerCount=${segment.passengers}`;
 
         try {
           const res = await fetch(url);
@@ -112,23 +116,59 @@ const FinalEnquiryPage = () => {
     );
   }
 
-  // Payment API call - now accepts both amount and currency
+  /**
+   * Merge user info from loginData into searchData.userInfo if needed
+   * before sending the final data to /api/ccavenue
+   */
+  const mergeUserInfoIfNeeded = (dataObj) => {
+    const finalData = { ...dataObj };
+
+    // If userInfo is missing or incomplete, fill from loginData
+    if (
+      !finalData.userInfo ||
+      !finalData.userInfo.name ||
+      !finalData.userInfo.email ||
+      !finalData.userInfo.phone
+    ) {
+      const loginDataStr = sessionStorage.getItem("loginData");
+      if (loginDataStr) {
+        const loginData = JSON.parse(loginDataStr);
+
+        finalData.userInfo = {
+          // Keep anything we already have
+          ...finalData.userInfo,
+          // Fill from loginData if missing
+          name: finalData.userInfo?.name || loginData.name,
+          email: finalData.userInfo?.email || loginData.email,
+          phone: finalData.userInfo?.phone || loginData.phone,
+          // Include token if present
+          token: loginData.token,
+        };
+      }
+    }
+    return finalData;
+  };
+
+  // Payment API call - now ensures userInfo is present
   const handlePayment = async (amount, currency, totalAmount) => {
     setLoading(true);
     try {
+      // Merge user info from loginData if searchData is missing it
+      const finalSearchData = mergeUserInfoIfNeeded(searchData);
+
       const response = await fetch("/api/ccavenue", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...searchData,
+          ...finalSearchData,
           amount,
           totalAmount,
-          currency, 
+          currency,
         }),
       });
 
       const { paymentUrl } = await response.json();
-      window.location.href = paymentUrl; 
+      window.location.href = paymentUrl;
     } catch (error) {
       console.log("Error", error);
       alert("Payment initiation failed!");
@@ -164,7 +204,7 @@ const FinalEnquiryPage = () => {
 
   // Summation for cost details
   const allSelectedFlights = fetchedSegmentsData.flat();
-  // Parse flight.totalPrice, e.g. "$ 650,000" => numeric
+  // Parse flight.totalPrice => numeric
   const estimatedCost = allSelectedFlights.reduce((acc, flight) => {
     if (!flight.totalPrice) return acc;
     const numericPrice = parseInt(flight.totalPrice.replace(/\D+/g, ""), 10) || 0;
@@ -185,23 +225,15 @@ const FinalEnquiryPage = () => {
     });
 
     try {
-      // Merge with loginData if it exists
-      const loginDataStr = sessionStorage.getItem("loginData");
-      if (loginDataStr) {
-        const loginData = JSON.parse(loginDataStr);
-        searchData.userInfo = {
-          name: loginData.name,
-          email: loginData.email,
-          phone: loginData.phone,
-        };
-      }
+      // Merge any missing user info from loginData
+      const finalSearchData = mergeUserInfoIfNeeded(searchData);
 
       const response = await fetch("/api/booking-request", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(searchData),
+        body: JSON.stringify(finalSearchData),
       });
 
       if (!response.ok) {
@@ -225,7 +257,7 @@ const FinalEnquiryPage = () => {
 
   // Email enquiry
   const sendEmailMessage = async () => {
-    setIsEmailSending(true); // Show "Sending..." on the button
+    setIsEmailSending(true);
 
     try {
       const response = await fetch("/api/enquiry", {
@@ -286,7 +318,11 @@ const FinalEnquiryPage = () => {
       14,
       28
     );
-    doc.text("Phone: +91-11-40845858 | Email: info@charterflightaviations.in", 14, 36);
+    doc.text(
+      "Phone: +91-11-40845858 | Email: info@charterflightaviations.in",
+      14,
+      36
+    );
 
     doc.text("Dear Sir/Madam,", 14, 44);
     doc.text(
@@ -339,10 +375,7 @@ const FinalEnquiryPage = () => {
       head: [["Description", "Amount (₹)"]],
       body: [
         ["Total Flying Cost", estimatedCost.toLocaleString()],
-        [
-          "All Inclusive Charter Package",
-          estimatedCost.toLocaleString(),
-        ],
+        ["All Inclusive Charter Package", estimatedCost.toLocaleString()],
       ],
       theme: "grid",
       headStyles: { fillColor: [22, 160, 133] },

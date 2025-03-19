@@ -15,9 +15,9 @@ const segmentSchema = new mongoose.Schema({
   departureDate: { type: Date, required: true },
   departureTime: { type: String, required: true },
   passengers: { type: Number, required: true },
-  fromCity: { type: String, required: true },
-  fromIATA: { type: String, required: true },
-  fromICAO: { type: String, required: true },
+  fromCity: { type: String, required: false },
+  fromIATA: { type: String, required: false },
+  fromICAO: { type: String, required: false },
   toCity: { type: String, required: true },
   toIATA: { type: String, required: true },
   toICAO: { type: String, required: true },
@@ -37,7 +37,7 @@ const userInfoSchema = new mongoose.Schema({
   email: { type: String, required: true },
   name: { type: String, required: true },
   phone: { type: String, required: true },
-  token: { type: String, required: true }
+  token: { type: String, required: false},
 });
 
 const BookingSchema = new mongoose.Schema({
