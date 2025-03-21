@@ -184,3 +184,43 @@ export function generateToken(user) {
     { expiresIn: "1h" } // Token expiration time
   );
 }
+
+export function addTimeToDate(dateInput, timeString) {
+  const baseDate = new Date(dateInput);
+  
+  const [hours, minutes] = timeString.split(':').map(Number);
+
+  if (isNaN(baseDate.getTime()) || isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+    throw new Error('Invalid date or time format. Use a valid date and time in "HH:MM" (24-hour) format.');
+  }
+
+  const resultDate = new Date(baseDate);
+  resultDate.setHours(hours, minutes, 0, 0); 
+  return resultDate;
+}
+
+export function addDurationToDate(dateInput, durationString) {
+  const baseDate = new Date(dateInput);
+  
+  if (isNaN(baseDate.getTime())) {
+    throw new Error('Invalid date input.');
+  }
+
+  const durationMatch = durationString.match(/(\d+)h\s*(\d+)m/);
+  if (!durationMatch) {
+    throw new Error('Invalid duration format. Use "Xh Ym" (e.g., "1h 19m").');
+  }
+
+  const hours = parseInt(durationMatch[1], 10); // Hours extract karo
+  const minutes = parseInt(durationMatch[2], 10); // Minutes extract karo
+
+  if (isNaN(hours) || isNaN(minutes) || hours < 0 || minutes < 0 || minutes > 59) {
+    throw new Error('Invalid hours or minutes.');
+  }
+
+  const resultDate = new Date(baseDate);
+  resultDate.setHours(baseDate.getHours() + hours);
+  resultDate.setMinutes(baseDate.getMinutes() + minutes);
+
+  return resultDate;
+}

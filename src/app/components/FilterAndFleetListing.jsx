@@ -190,6 +190,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
     const updatedSearchData = { ...searchData };
     updatedSearchData.segments[segmentIndex].selectedFleet = {
       registrationNo: flight?.fleetDetails?.registrationNo,
+      fleetId: flight?._id,
       type: flight?.fleetDetails?.flightType,
       model: flight?.fleetDetails?.selectedModel,
       seatingCapacity: flight?.fleetDetails?.seatCapacity,
