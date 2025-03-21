@@ -113,13 +113,6 @@ function chunkArray(array, size) {
   return result;
 }
 
-// Currency rates
-const exchangeRates = {
-  USD: 1,
-  INR: 82,
-  GBP: 0.8,
-};
-
 const FlightCard = ({
   filteredData = [],
   onSelectFleet,
@@ -130,7 +123,7 @@ const FlightCard = ({
   isMultiCity,
   readOnly = false,
 }) => {
-  const router = useRouter();          
+  const router = useRouter();
   const [activeDetailsId, setActiveDetailsId] = useState(null);
   const [parsedData, setParsedData] = useState(null);
 
@@ -163,6 +156,37 @@ const FlightCard = ({
 
   // NEW: Track email input from the modal
   const [emailModalInput, setEmailModalInput] = useState("");
+  const [exchangeRates, setExchangeRates] = useState(() => {
+    const storedRates = sessionStorage.getItem("exchangeRates");
+    return storedRates ? JSON.parse(storedRates) : { inrRate: 0, gbpRate: 0 };
+  });
+  
+  useEffect(() => {
+    async function fetchRates() {
+      try {
+        const inrRes = await fetch(
+          "https://1zukmeixgi.execute-api.ap-south-1.amazonaws.com/v1/currencies/convert?from=USD&to=INR&amount=1"
+        );
+        const inrData = await inrRes.json();
+        const inrRate = inrData?.conversion?.result || 0;
+  
+        const gbpRes = await fetch(
+          "https://1zukmeixgi.execute-api.ap-south-1.amazonaws.com/v1/currencies/convert?from=USD&to=GBP&amount=1"
+        );
+        const gbpData = await gbpRes.json();
+        const gbpRate = gbpData?.conversion?.result || 0;
+  
+        const newRates = { inrRate, gbpRate };
+        setExchangeRates(newRates);
+        sessionStorage.setItem("exchangeRates", JSON.stringify(newRates));
+      } catch (error) {
+        console.error("Error fetching exchange rates:", error);
+      }
+    }
+    fetchRates();
+  }, []);
+  
+
 
   useEffect(() => {
     const data = sessionStorage.getItem("searchData");
@@ -269,13 +293,6 @@ const FlightCard = ({
       sessionStorage.setItem("flightShots", JSON.stringify(newShots));
     }
   };
-
-  // Price conversion
-  const convertPrice = (usdPrice, currency) => {
-    const rate = exchangeRates[currency] || 1;
-    return Math.round(usdPrice * rate);
-  };
-
   // Helper to parse times
   function parseTimeString(timeStr) {
     const [hhStr, mmStr] = timeStr.split(":");
@@ -573,6 +590,7 @@ const FlightCard = ({
           const freeAmenities = allAmenities.filter(
             ([, data]) => data.value === "free"
           );
+
           const freeServicesToShow = freeAmenities.slice(0, 7);
           const firstLineServices = freeServicesToShow.slice(0, 4);
           const secondLineServices = freeServicesToShow.slice(4, 7);
@@ -581,6 +599,8 @@ const FlightCard = ({
           const flightPriceUSD = flight.totalPrice
             ? parseInt(flight.totalPrice.replace(/\D/g, ""), 10)
             : 0;
+          const inrPrice = Math.round(flightPriceUSD * exchangeRates.inrRate);
+          const gbpPrice = Math.round(flightPriceUSD * exchangeRates.gbpRate);
 
           return (
             <div
@@ -645,11 +665,11 @@ const FlightCard = ({
                         <div className="text-right">
                           <p className="text-sm text-gray-500">approx~</p>
                           <p className="text-xl font-bold text-gray-800">
-                            USD {convertPrice(flightPriceUSD, "USD").toLocaleString()}
+                            USD {flightPriceUSD.toLocaleString()}
                           </p>
                           <p className="text-sm text-gray-600 mt-1">
-                            INR {convertPrice(flightPriceUSD, "INR").toLocaleString()},
-                            GBP {convertPrice(flightPriceUSD, "GBP").toLocaleString()}
+                            INR {inrPrice.toLocaleString()},
+                            GBP {gbpPrice.toLocaleString()}
                           </p>
                         </div>
                       </div>
@@ -712,15 +732,15 @@ const FlightCard = ({
                         <div className="flex">
                           <span className="text-base md:text-lg font-bold text-gray-600 flex items-center mr-2">
                             <MdAirlineSeatReclineExtra size={22} className="mr-1" />
-                            {flight.fleetDetails.seatCapacity} | 
+                            {flight.fleetDetails.seatCapacity} |
                           </span>
                           <span className="text-base md:text-lg font-bold text-gray-600 flex items-center">
                             <BsFillLuggageFill size={22} className="mr-1" />
-                            {flight.fleetDetails.luggage} | 
+                            {flight.fleetDetails.luggage} |
                           </span>
                           <span className="text-base md:text-lg font-bold text-gray-600 flex items-center mr-2 ml-2">
                             <IoMdSpeedometer size={22} className="mr-1" />
-                            {flight.fleetDetails.maxSpeed} nm 
+                            {flight.fleetDetails.maxSpeed} nm
                           </span>
                         </div>
                       </div>
@@ -816,11 +836,10 @@ const FlightCard = ({
                           <div className="flex items-center space-x-4 mt-4 md:mt-0">
                             <button
                               onClick={() => onSelectFleet(flight)}
-                              className={`${
-                                selectedFleet?._id === flight._id
-                                  ? "bg-red-500 focus:ring-2 focus:ring-red-300"
-                                  : "bg-gradient-to-r from-green-500 to-green-700"
-                              } text-white text-base font-semibold px-4 py-2 rounded shadow-md`}
+                              className={`${selectedFleet?._id === flight._id
+                                ? "bg-red-500 focus:ring-2 focus:ring-red-300"
+                                : "bg-gradient-to-r from-green-500 to-green-700"
+                                } text-white text-base font-semibold px-4 py-2 rounded shadow-md`}
                             >
                               {selectedFleet?._id === flight._id
                                 ? "Fleet Selected"
@@ -986,11 +1005,10 @@ const FlightCard = ({
                                           {amenityKey}
                                         </span>
                                         <span
-                                          className={`text-sm font-semibold ml-2 px-2 py-1 rounded ${
-                                            amenityData.value === "free"
-                                              ? "bg-green-100 text-green-600"
-                                              : "bg-red-100 text-red-600"
-                                          }`}
+                                          className={`text-sm font-semibold ml-2 px-2 py-1 rounded ${amenityData.value === "free"
+                                            ? "bg-green-100 text-green-600"
+                                            : "bg-red-100 text-red-600"
+                                            }`}
                                         >
                                           {amenityData.value === "free"
                                             ? "Free"
@@ -1040,11 +1058,10 @@ const FlightCard = ({
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`py-2 px-4 text-sm font-semibold ${
-                      activeTab === tab
-                        ? "text-blue-600 border-b-2 border-blue-600"
-                        : "text-gray-500"
-                    }`}
+                    className={`py-2 px-4 text-sm font-semibold ${activeTab === tab
+                      ? "text-blue-600 border-b-2 border-blue-600"
+                      : "text-gray-500"
+                      }`}
                   >
                     {tab}
                   </button>
