@@ -7,6 +7,7 @@ import {
   convertToHoursMinutes,
   addHoursToDate,
 } from "@/utils/helperFunction";
+import FleetTime from "@/app/models/FleetTime";
 
 export async function GET(req) {
   try {
@@ -26,24 +27,31 @@ export async function GET(req) {
     }
 
     // Query MongoDB for available fleets
-    const availableFleets = await Aircraft.find({
+    const fleets = await Aircraft.find({
       "fleetDetails.baseStation": from,
       "fleetDetails.restrictedAirports": { $not: { $elemMatch: { $eq: to } } },
-      "fleetDetails.seatCapacity": { $gte: Number(travelerCount) },
-      $or: [
-        { "fleetDetails.unavailabilityDates.fromDate": { $gt: departureDate } },
-        { "fleetDetails.unavailabilityDates.toDate": { $lt: departureDate } },
-      ],
+      "fleetDetails.seatCapacity": { $gte: Number(travelerCount) }
     });
 
-    
+    const fleetIds = fleets.map((fleet) => fleet._id);
+
+    const fleetTimes = await FleetTime.find({
+      _id: { $in: fleetIds },
+      departure_time: { $gte: new Date(departureDate) },
+      arrival_time: { $lte: new Date(departureDate) },
+    }).lean();
+
+    const bookedFleet = fleetTimes.map(fleet => fleet._id);
+
+    const availableFleets = fleets.filter(fleet => !bookedFleet.includes(fleet._id));
+
     if (availableFleets.length === 0) {
       return NextResponse.json(
         { message: "No available fleets match the criteria." },
         { status: 404 }
       );
     }
-    
+
     const arrival = await searchStation(from.trim());
     const destination = await searchStation(to.trim());
 

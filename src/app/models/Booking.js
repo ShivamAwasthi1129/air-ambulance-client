@@ -1,12 +1,13 @@
 import mongoose from "mongoose";
 
 const selectedFleetSchema = new mongoose.Schema({
+  fleetId: { type: String, required: true },
   registrationNo: { type: String, required: true },
   type: { type: String, required: true },
   model: { type: String, required: true },
   seatingCapacity: { type: Number, required: true },
   price: { type: String, required: true },
-  time: { type: String, required: true }
+  time: { type: String, required: true },
 });
 
 const segmentSchema = new mongoose.Schema({
@@ -21,7 +22,7 @@ const segmentSchema = new mongoose.Schema({
   toCity: { type: String, required: true },
   toIATA: { type: String, required: true },
   toICAO: { type: String, required: true },
-  selectedFleet: selectedFleetSchema
+  selectedFleet: selectedFleetSchema,
 });
 
 const userInfoSchema = new mongoose.Schema({
@@ -37,24 +38,28 @@ const userInfoSchema = new mongoose.Schema({
   email: { type: String, required: true },
   name: { type: String, required: true },
   phone: { type: String, required: true },
-  token: { type: String, required: true }
+  token: { type: String, required: true },
 });
 
-const BookingSchema = new mongoose.Schema({
-  amount_paid: { type: Number, required: true },
-  currency: { type: String, required: true, default: 'INR' },
-  flight_type: { type: String, required: true },
-  segments: [segmentSchema],
-  trip_type: { type: String, required: true },
-  user_info: userInfoSchema,
-  total_amount: { type: Number, required: true },
-  status: {
-    type: String,
-    enum: ['pending', 'success', 'failed'],
-    default: 'pending'
+const BookingSchema = new mongoose.Schema(
+  {
+    amount_paid: { type: Number, required: true },
+    currency: { type: String, required: true, default: "INR" },
+    flight_type: { type: String, required: true },
+    segments: [segmentSchema],
+    trip_type: { type: String, required: true },
+    user_info: userInfoSchema,
+    total_amount: { type: Number, required: true },
+    status: {
+      type: String,
+      enum: ["pending", "success", "failed"],
+      default: "pending",
+    },
+  },
+  {
+    timestamps: true, // Adds createdAt and updatedAt automatically
   }
-}, {
-  timestamps: true // Adds createdAt and updatedAt automatically
-});
+);
 
-export default mongoose.models.Booking || mongoose.model('Booking', BookingSchema);
+export default mongoose.models.Booking ||
+  mongoose.model("Booking", BookingSchema, "Booking");
