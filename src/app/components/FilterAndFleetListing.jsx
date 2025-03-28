@@ -321,7 +321,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
 
   // Otherwise, show main UI
   return (
-    <div className="relative w-full mx-auto flex flex-col items-start overflow-hidden max-w-[100rem] px-6">
+    <div className="relative w-full mx-auto flex flex-col items-start overflow-hidden max-w-[110rem] px-6">
       {/* Top Panel */}
       <div className="w-full py-4">
         <h1 className="text-2xl font-bold text-center text-white">
@@ -397,7 +397,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                           hover:bg-green-500 focus:outline-none focus:ring-2 
                           focus:ring-green-400 focus:ring-offset-2 transition-all text-sm font-medium ml-4"
                       >
-                        Proceed to Enquiry
+                        Proceed to Pay
                       </button>
                     </Link>
                   )}
@@ -577,7 +577,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
         </motion.div>
 
         {/* Fleet Listing Section */}
-        <div className="w-full bg-white flex flex-col items-center p-4 px-12 border border-blue-100 rounded-xl">
+        <div className="w-full bg-white flex flex-col items-center p-4 border border-blue-100 rounded-xl">
           <div className="mb-10 w-full">
             <h3 className="text-lg font-bold flex">
               Trip {segmentIndex + 1}: {searchData.segments[segmentIndex].from}
