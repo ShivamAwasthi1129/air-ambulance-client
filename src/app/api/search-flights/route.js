@@ -28,6 +28,7 @@ export async function GET(req) {
 
     // Query MongoDB for available fleets
     const fleets = await Aircraft.find({
+      "verified": true,
       "fleetDetails.baseStation": from,
       "fleetDetails.restrictedAirports": { $not: { $elemMatch: { $eq: to } } },
       "fleetDetails.seatCapacity": { $gte: Number(travelerCount) }
