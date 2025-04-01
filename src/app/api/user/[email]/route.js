@@ -21,10 +21,7 @@ export const GET = async (req, { params }) => {
     const users = await User.aggregate([
       {
         $match: {
-          $or: [
-            { email: { $regex: regex } },
-            { phone: { $regex: regex } },
-          ],
+          $or: [{ email: { $regex: regex } }, { phone: { $regex: regex } }],
         },
       },
       {
@@ -38,6 +35,29 @@ export const GET = async (req, { params }) => {
 
     return NextResponse.json(users);
   } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+};
+
+export const PUT = async (req, { params }) => {
+  try {
+    const email = (await params).email;
+    const { name, password } = await req.json();
+    await connectToDatabase();
+    await User.updateOne(
+      {
+        email,
+      },
+      {
+        $set: {
+          name,
+          password,
+        },
+      }
+    );
+    return NextResponse.json({"message": "User updated"});
+  } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 };
