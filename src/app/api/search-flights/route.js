@@ -28,12 +28,13 @@ export async function GET(req) {
 
     // Query MongoDB for available fleets
     const fleets = await Aircraft.find({
-      "verified": true,
       "fleetDetails.baseStation": from,
       "fleetDetails.restrictedAirports": { $not: { $elemMatch: { $eq: to } } },
-      "fleetDetails.seatCapacity": { $gte: Number(travelerCount) }
+      "fleetDetails.seatCapacity": { $gte: Number(travelerCount) },
+      "fleetDetails.verified" : true
     });
-
+    console.log("fleet params" , from , to , departureDate , travelerCount);
+   console.log("fleets" , fleets);
     const fleetIds = fleets.map((fleet) => fleet._id);
 
     const fleetTimes = await FleetTime.find({

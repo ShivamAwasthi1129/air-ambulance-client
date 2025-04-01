@@ -32,6 +32,7 @@ export const GET = async (req, { params }) => {
           name: 1,
           email: 1,
           phone: 1,
+          password: 1,
         },
       },
     ]);
