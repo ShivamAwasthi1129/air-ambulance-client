@@ -9,12 +9,13 @@ import Link from "next/link";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Icondiv } from "./Icondiv";
-
 export const SearchBar = () => {
   // === State ===
   const [tripType, setTripType] = useState("oneway");
   const [showMultiCityDetails, setShowMultiCityDetails] = useState(false);
   const [isMultiCityCollapsed, setIsMultiCityCollapsed] = useState(false);
+  const [dateSelected, setDateSelected] = useState(false);
+
 
   const [segments, setSegments] = useState([
     {
@@ -345,9 +346,9 @@ export const SearchBar = () => {
           if (data.message === "user already exists") {
             toast.info(
               data.message +
-                " with email : " +
-                currentEmail +
-                " Check your email for credentials"
+              " with email : " +
+              currentEmail +
+              " Check your email for credentials"
             );
             setIsLoading(false);
             return;
@@ -500,7 +501,6 @@ export const SearchBar = () => {
                       </ul>
                     )}
                 </div>
-
                 {/* Swap Icon */}
                 <motion.button
                   onClick={() => handleSwap(0)}
@@ -554,7 +554,6 @@ export const SearchBar = () => {
                       </ul>
                     )}
                 </div>
-
                 {/* Departure Date & Time */}
                 <div className="w-full sm:w-1/2 md:w-[200px]">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -562,17 +561,25 @@ export const SearchBar = () => {
                   </label>
                   <input
                     type="datetime-local"
-                    value={`${segments[0].departureDate}T${
-                      segments[0].departureTime || "12:00"
-                    }`}
+                    value={`${segments[0].departureDate}T${segments[0].departureTime || "12:00"}`}
+                    onFocus={() => setDateSelected(false)} // Reset flag when focusing
                     onChange={(e) => {
                       const [date, time] = e.target.value.split("T");
-                      handleSegmentChange(0, "departureDate", date);
-                      handleSegmentChange(0, "departureTime", time);
+                      if (!dateSelected) {
+                        // First change: update date only and mark that date is selected.
+                        handleSegmentChange(0, "departureDate", date);
+                        setDateSelected(true);
+                      } else {
+                        // Second change: update time and then close the picker.
+                        handleSegmentChange(0, "departureTime", time);
+                        e.target.blur(); // Closes the picker after time selection.
+                        setDateSelected(false);
+                      }
                     }}
                     min={`${new Date().toISOString().split("T")[0]}T00:00`}
                     className="block w-full p-2 border rounded focus:outline-none"
                   />
+
                 </div>
 
                 {/* Seats */}
@@ -725,7 +732,6 @@ export const SearchBar = () => {
                                 </ul>
                               )}
                           </div>
-
                           {/* DATE & TIME */}
                           <div className="w-full sm:w-1/2 md:w-[200px]">
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -733,9 +739,8 @@ export const SearchBar = () => {
                             </label>
                             <input
                               type="datetime-local"
-                              value={`${segment.departureDate}T${
-                                segment.departureTime || "12:00"
-                              }`}
+                              value={`${segment.departureDate}T${segment.departureTime || "12:00"
+                                }`}
                               onChange={(e) => {
                                 const [date, time] = e.target.value.split("T");
                                 handleSegmentChange(index, "departureDate", date);

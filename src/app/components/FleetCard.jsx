@@ -224,7 +224,6 @@ export default function FlightCard({
         );
         const inrData = await inrRes.json();
         const inrRate = inrData?.conversion?.result || 0;
-
         const gbpRes = await fetch(
           "https://1zukmeixgi.execute-api.ap-south-1.amazonaws.com/v1/currencies/convert?from=USD&to=GBP&amount=1"
         );
