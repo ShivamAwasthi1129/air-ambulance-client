@@ -27,6 +27,7 @@ const NavBar = () => {
   // We want to show "Login via OTP" first, so default:
   const [isOtpMode, setIsOtpMode] = useState(true);
   const [otpSendStatus, setOtpSendStatus] = useState("idle");
+  const [infoFetched, setInfoFetched] = useState(false);
   // Dropdown
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -117,6 +118,7 @@ const NavBar = () => {
         throw new Error("Failed to get user info");
       }
       const userData = await resp.json();
+      setInfoFetched(true);
 
       // If your API returns an array:
       if (Array.isArray(userData) && userData.length > 0) {
@@ -536,7 +538,7 @@ const NavBar = () => {
                   onClick={handleSendOtp}
                   className="w-full py-3 bg-blue-500 text-white rounded hover:bg-blue-600 mb-4 flex items-center justify-center"
                   disabled={
-                    otpSendStatus === "sending" || otpSendStatus === "sent"
+                    otpSendStatus === "sending" || otpSendStatus === "sent" || !infoFetched
                   }
                 >
                   {otpSendStatus === "sending" ? (
