@@ -8,12 +8,23 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Form fields
+  // Basic user info
   const [name, setName] = useState("");
-  const [password, setPassword] = useState("");
-  const [retypePassword, setRetypePassword] = useState("");
   const [phone, setPhone] = useState("");
   const [mailId, setMailId] = useState("");
+
+  // Current password (read-only) and its show/hide toggle
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+
+  // New password fields
+  const [password, setPassword] = useState("");
+  const [retypePassword, setRetypePassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRetypePassword, setShowRetypePassword] = useState(false);
+
+  // Whether user is in "Update Password" mode
+  const [editPassword, setEditPassword] = useState(false);
 
   // On mount, get email from sessionStorage and fetch user data
   useEffect(() => {
@@ -44,10 +55,14 @@ export default function ProfilePage() {
 
         // Populate form fields
         setName(data.name || "");
-        setPassword(data.password || "");
-        setRetypePassword(data.password || "");
         setPhone(data.phone || "");
         setMailId(data.email || "");
+
+        // Store the real password - not recommended in real apps
+        setCurrentPassword(data.password || "");
+        // Do not fill the new password fields until "Update Password" is clicked
+        setPassword("");
+        setRetypePassword("");
       } catch (err) {
         setError(err.message);
       } finally {
@@ -63,18 +78,79 @@ export default function ProfilePage() {
     userData?.name?.[0]?.toUpperCase() ||
     (name ? name[0].toUpperCase() : "U");
 
-  // Stub for Save Changes
-  const handleSave = () => {
-    // Possibly PUT/PATCH updated fields
-    alert("Save Changes clicked! Implement your update logic here.");
+  // Check if name has changed from the original
+  const isNameChanged = userData && name !== userData.name;
+
+  // Are the new password fields filled and matching?
+  const passwordsFilled = password.trim().length > 0 && retypePassword.trim().length > 0;
+  const passwordsMatch = password === retypePassword;
+  const isPasswordChanged = editPassword && passwordsFilled && passwordsMatch;
+
+  // Only enable Save if there's a name change OR a valid password change
+  const canSave = isNameChanged || isPasswordChanged;
+
+  const handleSave = async () => {
+    // If user is updating password but they do not match, show error & return
+    if (editPassword && !passwordsMatch) {
+      setError("Passwords do not match!");
+      return;
+    }
+    setError(null);
+
+    try {
+      // If we're editing the password, send { name, password }
+      // If not editing the password, send { name } only
+      const payload = editPassword
+        ? { name, password }
+        : { name };
+
+      // Make the PUT request
+      const res = await fetch(`/api/user/${mailId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to update user");
+      }
+
+      const result = await res.json();
+      console.log("Update response:", result);
+
+      alert("Profile updated successfully!");
+
+      // If password was updated, end edit mode & clear it out
+      if (editPassword) {
+        setEditPassword(false);
+        setPassword("");
+        setRetypePassword("");
+      }
+      // Update local userData as well (so name matches what we just saved)
+      setUserData((prev) => ({ ...prev, name }));
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
-  // Stub for Cancel
   const handleCancel = () => {
-    alert("Cancel clicked! Implement your reset or navigation logic here.");
+    // Reset fields to the original userData
+    if (!userData) return;
+
+    setName(userData.name || "");
+    setError(null);
+
+    // Reset password edits
+    setEditPassword(false);
+    setPassword("");
+    setRetypePassword("");
+    setShowPassword(false);
+    setShowRetypePassword(false);
   };
 
-  // Stub for Log out
+  // Example logout
   const handleLogout = () => {
     sessionStorage.removeItem("loginData");
     alert("Logged out. Implement your logout logic here.");
@@ -164,7 +240,9 @@ export default function ProfilePage() {
             <div className="md:w-2/3 bg-white p-8 rounded-xl shadow-lg">
               {/* Generals */}
               <h3 className="text-blue-600 text-lg font-bold mb-4">GENERALS</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+
+              {/* Name row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-gray-600 mb-1 text-sm">
                     Name
@@ -176,54 +254,139 @@ export default function ProfilePage() {
                     className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none"
                   />
                 </div>
-                <div>
-                  <label className="block text-gray-600 mb-1 text-sm">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-600 mb-1 text-sm">
-                    Re-Type Password
-                  </label>
-                  <input
-                    type="password"
-                    value={retypePassword}
-                    onChange={(e) => setRetypePassword(e.target.value)}
-                    className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none"
-                  />
-                </div>
+              </div>
+
+              {/* Password section */}
+              <div className="mt-6">
+                <h3 className="text-blue-600 text-lg font-bold mb-4">
+                  PASSWORD
+                </h3>
+
+                {!editPassword ? (
+                  // Show "Current password" with eye toggle + "Update password" button
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-gray-600 mb-1 text-sm">
+                        Current Password
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showCurrentPassword ? "text" : "password"}
+                          value={currentPassword}
+                          readOnly
+                          className="w-full border rounded px-3 py-2 text-gray-700 bg-gray-100 focus:outline-none"
+                        />
+                        <span
+                          onClick={() =>
+                            setShowCurrentPassword(!showCurrentPassword)
+                          }
+                          className="absolute right-3 top-3 cursor-pointer text-gray-400"
+                        >
+                          {showCurrentPassword ? "🙈" : "👁"}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditPassword(true);
+                          setPassword("");
+                          setRetypePassword("");
+                        }}
+                        className="mt-2 text-blue-500 hover:underline"
+                      >
+                        Update Password
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  // Show "New password" + "Confirm password" fields
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-gray-600 mb-1 text-sm">
+                        New Password
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none"
+                        />
+                        <span
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-3 cursor-pointer text-gray-400"
+                        >
+                          {showPassword ? "🙈" : "👁"}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-gray-600 mb-1 text-sm">
+                        Confirm Password
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showRetypePassword ? "text" : "password"}
+                          value={retypePassword}
+                          onChange={(e) => setRetypePassword(e.target.value)}
+                          className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none"
+                        />
+                        <span
+                          onClick={() =>
+                            setShowRetypePassword(!showRetypePassword)
+                          }
+                          className="absolute right-3 top-3 cursor-pointer text-gray-400"
+                        >
+                          {showRetypePassword ? "🙈" : "👁"}
+                        </span>
+                      </div>
+                      {/* Show match status if user typed something */}
+                      {passwordsFilled && (
+                        <p
+                          className={
+                            passwordsMatch
+                              ? "text-green-500 text-sm mt-1"
+                              : "text-red-500 text-sm mt-1"
+                          }
+                        >
+                          {passwordsMatch
+                            ? "Passwords match"
+                            : "Passwords do not match"}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Contact */}
-              <h3 className="text-blue-600 text-lg font-bold mb-4">CONTACT</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-gray-600 mb-1 text-sm">
-                    Phone No
-                  </label>
-                  <input
-                    type="text"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-600 mb-1 text-sm">
-                    Mail ID
-                  </label>
-                  <input
-                    type="text"
-                    value={mailId}
-                    onChange={(e) => setMailId(e.target.value)}
-                    className="w-full border rounded px-3 py-2 text-gray-700 focus:outline-none"
-                  />
+              <div className="mt-6">
+                <h3 className="text-blue-600 text-lg font-bold mb-4">
+                  CONTACT
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-600 mb-1 text-sm">
+                      Phone No
+                    </label>
+                    <input
+                      type="text"
+                      value={phone}
+                      readOnly
+                      className="w-full border rounded px-3 py-2 text-gray-500 bg-gray-100 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-600 mb-1 text-sm">
+                      Mail ID
+                    </label>
+                    <input
+                      type="text"
+                      value={mailId}
+                      readOnly
+                      className="w-full border rounded px-3 py-2 text-gray-500 bg-gray-100 focus:outline-none"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -231,7 +394,12 @@ export default function ProfilePage() {
               <div className="mt-6 flex items-center space-x-4">
                 <button
                   onClick={handleSave}
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-2 rounded-full transition"
+                  disabled={!canSave}
+                  className={`px-6 py-2 rounded-full font-semibold transition ${
+                    canSave
+                      ? "bg-blue-500 hover:bg-blue-600 text-white"
+                      : "bg-gray-300 text-gray-800 cursor-not-allowed"
+                  }`}
                 >
                   Save Changes
                 </button>
@@ -241,12 +409,14 @@ export default function ProfilePage() {
                 >
                   Cancel
                 </button>
+                {/*
                 <button
                   onClick={handleLogout}
                   className="ml-auto text-red-600 hover:underline"
                 >
                   Log out
                 </button>
+                */}
               </div>
             </div>
           </div>

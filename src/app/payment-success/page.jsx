@@ -84,18 +84,20 @@ function PaymentSuccessContent() {
       >
         <NavBar />
       </div>
-
       {/* Main Content Container */}
       <div className="relative z-10 pt-28 pb-10 max-w-6xl mx-auto px-4">
         {loading ? (
+          // Show skeleton loader while fetching
           <div className="bg-white p-6 rounded-md shadow-xl">
             <SkeletonLoader />
           </div>
         ) : error ? (
+          // Show error if any
           <div className="bg-white p-6 rounded-md shadow-xl text-center text-red-600 font-semibold">
             {error}
           </div>
         ) : bookingData ? (
+          // Show booking info if available
           <div className="bg-white p-6 md:p-8 rounded-md shadow-xl">
             {/* Header / Confirmation Row */}
             <div className="flex items-center space-x-4">
@@ -108,8 +110,7 @@ function PaymentSuccessContent() {
                   Flight Successfully Booked!
                 </h1>
                 <p className="text-gray-600">
-                  Thank you for booking your flight with Charter Flights
-                  Aviation.
+                  Thank you for booking your flight with Charter Flights Aviation.
                 </p>
               </div>
             </div>
@@ -149,7 +150,7 @@ function PaymentSuccessContent() {
                           {" | "}Passengers: <b>{seg.passengers || 1}</b>
                         </div>
 
-                        {/* Potential "Approx Time" or arrival time placeholder */}
+                        {/* Potential "Approx Time" */}
                         <div className="text-gray-600 text-sm mb-3">
                           Approx Time:{" "}
                           {seg.departureTime
@@ -157,13 +158,11 @@ function PaymentSuccessContent() {
                             : "N/A"}
                         </div>
 
-                        {/* If you have a per-segment price, show it; otherwise, use the fleet or entire booking price */}
+                        {/* Per-segment price (if any) */}
                         <div className="text-gray-900 font-semibold mb-4">
                           Segment Fleet Price (if any):{" "}
                           {bookingData.currency} {segFleet.price || "N/A"}
                         </div>
-
-                      
 
                         {/* Airport / City Info */}
                         <div className="flex items-center justify-between border-t pt-3">
@@ -172,8 +171,7 @@ function PaymentSuccessContent() {
                               From
                             </div>
                             <div className="text-gray-700">
-                              {seg.from} 
-                              {/* or: {seg.fromCity} ({seg.fromIATA}) */}
+                              {seg.from}
                             </div>
                           </div>
                           <div className="text-gray-500 text-sm">---</div>
@@ -183,7 +181,6 @@ function PaymentSuccessContent() {
                             </div>
                             <div className="text-gray-700">
                               {seg.to}
-                              {/* or: {seg.toCity} ({seg.toIATA}) */}
                             </div>
                           </div>
                           <div className="text-xs font-medium text-gray-500">
@@ -252,7 +249,6 @@ function PaymentSuccessContent() {
                 Passenger & User Info
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
-                {/* Basic Fields */}
                 <div>
                   <span className="font-medium">Name: </span>
                   {userInfo.name}
@@ -320,49 +316,7 @@ function PaymentSuccessContent() {
               </div>
             </div>
           </div>
-        ) : (
-          // Minimal fallback if no booking data, no error, not loading
-          <div className="bg-white p-6 md:p-8 rounded-md shadow-xl text-center">
-            <AiOutlineCheckCircle
-              className="text-green-500 animate-bounce mx-auto"
-              size={64}
-            />
-            <h1 className="mt-4 text-3xl font-bold text-gray-800">
-              Payment Successful!
-            </h1>
-            <p className="mt-2 text-gray-600">
-              Thank you for your purchase.
-            </p>
-            <div className="mt-6 w-full max-w-sm mx-auto">
-              <div className="flex justify-between py-2 border-b border-gray-200">
-                <span className="text-gray-700 font-medium">Order ID:</span>
-                <span className="text-gray-700">{orderId}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-200">
-                <span className="text-gray-700 font-medium">Currency:</span>
-                <span className="text-gray-700">{currencyParam}</span>
-              </div>
-              <div className="flex justify-between py-2">
-                <span className="text-gray-700 font-medium">Amount:</span>
-                <span className="text-green-600 font-bold text-lg">
-                  {currencyParam} {amountParam}
-                </span>
-              </div>
-            </div>
-            <div className="mt-6">
-              <a
-                href="/"
-                className="inline-block bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-full transition duration-300 cursor-pointer"
-              >
-                Continue another booking
-              </a>
-            </div>
-            <p className="mt-4 text-sm text-gray-500 italic">
-              Note: This is just 10% of the booking payment. Our team will call
-              you soon to complete the remaining payment and further inquiry.
-            </p>
-          </div>
-        )}
+        ) : null /* No fallback UI if there's no error & no bookingData */}
       </div>
     </div>
   );

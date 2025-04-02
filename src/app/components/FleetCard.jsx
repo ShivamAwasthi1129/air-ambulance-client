@@ -591,16 +591,16 @@ export default function FlightCard({
           // Times
           const depTime =
             parsedData?.segments?.[currentTripIndex]?.departureTime || "12:00";
-          const flightTime = flight.flightTime || "1h 26m";
+          const flightTime = flight.flightTime || "N/A";
           const arrTime = calculateArrivalTime(depTime, flightTime);
           const fromCity =
-            parsedData?.segments?.[currentTripIndex]?.fromCity || "Dubai";
+            parsedData?.segments?.[currentTripIndex]?.fromCity || "N/A";
           const fromIATA =
-            parsedData?.segments?.[currentTripIndex]?.fromIATA || "DXB";
+            parsedData?.segments?.[currentTripIndex]?.fromIATA || "N/A";
           const toCity =
-            parsedData?.segments?.[currentTripIndex]?.toCity || "New Delhi";
+            parsedData?.segments?.[currentTripIndex]?.toCity || "N/A";
           const toIATA =
-            parsedData?.segments?.[currentTripIndex]?.toIATA || "DEL";
+            parsedData?.segments?.[currentTripIndex]?.toIATA || "N/A";
 
           // Amenities
           const allAmenities = Object.entries(flight.additionalAmenities || {});
@@ -780,8 +780,8 @@ export default function FlightCard({
                     </div>
                     <div className="text-right flex my-4 font-bold">
                       <div className="flex flex-col items-center text-sm text-gray-500 mr-6">
-                        <p>{toIATA}</p>
-                        <p>{toCity}</p>
+                        <p>{fromIATA}</p>
+                        <p>{fromCity}</p>
                       </div>
                       <div className="text-center text-gray-500">
                         <p className="text-xl font-bold text-gray-800">
@@ -794,8 +794,8 @@ export default function FlightCard({
                         </p>
                       </div>
                       <div className="flex flex-col items-center text-sm text-gray-500 ml-6">
-                        <p>{fromIATA}</p>
-                        <p>{fromCity}</p>
+                        <p>{toIATA}</p>
+                        <p>{toCity}</p>
                       </div>
                     </div>
                   </div>
