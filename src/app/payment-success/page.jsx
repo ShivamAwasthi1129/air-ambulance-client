@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { AiOutlineCheckCircle } from "react-icons/ai";
 import NavBar from "../components/Navbar";
@@ -323,5 +323,9 @@ function PaymentSuccessContent() {
 }
 
 export default function PaymentSuccessPage() {
-  return <PaymentSuccessContent />;
+  return (
+    <Suspense fallback={<SkeletonLoader />}>
+      <PaymentSuccessContent />
+    </Suspense>
+  );
 }
