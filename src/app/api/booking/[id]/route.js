@@ -6,7 +6,7 @@ export const GET = async (req, { params }) => {
   try {
     const { id } = await params;
     await connectToDatabase();
-    const allBooking = await Booking.findById(id);
+    const allBooking = await Booking.findOne({ _id: id });
     return NextResponse.json(allBooking);
   } catch (err) {
     console.error("error", err);

@@ -12,8 +12,8 @@ export async function POST(req) {
     const id = parsedURL.searchParams.get("order_id");
     if (status == "success") {
       await connectToDatabase();
-      const updatedBooking = await Booking.findByIdAndUpdate(
-        id,
+      const updatedBooking = await Booking.findOneAndUpdate(
+        { _id: id },
         {
           $set: {
             status: "success",
@@ -29,12 +29,17 @@ export async function POST(req) {
         );
       }
 
-      for(const segment of updatedBooking.segments){
+      for (const segment of updatedBooking.segments) {
         await FleetTime.create({
-          fleet_id: new mongoose.Types.ObjectId(segment["selectedFleet"]["fleetId"]),
+          fleet_id: new mongoose.Types.ObjectId(
+            segment["selectedFleet"]["fleetId"]
+          ),
           departure_time: segment.departureDate,
-          arrival_time: addDurationToDate(addTimeToDate(segment.departureDate, segment.departureTime), segment["selectedFleet"]["time"])
-        })
+          arrival_time: addDurationToDate(
+            addTimeToDate(segment.departureDate, segment.departureTime),
+            segment["selectedFleet"]["time"]
+          ),
+        });
       }
 
       return NextResponse.redirect(

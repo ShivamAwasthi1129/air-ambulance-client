@@ -118,7 +118,7 @@ export default function ProfilePage() {
       }
 
       const result = await res.json();
-      console.log("Update response:", result);
+      // console.log("Update response:", result);
 
       alert("Profile updated successfully!");
 

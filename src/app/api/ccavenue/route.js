@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { encrypt } from "@/utils/ccavutil";
 import Booking from "@/app/models/Booking";
 
+function generateUniqueString(length) {
+  const timestamp = Date.now().toString(36); // Convert current time to base36
+  const randomStr = Math.random().toString(36).substr(2, length); // Random string
+  return timestamp + randomStr;
+}
+
 export async function POST(req) {
   const { amount , currency, flightType, segments, tripType, userInfo, totalAmount } = await req.json();
 
@@ -24,8 +30,11 @@ export async function POST(req) {
   }
 
   // await Booking.create(bookingInfo);
-  const createdBooking = await Booking.create(bookingInfo);
-  const orderId = createdBooking._id.toString();
+  const orderId = generateUniqueString(2);
+  // const createdBooking = 
+  await Booking.create({_id: orderId, ...bookingInfo});
+  // const orderId = createdBooking._id;
+  // console.log("orderid", orderId);
   // Prepare payload
   const payload = {
     merchant_id: merchantId,

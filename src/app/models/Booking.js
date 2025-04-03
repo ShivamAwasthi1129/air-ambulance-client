@@ -43,6 +43,7 @@ const userInfoSchema = new mongoose.Schema({
 
 const BookingSchema = new mongoose.Schema(
   {
+    _id: { type: String, required: true },
     amount_paid: { type: Number, required: true },
     currency: { type: String, required: true, default: "INR" },
     flight_type: { type: String, required: true },

@@ -33,8 +33,6 @@ export async function GET(req) {
       "fleetDetails.seatCapacity": { $gte: Number(travelerCount) },
       "fleetDetails.verified" : true
     });
-    console.log("fleet params" , from , to , departureDate , travelerCount);
-   console.log("fleets" , fleets);
     const fleetIds = fleets.map((fleet) => fleet._id);
 
     const fleetTimes = await FleetTime.find({
