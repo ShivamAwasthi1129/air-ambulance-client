@@ -377,7 +377,7 @@ export const SearchBar = () => {
       const finalDataFromSession = sessionStorage.getItem("searchData");
       if (finalDataFromSession) {
         const finalDataToSend = JSON.parse(finalDataFromSession);
-        console.log("Final Payload (sent immediately):", finalDataToSend);
+        // console.log("Final Payload (sent immediately):", finalDataToSend);
         await fetch("/api/query", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
