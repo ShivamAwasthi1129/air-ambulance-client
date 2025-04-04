@@ -161,7 +161,7 @@ function PaymentSuccessContent() {
                         {/* Per-segment price (if any) */}
                         <div className="text-gray-900 font-semibold mb-4">
                           Segment Fleet Price (if any):{" "}
-                          {bookingData.currency} {segFleet.price || "N/A"}
+                          $ {segFleet.price || "N/A"}
                         </div>
 
                         {/* Airport / City Info */}
@@ -213,7 +213,7 @@ function PaymentSuccessContent() {
                   <div className="flex justify-between py-1 text-sm border-b border-gray-200">
                     <span>Total Amount</span>
                     <span>
-                      {bookingData.currency} {bookingData.total_amount}
+                      {bookingData.currency} {Math.trunc(bookingData.total_amount)}
                     </span>
                   </div>
                   <div className="flex justify-between py-1 text-sm">
@@ -262,10 +262,6 @@ function PaymentSuccessContent() {
                   {userInfo.phone}
                 </div>
                 <div>
-                  <span className="font-medium">IP: </span>
-                  {userInfo.ip}
-                </div>
-                <div>
                   <span className="font-medium">City: </span>
                   {userInfo.city}
                 </div>
@@ -284,14 +280,6 @@ function PaymentSuccessContent() {
                 <div>
                   <span className="font-medium">Timezone: </span>
                   {userInfo.timezone}
-                </div>
-                <div className="col-span-full">
-                  <span className="font-medium">Org: </span>
-                  {userInfo.org}
-                </div>
-                <div className="col-span-full">
-                  <span className="font-medium">Location (lat, long): </span>
-                  {userInfo.loc}
                 </div>
               </div>
             </div>

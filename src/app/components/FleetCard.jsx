@@ -405,7 +405,7 @@ export default function FlightCard({
         setEmailSendState("idle");
         return;
       }
-      toast.success("Data sent to feviamail API!");
+      toast.success("Details Shared Successfully!");
       setEmailSendState("sent");
 
       // Clean up
@@ -594,13 +594,13 @@ export default function FlightCard({
           const flightTime = flight.flightTime || "N/A";
           const arrTime = calculateArrivalTime(depTime, flightTime);
           const fromCity =
-            parsedData?.segments?.[currentTripIndex]?.fromCity || "N/A";
+            parsedData?.segments?.[currentTripIndex]?.fromCity || "Dubai";
           const fromIATA =
-            parsedData?.segments?.[currentTripIndex]?.fromIATA || "N/A";
+            parsedData?.segments?.[currentTripIndex]?.fromIATA || "DXB";
           const toCity =
-            parsedData?.segments?.[currentTripIndex]?.toCity || "N/A";
+            parsedData?.segments?.[currentTripIndex]?.toCity || "New Delhi";
           const toIATA =
-            parsedData?.segments?.[currentTripIndex]?.toIATA || "N/A";
+            parsedData?.segments?.[currentTripIndex]?.toIATA || "DEL";
 
           // Amenities
           const allAmenities = Object.entries(flight.additionalAmenities || {});

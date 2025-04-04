@@ -376,14 +376,14 @@ const NavBar = () => {
             <Link href="/about" className="text-white hover:text-slate-300">
               About
             </Link>
-            <Link href="/aircrafts" className="text-white hover:text-slate-300">
+            <Link href="#" className="text-white hover:text-slate-300">
               Aircrafts
             </Link>
-            <Link href="/partners" className="text-white hover:text-slate-300">
-              Partners
+            <Link href="/#" className="text-white hover:text-slate-300">
+              Get in Touch
             </Link>
             <Link
-              href="/termsAnsCondition"
+              href="/termsAndCondition"
               className="text-white hover:text-slate-300"
             >
               Terms and Conditions
@@ -412,7 +412,7 @@ const NavBar = () => {
                         User Profile
                       </div>
                     </Link>
-                    <Link href="/travel-history">
+                    <Link href="/travelHistory">
                       <div className="px-4 py-2 hover:bg-gray-100">
                         Travel History
                       </div>

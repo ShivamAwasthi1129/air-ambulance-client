@@ -117,7 +117,7 @@ export const POST = async (req) => {
     } = await req.json();
 
     // You can replace this with user.email if you want to send to their address
-    const userEmail = "shivam@hexerve.com";
+    const userEmail = user.email;
     const userPhone = user.phone || "+1 (000) 000-0000";
     const userName = user.name || "Valued Customer";
 
@@ -135,11 +135,9 @@ export const POST = async (req) => {
           departureTime,
           selectedFleet = {},
         } = segment;
-
         const departureLabel =
           fromCity && fromIATA ? `${fromCity} (${fromIATA})` : from;
         const arrivalLabel = toCity && toIATA ? `${toCity} (${toIATA})` : to;
-
         const depDateStr = departureDate
           ? new Date(departureDate).toDateString()
           : "N/A";
