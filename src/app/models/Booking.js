@@ -11,6 +11,7 @@ const selectedFleetSchema = new mongoose.Schema({
 });
 
 const segmentSchema = new mongoose.Schema({
+  _id: { type: String, required: true },
   from: { type: String, required: true },
   to: { type: String, required: true },
   departureDate: { type: Date, required: true },
@@ -38,7 +39,6 @@ const userInfoSchema = new mongoose.Schema({
   email: { type: String, required: true },
   name: { type: String, required: true },
   phone: { type: String, required: true },
-  token: { type: String, required: false},
 });
 
 const BookingSchema = new mongoose.Schema(
@@ -58,7 +58,7 @@ const BookingSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true, // Adds createdAt and updatedAt automatically
+    timestamps: true,
   }
 );
 
