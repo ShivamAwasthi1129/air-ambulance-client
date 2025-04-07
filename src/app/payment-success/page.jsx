@@ -107,10 +107,10 @@ function PaymentSuccessContent() {
               />
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-                  Flight Successfully Booked!
+                  Booking In Progress
                 </h1>
                 <p className="text-gray-600">
-                  Thank you for booking your flight with Charter Flights Aviation.
+                  Thank you for booking your flight with Charter Flights Aviation. We received your booking request, will get in touch with you to confirm the booking
                 </p>
               </div>
             </div>

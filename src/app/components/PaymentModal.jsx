@@ -100,7 +100,7 @@ const PaymentModal = ({
           >
             <option value="USD">USD</option>
             <option value="INR">INR</option>
-            <option value="GBP">GBP</option>
+            <option value="GBP">Euro</option>
           </select>
         </div>
 

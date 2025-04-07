@@ -28,6 +28,44 @@ export const Icondiv = ({ flightType, setFlightType }) => {
         </span>
         <span className="text-[13px] m-0">Private Jet</span>
       </div>
+      
+      {/* Helicopter */}
+      <div
+        onClick={() => setFlightType("Helicopter")}
+        className={`cursor-pointer flex flex-col items-center p-2 rounded-md transition-colors ${flightType === "Helicopter"
+            ? "bg-blue-600 text-white"
+            : "text-gray-700 hover:bg-gray-300"
+          }`}
+      >
+        <span className="cursor-pointer">
+          <svg
+            id="Layer_1"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 1080 678.6"
+            width="40"
+            height="40"
+            className="fill-current"
+          >
+            <path
+              fill="currentColor"
+              d="M920.08,488.87v-74.33c0-160.82-188.44-199.29-188.44-199.29h-107.16v-57.85h-102.82v57.85H236.75l-21.55-92.12h-87.78l15.33,164.14h242.53s54.67,130.16,77.23,175.13c22.42,44.98,61.32,44.25,61.32,44.25h360.97c36.16,0,35.29-17.79,35.29-17.79ZM720.07,391.11v-142.88c141.44,17.64,157.49,142.88,157.49,142.88h-157.49Z"
+            />
+            <path
+              fill="currentColor"
+              d="M865.24,56.02H270.7c-11.98,0-21.69-9.71-21.69-21.69s9.71-21.69,21.69-21.69h594.55c11.98,0,21.69,9.71,21.69,21.69s-9.71,21.69-21.69,21.69Z"
+            />
+            <path
+              fill="currentColor"
+              d="M567.97,124.7c-11.98,0-21.69-9.71-21.69-21.69V34.33c0-11.98,9.71-21.69,21.69-21.69s21.69,9.71,21.69,21.69v68.67c0,11.98-9.71,21.69-21.69,21.69Z"
+            />
+            <path
+              fill="currentColor"
+              d="M372.46,578.11h46.6v32.14h130.16v-41.78h43.39v41.78h127.46v-41.78h49.29v41.78h141.41v-28.92h41.78v38.57s3.21,44.99-57.85,44.99h-454.75s-67.49,11.25-67.49-38.57v-48.21Z"
+            />
+          </svg>
+        </span>
+        <span className="text-[13px] m-0">Helicopter</span>
+      </div>
 
       {/* Air Ambulance */}
       <div
@@ -69,43 +107,6 @@ export const Icondiv = ({ flightType, setFlightType }) => {
         <span className="text-[13px] m-0">Air Ambulance</span>
       </div>
 
-      {/* Helicopter */}
-      <div
-        onClick={() => setFlightType("Helicopter")}
-        className={`cursor-pointer flex flex-col items-center p-2 rounded-md transition-colors ${flightType === "Helicopter"
-            ? "bg-blue-600 text-white"
-            : "text-gray-700 hover:bg-gray-300"
-          }`}
-      >
-        <span className="cursor-pointer">
-          <svg
-            id="Layer_1"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 1080 678.6"
-            width="40"
-            height="40"
-            className="fill-current"
-          >
-            <path
-              fill="currentColor"
-              d="M920.08,488.87v-74.33c0-160.82-188.44-199.29-188.44-199.29h-107.16v-57.85h-102.82v57.85H236.75l-21.55-92.12h-87.78l15.33,164.14h242.53s54.67,130.16,77.23,175.13c22.42,44.98,61.32,44.25,61.32,44.25h360.97c36.16,0,35.29-17.79,35.29-17.79ZM720.07,391.11v-142.88c141.44,17.64,157.49,142.88,157.49,142.88h-157.49Z"
-            />
-            <path
-              fill="currentColor"
-              d="M865.24,56.02H270.7c-11.98,0-21.69-9.71-21.69-21.69s9.71-21.69,21.69-21.69h594.55c11.98,0,21.69,9.71,21.69,21.69s-9.71,21.69-21.69,21.69Z"
-            />
-            <path
-              fill="currentColor"
-              d="M567.97,124.7c-11.98,0-21.69-9.71-21.69-21.69V34.33c0-11.98,9.71-21.69,21.69-21.69s21.69,9.71,21.69,21.69v68.67c0,11.98-9.71,21.69-21.69,21.69Z"
-            />
-            <path
-              fill="currentColor"
-              d="M372.46,578.11h46.6v32.14h130.16v-41.78h43.39v41.78h127.46v-41.78h49.29v41.78h141.41v-28.92h41.78v38.57s3.21,44.99-57.85,44.99h-454.75s-67.49,11.25-67.49-38.57v-48.21Z"
-            />
-          </svg>
-        </span>
-        <span className="text-[13px] m-0">Helicopter</span>
-      </div>
 
       {/* Air Cargo */}
       <div
