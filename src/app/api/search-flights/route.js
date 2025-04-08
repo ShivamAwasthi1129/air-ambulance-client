@@ -18,8 +18,9 @@ export async function GET(req) {
     const to = searchParams.get("to");
     const departureDate = searchParams.get("departureDate");
     const travelerCount = searchParams.get("travelerCount");
+    const flightTypes = searchParams.get("flightType").split(",");
 
-    if (!from || !to || !departureDate || !travelerCount) {
+    if (!from || !to || !departureDate || !travelerCount || !flightTypes) {
       return NextResponse.json(
         { message: "Missing required parameters." },
         { status: 400 }
@@ -29,6 +30,7 @@ export async function GET(req) {
     // Query MongoDB for available fleets
     const fleets = await Aircraft.find({
       "fleetDetails.baseStation": from,
+      "fleetDetails.flightType": { $in: flightTypes },
       "fleetDetails.restrictedAirports": { $not: { $elemMatch: { $eq: to } } },
       "fleetDetails.seatCapacity": { $gte: Number(travelerCount) },
       "fleetDetails.verified" : true

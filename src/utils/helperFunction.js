@@ -26,10 +26,6 @@ export function haversine(lat1, lon1, lat2, lon2) {
 export async function searchStation(query) {
   try {
     await connectToDatabase();
-    // const results = await Airports.find(
-    //   { $text: { $search: query } }, // Full-text search
-    //   { score: { $meta: "textScore" } } // Get search relevance score
-    // ).sort({ score: { $meta: "textScore" } }); // Sort by relevance
 
     const results = await Airports.aggregate([
       {
