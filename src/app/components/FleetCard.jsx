@@ -834,7 +834,7 @@ export default function FlightCard({
                             {allAmenities.map(([aKey, aVal], idx) => {
                               const IconComp =
                                 amenityIcons[aKey] || <AiOutlineCheckCircle />;
-                                console.log("aKey , aVal",aKey , aVal)
+                                // console.log("aKey , aVal",aKey , aVal)
                               return (
                                 <div
                                   key={aKey + idx}

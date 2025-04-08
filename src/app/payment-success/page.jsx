@@ -114,7 +114,6 @@ function PaymentSuccessContent() {
                 </p>
               </div>
             </div>
-
             {/* Two-Column Layout */}
             <div className="mt-8 flex flex-col md:flex-row md:space-x-8">
               {/* Left Column: Segments (Each Trip) */}

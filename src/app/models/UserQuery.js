@@ -6,6 +6,7 @@ const SegmentSchema = new mongoose.Schema({
   departureDate: { type: String, required: true },
   departureTime: { type: String, required: true },
   passengers: { type: Number, required: true },
+  flightTypes: { type: [String], required: false },
 });
 
 const UserInfoSchema = new mongoose.Schema({
@@ -29,7 +30,6 @@ const ExistingUserLoginSchema = new mongoose.Schema({
 const UserQuerySchema = new mongoose.Schema({
   userInfo: UserInfoSchema,
   tripType: { type: String, required: true },
-  flightType: { type: String, required: false },
   ExistingUserInfo : ExistingUserLoginSchema ,
   segments: [SegmentSchema],
   timestamp: { type: Date, default: Date.now },

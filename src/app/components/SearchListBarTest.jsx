@@ -8,7 +8,10 @@ import UserInfoModal from "../components/UserInfoModal";
 import Link from "next/link";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Icondiv } from "./Icondiv";
+
+// Make sure your Icondiv supports multi-select flightTypes array
+import { Icondiv } from "./Icondiv"; 
+
 export const SearchBar = () => {
   // === State ===
   const [tripType, setTripType] = useState("oneway");
@@ -16,7 +19,7 @@ export const SearchBar = () => {
   const [isMultiCityCollapsed, setIsMultiCityCollapsed] = useState(false);
   const [dateSelected, setDateSelected] = useState(false);
 
-
+  // Each segment has `flightTypes` (an array) for multi-select
   const [segments, setSegments] = useState([
     {
       from: "Dubai International Airport (DXB)",
@@ -24,6 +27,7 @@ export const SearchBar = () => {
       departureDate: new Date().toISOString().split("T")[0],
       departureTime: "12:00",
       passengers: 1,
+      flightTypes: [], // <--- flight types stored here
     },
   ]);
 
@@ -32,9 +36,6 @@ export const SearchBar = () => {
   const [focusedSegmentIndex, setFocusedSegmentIndex] = useState(null);
   const [focusedField, setFocusedField] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
-
-  // Default flightType
-  const [flightType, setFlightType] = useState("Private Jet");
 
   // Personal info fields
   const [name, setName] = useState("");
@@ -53,7 +54,7 @@ export const SearchBar = () => {
 
   // === Effects ===
 
-  // (A) Load data from session OR set defaults if no saved data
+  // (A) Load from session or set defaults
   useEffect(() => {
     const savedSearchData = sessionStorage.getItem("searchData");
     if (savedSearchData) {
@@ -62,19 +63,12 @@ export const SearchBar = () => {
       if (parsed.tripType) setTripType(parsed.tripType);
       if (parsed.segments) setSegments(parsed.segments);
 
-      // if flightType was stored at top-level in older sessions or inside userInfo
-      if (parsed.flightType) {
-        setFlightType(parsed.flightType);
-      } else if (parsed.userInfo && parsed.userInfo.flightType) {
-        setFlightType(parsed.userInfo.flightType);
-      }
-
       if (parsed.userInfo) setUserInfo(parsed.userInfo);
       if (parsed.tripType === "multicity") {
         setShowMultiCityDetails(true);
       }
     } else {
-      // No session data => set default airports for "from" & "to"
+      // No session data => set default from/to
       setSegments((prev) => {
         const updated = [...prev];
         updated[0] = {
@@ -87,6 +81,7 @@ export const SearchBar = () => {
           toCity: "New Delhi",
           toIATA: "DEL",
           toICAO: "VIDP",
+          flightTypes: [],
         };
         return updated;
       });
@@ -99,22 +94,22 @@ export const SearchBar = () => {
     }
   }, []);
 
-  // (B) Whenever tripType, segments, userInfo, or flightType changes, save to session
+  // (B) Save to session whenever these change
   useEffect(() => {
     const dataToSave = {
       tripType,
-      flightType,
       segments,
       userInfo,
     };
     sessionStorage.setItem("searchData", JSON.stringify(dataToSave));
-  }, [tripType, flightType, segments, userInfo]);
+  }, [tripType, segments, userInfo]);
 
-  // (C) Collapse multi-city when user clicks outside container
+  // (C) Collapse multi-city if user clicks outside container
   useEffect(() => {
     function handleDocClick(e) {
       if (!containerRef.current) return;
       const clickedInside = containerRef.current.contains(e.target);
+
       if (tripType === "multicity") {
         if (clickedInside && isMultiCityCollapsed) {
           setIsMultiCityCollapsed(false);
@@ -166,7 +161,7 @@ export const SearchBar = () => {
     fetchAirports();
   }, [searchQuery]);
 
-  // (F) Fetch IP info on mount (optional / fallback)
+  // (F) Fetch IP info on mount (optional)
   useEffect(() => {
     async function fetchIP() {
       try {
@@ -182,8 +177,10 @@ export const SearchBar = () => {
 
   // === Handlers ===
 
+  // Toggle trip type (oneway/multicity)
   const handleTripTypeChange = (type) => {
     setTripType(type);
+
     if (type === "oneway") {
       setShowMultiCityDetails(false);
       setIsMultiCityCollapsed(false);
@@ -194,6 +191,7 @@ export const SearchBar = () => {
           departureDate: new Date().toISOString().split("T")[0],
           departureTime: "12:00",
           passengers: 1,
+          flightTypes: [],
         },
       ]);
     } else if (type === "multicity") {
@@ -206,17 +204,20 @@ export const SearchBar = () => {
           departureDate: new Date().toISOString().split("T")[0],
           departureTime: "12:00",
           passengers: 1,
+          flightTypes: [],
         },
       ]);
     }
   };
 
+  // Update any field in a given segment
   const handleSegmentChange = (index, field, value) => {
     const updatedSegments = [...segments];
     updatedSegments[index][field] = value;
     setSegments(updatedSegments);
   };
 
+  // On selecting an airport from dropdown
   const handleSelectAirport = (
     airport,
     index = focusedSegmentIndex,
@@ -250,6 +251,7 @@ export const SearchBar = () => {
     setSearchQuery("");
   };
 
+  // Swap "from" & "to" in one-way mode
   const handleSwap = (index) => {
     if (tripType !== "oneway") return;
     const updated = [...segments];
@@ -259,7 +261,7 @@ export const SearchBar = () => {
     setSegments(updated);
   };
 
-  // Multi-city: next day's date for newly added segment
+  // Multi-city: add new segment with next-day date
   const handleAddCity = () => {
     setSegments((prev) => {
       const lastSegment = prev[prev.length - 1];
@@ -269,6 +271,7 @@ export const SearchBar = () => {
       }
       lastDateObj.setDate(lastDateObj.getDate() + 1);
       const nextDayISO = lastDateObj.toISOString().split("T")[0];
+
       return [
         ...prev,
         {
@@ -277,47 +280,50 @@ export const SearchBar = () => {
           departureDate: nextDayISO,
           departureTime: "12:00",
           passengers: 1,
+          flightTypes: [],
         },
       ];
     });
   };
 
+  // Remove a segment (multi-city only)
   const handleRemoveCity = (index) => {
     setSegments((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // Final "Search" button
   const handleSearch = async () => {
     setIsLoading(true);
     try {
-      // If user IS verified, fetch name/email/phone from loginData session
+      // If verified, try to pull name/email/phone from loginData in session
       if (isVerified) {
         const storedLoginData = sessionStorage.getItem("loginData");
         if (storedLoginData) {
           const parsedLoginData = JSON.parse(storedLoginData);
-          // Overwrite your local states (or fallback if empty):
+          // Overwrite if empty
           if (!name.trim()) setName(parsedLoginData.name || "");
           if (!phone.trim()) setPhone(parsedLoginData.phone || "");
           if (!email.trim()) setEmail(parsedLoginData.email || "");
         }
       }
 
-      // Because we might have just updated state, let's gather fresh fields from local state:
-      // (A small delay ensures setState is processed. Or just use fresh references below.)
+      // Ensure setState is processed
       await new Promise((resolve) => setTimeout(resolve, 0));
 
       const currentName = name.trim();
       const currentPhone = phone.trim();
       const currentEmail = email.trim();
 
-      // If user is NOT verified, we do normal checks for the placeholders:
-      // Or if user is verified but the fields are still missing (just in case).
-      if (!currentName || !currentPhone || !currentEmail || !flightType || !agreedToPolicy) {
-        toast.error("Name, phone, email and Terms and condition are required fields.");
+      // Basic validations if user is not verified
+      if (!currentName || !currentPhone || !currentEmail || !agreedToPolicy) {
+        toast.error(
+          "Name, phone, email, and agreeing to Terms & Conditions are required."
+        );
         setIsLoading(false);
         return;
       }
 
-      // Append the selected country code to the phone number
+      // Append country code to phone
       const fullPhoneNumber = `${countryCode}${currentPhone}`;
 
       // Merge user info
@@ -329,7 +335,7 @@ export const SearchBar = () => {
         agreedToPolicy,
       };
 
-      // (B) If user is NOT verified, attempt to send OTP
+      // If not verified, send OTP
       if (!isVerified) {
         try {
           const response = await fetch("/api/otp", {
@@ -346,15 +352,14 @@ export const SearchBar = () => {
           if (data.message === "user already exists") {
             toast.info(
               data.message +
-              " with email : " +
-              currentEmail +
-              " Check your email for credentials"
+                " with email : " +
+                currentEmail +
+                " Check your email for credentials"
             );
             setIsLoading(false);
             return;
           }
-
-          // Show the OTP modal
+          // Show OTP modal
           setIsUserInfoModalOpen(true);
         } catch (err) {
           console.error("Error sending OTP request:", err);
@@ -362,22 +367,23 @@ export const SearchBar = () => {
         }
       }
 
-      // (C) Prepare final data, store it, and optionally POST
+      // Build final payload (each segment includes flightTypes array)
       const finalData = {
         tripType,
-        flightType,
-        segments,
+        segments, // => each has flightTypes: [...]
         userInfo: mergedUserInfo,
       };
+
+      // Store in session
       sessionStorage.setItem("searchData", JSON.stringify(finalData));
       setUserInfo(mergedUserInfo);
       setRefreshKey((prev) => prev + 1);
 
-      // Immediately POST to /api/query for flight listing
+      // Optionally POST to /api/query for flight listing
       const finalDataFromSession = sessionStorage.getItem("searchData");
+      console.log("final payload : " , finalDataFromSession);
       if (finalDataFromSession) {
         const finalDataToSend = JSON.parse(finalDataFromSession);
-        // console.log("Final Payload (sent immediately):", finalDataToSend);
         await fetch("/api/query", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -385,7 +391,7 @@ export const SearchBar = () => {
         });
       }
 
-      // For multi-city, collapse after searching
+      // If multi-city, collapse after searching
       if (tripType === "multicity") {
         setIsMultiCityCollapsed(true);
       }
@@ -397,10 +403,10 @@ export const SearchBar = () => {
     }
   };
 
-  // === JSX ===
+  // === Render ===
   return (
     <>
-      {/* User Info (OTP) Modal */}
+      {/* OTP Modal (if needed) */}
       {isUserInfoModalOpen && (
         <UserInfoModal
           show={isUserInfoModalOpen}
@@ -415,14 +421,21 @@ export const SearchBar = () => {
       )}
 
       <div className="w-full flex flex-col items-center relative">
-        {/* Search Bar Container */}
+        {/* Main Container */}
         <div
+          ref={containerRef}
           className="p-4 sm:p-6 md:p-8 max-w-6xl w-full rounded-lg bg-white/40 
                      backdrop-blur-md shadow-md -mt-32 relative z-10"
-          ref={containerRef}
         >
-          {/* (1) Flight-Type Icons row */}
-          <Icondiv flightType={flightType} setFlightType={setFlightType} />
+          {/* (1) Icon bar for ONE-WAY tripType =>  segments[0] */}
+          {tripType === "oneway" && (
+            <Icondiv
+              flightTypes={segments[0].flightTypes}
+              setFlightTypes={(updatedFlightTypes) =>
+                handleSegmentChange(0, "flightTypes", updatedFlightTypes)
+              }
+            />
+          )}
 
           {/* (2) Trip Type Radio Buttons */}
           <div className="flex items-center justify-start gap-6 mb-6">
@@ -451,7 +464,7 @@ export const SearchBar = () => {
             </label>
           </div>
 
-          {/* (3) Main Search Fields Container */}
+          {/* (3) Main Fields Box */}
           <div className="bg-white rounded-xl border-4 border-gray-300 p-4">
             {/* One Way Fields */}
             {tripType === "oneway" && (
@@ -486,7 +499,9 @@ export const SearchBar = () => {
                         {airports.slice(0, 5).map((airport, i) => (
                           <li
                             key={airport.id ?? `airport-from-${i}`}
-                            onClick={() => handleSelectAirport(airport, 0, "from")}
+                            onClick={() =>
+                              handleSelectAirport(airport, 0, "from")
+                            }
                             className="p-2 cursor-pointer hover:bg-gray-200 border-b text-sm"
                           >
                             <div className="font-semibold">
@@ -501,11 +516,13 @@ export const SearchBar = () => {
                       </ul>
                     )}
                 </div>
+
                 {/* Swap Icon */}
                 <motion.button
                   onClick={() => handleSwap(0)}
                   whileHover={{ scale: 1.1 }}
-                  className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full h-10 w-10 flex items-center justify-center mt-6"
+                  className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full 
+                             h-10 w-10 flex items-center justify-center mt-6"
                 >
                   <SwapHorizIcon />
                 </motion.button>
@@ -539,7 +556,9 @@ export const SearchBar = () => {
                         {airports.slice(0, 5).map((airport, i) => (
                           <li
                             key={airport.id ?? `airport-to-${i}`}
-                            onClick={() => handleSelectAirport(airport, 0, "to")}
+                            onClick={() =>
+                              handleSelectAirport(airport, 0, "to")
+                            }
                             className="p-2 cursor-pointer hover:bg-gray-200 border-b text-sm"
                           >
                             <div className="font-semibold">
@@ -554,6 +573,7 @@ export const SearchBar = () => {
                       </ul>
                     )}
                 </div>
+
                 {/* Departure Date & Time */}
                 <div className="w-full sm:w-1/2 md:w-[200px]">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -562,24 +582,23 @@ export const SearchBar = () => {
                   <input
                     type="datetime-local"
                     value={`${segments[0].departureDate}T${segments[0].departureTime || "12:00"}`}
-                    onFocus={() => setDateSelected(false)} // Reset flag when focusing
+                    onFocus={() => setDateSelected(false)} 
                     onChange={(e) => {
                       const [date, time] = e.target.value.split("T");
                       if (!dateSelected) {
-                        // First change: update date only and mark that date is selected.
+                        // first pick => update date only
                         handleSegmentChange(0, "departureDate", date);
                         setDateSelected(true);
                       } else {
-                        // Second change: update time and then close the picker.
+                        // second pick => update time, then blur
                         handleSegmentChange(0, "departureTime", time);
-                        e.target.blur(); // Closes the picker after time selection.
+                        e.target.blur();
                         setDateSelected(false);
                       }
                     }}
                     min={`${new Date().toISOString().split("T")[0]}T00:00`}
                     className="block w-full p-2 border rounded focus:outline-none"
                   />
-
                 </div>
 
                 {/* Seats */}
@@ -622,19 +641,30 @@ export const SearchBar = () => {
                     {segments.map((segment, index) => (
                       <div
                         key={index}
-                        className="relative bg-gray-50 border-2 border-gray-300 rounded-md p-4"
+                        className="relative bg-gray-50 border-2 border-gray-300 
+                                   rounded-md p-4"
                       >
-                        {/* Purple vertical tab for "Trip X" */}
+                        {/* Purple vertical label for "Trip X" */}
                         <div
-                          className="absolute -left-8 top-1/2 -translate-y-1/2 w-[70px]
-                                     bg-purple-600 text-white text-center text-sm font-semibold 
+                          className="absolute -left-12 top-1/2 -translate-y-1/2 w-[100px]
+                                     bg-purple-600 text-white text-center text-sm font-semibold
                                      py-1 transform -rotate-90 origin-center rounded-md"
                           style={{ transformOrigin: "center" }}
                         >
                           Trip {index + 1}
                         </div>
 
-                        <div className="ml-10 flex flex-wrap lg:flex-nowrap items-end gap-4">
+                        {/* Icon div for each segment */}
+                      <div className="mt-20 ml-10"> 
+                         <Icondiv
+                          flightTypes={segment.flightTypes}
+                          setFlightTypes={(updatedFlightTypes) =>
+                            handleSegmentChange(index, "flightTypes", updatedFlightTypes)
+                          }
+                        /></div>
+
+                        {/* Actual fields */}
+                        <div className="ml-10 flex flex-wrap lg:flex-nowrap items-end gap-4 mt-4">
                           {/* FROM */}
                           <div className="flex-1 relative">
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -656,6 +686,7 @@ export const SearchBar = () => {
                                 setSearchQuery(e.target.value);
                               }}
                             />
+                            {/* Dropdown */}
                             {showDropdown &&
                               focusedSegmentIndex === index &&
                               focusedField === "from" &&
@@ -663,9 +694,7 @@ export const SearchBar = () => {
                                 <ul className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
                                   {airports.slice(0, 5).map((airport, i) => (
                                     <li
-                                      key={
-                                        airport.id ?? `airport-from-${index}-${i}`
-                                      }
+                                      key={airport.id ?? `airport-from-${index}-${i}`}
                                       onClick={() =>
                                         handleSelectAirport(airport, index, "from")
                                       }
@@ -732,6 +761,7 @@ export const SearchBar = () => {
                                 </ul>
                               )}
                           </div>
+
                           {/* DATE & TIME */}
                           <div className="w-full sm:w-1/2 md:w-[200px]">
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -739,8 +769,7 @@ export const SearchBar = () => {
                             </label>
                             <input
                               type="datetime-local"
-                              value={`${segment.departureDate}T${segment.departureTime || "12:00"
-                                }`}
+                              value={`${segment.departureDate}T${segment.departureTime || "12:00"}`}
                               onChange={(e) => {
                                 const [date, time] = e.target.value.split("T");
                                 handleSegmentChange(index, "departureDate", date);
@@ -772,13 +801,14 @@ export const SearchBar = () => {
                             </select>
                           </div>
 
-                          {/* Delete Button (if multiple segments) */}
+                          {/* Remove segment (if more than 1) */}
                           <div className="mt-3 flex items-center gap-4">
                             {segments.length > 1 && (
                               <motion.button
                                 onClick={() => handleRemoveCity(index)}
                                 whileHover={{ scale: 1.1 }}
-                                className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-md flex items-center justify-center"
+                                className="bg-red-500 hover:bg-red-600 text-white p-2 
+                                           rounded-md flex items-center justify-center"
                               >
                                 <DeleteIcon />
                               </motion.button>
@@ -786,13 +816,15 @@ export const SearchBar = () => {
                           </div>
                         </div>
 
-                        {/* Add Another Flight (last segment only) */}
+                        {/* Add Another Flight (only on last segment) */}
                         {index === segments.length - 1 && (
                           <div className="mt-3 flex items-center gap-4 ml-10">
                             <button
                               type="button"
                               onClick={handleAddCity}
-                              className="py-1 px-3 border rounded text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white transition"
+                              className="py-1 px-3 border rounded text-blue-600 
+                                         border-blue-600 hover:bg-blue-600 
+                                         hover:text-white transition"
                             >
                               + Add Another Flight
                             </button>
@@ -824,7 +856,8 @@ export const SearchBar = () => {
                   <select
                     value={countryCode}
                     onChange={(e) => setCountryCode(e.target.value)}
-                    className="absolute inset-y-0 left-0 w-20 bg-transparent border-0 text-gray-700 z-10"
+                    className="absolute inset-y-0 left-0 w-20 bg-transparent 
+                               border-0 text-gray-700 z-10"
                   >
                     <option value="+91">+91</option>
                     <option value="+1">+1</option>
@@ -836,7 +869,8 @@ export const SearchBar = () => {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="Phone Number*"
-                    className="block w-full p-2 border rounded focus:outline-none pl-20 bg-pink-50/50"
+                    className="block w-full p-2 border rounded focus:outline-none
+                               pl-20 bg-pink-50/50"
                   />
                 </div>
 
@@ -858,7 +892,8 @@ export const SearchBar = () => {
                     id="policyCheck"
                     checked={agreedToPolicy}
                     onChange={(e) => setAgreedToPolicy(e.target.checked)}
-                    className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="h-5 w-5 text-blue-600 border-gray-300 
+                               rounded focus:ring-blue-500"
                   />
                   <label
                     htmlFor="policyCheck"
@@ -885,7 +920,10 @@ export const SearchBar = () => {
               >
                 {isLoading ? (
                   <div className="flex items-center">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    <div className="w-4 h-4 border-2 border-white 
+                                   border-t-transparent rounded-full 
+                                   animate-spin mr-2"
+                    />
                     Loading...
                   </div>
                 ) : (
@@ -896,7 +934,7 @@ export const SearchBar = () => {
           </div>
         </div>
 
-        {/* (6) Conditionally render FilterAndFleetListing */}
+        {/* (6) Conditionally render the flight listing (if verified) */}
         {!isLoading && isVerified && <FilterAndFleetListing key={refreshKey} />}
       </div>
 
