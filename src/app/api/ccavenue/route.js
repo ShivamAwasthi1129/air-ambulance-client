@@ -15,7 +15,6 @@ export async function POST(req) {
     let {
       amount,
       currency,
-      flightType,
       segments,
       tripType,
       userInfo,
@@ -36,7 +35,6 @@ export async function POST(req) {
     const bookingInfo = {
       amount_paid: amount,
       currency,
-      flight_type: flightType,
       segments,
       trip_type: tripType,
       user_info: userInfo,

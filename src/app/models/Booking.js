@@ -12,6 +12,7 @@ const selectedFleetSchema = new mongoose.Schema({
 
 const segmentSchema = new mongoose.Schema({
   _id: { type: String, required: true },
+  flightTypes: [{ type: String, required: true }],
   from: { type: String, required: true },
   to: { type: String, required: true },
   departureDate: { type: Date, required: true },
@@ -46,7 +47,6 @@ const BookingSchema = new mongoose.Schema(
     _id: { type: String, required: true },
     amount_paid: { type: Number, required: true },
     currency: { type: String, required: true, default: "INR" },
-    flight_type: { type: String, required: true },
     segments: [segmentSchema],
     trip_type: { type: String, required: true },
     user_info: userInfoSchema,
