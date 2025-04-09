@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { IoIosAirplane } from "react-icons/io";
 import FlightCard from "./FleetCard"; // <--- Our updated FlightCard
 import { BsExclamationTriangle } from "react-icons/bs";
-// import { FaWhatsapp } from "react-icons/fa"; // example if needed
 
 const FilterAndFleetListing = ({ refreshKey }) => {
   const [searchData, setSearchData] = useState(null);
@@ -21,10 +20,11 @@ const FilterAndFleetListing = ({ refreshKey }) => {
 
         // Initialize segment states
         if (sessionData?.segments?.length) {
-          const initialSegmentStates = sessionData.segments.map(() => ({
+          const initialSegmentStates = sessionData.segments.map((seg) => ({
             fleetData: [],
             filteredData: [],
-            selectedTypes: [],
+            // IMPORTANT: Start selectedTypes with whatever the user picked in the SearchBar
+            selectedTypes: seg.flightTypes || [],
             selectedAmenities: [],
             minPrice: 0,
             maxPrice: 0,
@@ -56,9 +56,19 @@ const FilterAndFleetListing = ({ refreshKey }) => {
       const segment = searchData.segments[segmentIndex];
       const cleanedFrom = cleanAirportName(segment.from);
       const cleanedTo = cleanAirportName(segment.to);
+
+      // Build the flightType parameter if the user selected any
+      let flightTypeQuery = "";
+      if (segment.flightTypes && segment.flightTypes.length > 0) {
+        flightTypeQuery = `&flightType=${encodeURIComponent(
+          segment.flightTypes.join(",")
+        )}`;
+      }
+
+      // Now include flightType param in the fetch URL
       const url = `/api/search-flights?from=${cleanedFrom}&to=${cleanedTo}&departureDate=${
         segment.departureDate
-      }T${segment.departureTime}:00Z&travelerCount=${segment.passengers}`;
+      }T${segment.departureTime}:00Z&travelerCount=${segment.passengers}${flightTypeQuery}`;
 
       try {
         const response = await fetch(url);
@@ -172,7 +182,8 @@ const FilterAndFleetListing = ({ refreshKey }) => {
       const segState = updated[segmentIndex];
       updated[segmentIndex] = {
         ...segState,
-        selectedTypes: [],
+        // Reset to what it was originally for that segment:
+        selectedTypes: searchData.segments[segmentIndex].flightTypes || [],
         selectedAmenities: [],
         priceRange: segState.maxPrice,
         filteredData: segState.fleetData,
@@ -196,7 +207,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
       seatingCapacity: flight?.fleetDetails?.seatCapacity,
       price: flight?.totalPrice,
       time: flight?.flightTime,
-      // Store some images if needed ...
+      // optional: store images, etc.
     };
 
     setSearchData(updatedSearchData);
@@ -229,12 +240,17 @@ const FilterAndFleetListing = ({ refreshKey }) => {
     noData = false,
   } = currentSegmentState;
 
-  // Distinct flight types
+  // Combine flight types from API data + user-chosen
   const allFlightTypes = useMemo(() => {
-    return [
-      ...new Set(fleetData.map((f) => f.fleetDetails?.flightType).filter(Boolean)),
-    ];
-  }, [fleetData]);
+    // From the API results
+    const fromData = fleetData
+      .map((f) => f.fleetDetails?.flightType)
+      .filter(Boolean);
+
+    // Ensure user-chosen flight types also appear
+    const fromSet = new Set([...fromData, ...selectedTypes]);
+    return [...fromSet];
+  }, [fleetData, selectedTypes]);
 
   // Collect all amenities
   const allAmenities = useMemo(() => {
@@ -301,7 +317,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
           <div className="bg-gray-300 rounded h-6 w-60" />
           <div className="bg-gray-300 rounded h-8 w-32" />
         </div>
-        {/* etc. (skeleton placeholders) */}
+        {/* etc. (more skeleton placeholders) */}
       </div>
     );
   }
@@ -348,8 +364,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                   key={idx}
                   className="text-sm text-red-500 mb-2 border-l-4 border-red-500 pl-2"
                 >
-                  Trip {idx + 1}:{" "}
-                  <span className="font-medium">No Fleet Selected</span>
+                  Trip {idx + 1}: <span className="font-medium">No Fleet Selected</span>
                 </p>
               )
             )}
@@ -598,9 +613,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                 <p className="text-lg text-gray-600">No fleets available</p>
               </div>
             ) : (
-              
               <FlightCard
-              
                 // Pass entire array so user can check multiple flights
                 filteredData={filteredData}
                 onSelectFleet={(flight) => handleFleetSelection(segmentIndex, flight)}
@@ -609,7 +622,6 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                 currentTripIndex={currentTripIndex}
                 tripCount={tripCount}
                 isMultiCity={isMultiCity}
-                // readOnly={false} // optional
               />
             )}
           </div>

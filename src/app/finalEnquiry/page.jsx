@@ -74,11 +74,18 @@ const FinalEnquiryPage = () => {
         const cleanedFrom = cleanAirportName(segment.from);
         const cleanedTo = cleanAirportName(segment.to);
 
-        const url = `/api/search-flights?from=${encodeURIComponent(
-          cleanedFrom
-        )}&to=${encodeURIComponent(cleanedTo)}&departureDate=${
+        // Build the flightType parameter if the user selected any
+        let flightTypeQuery = "";
+        if (segment.flightTypes && segment.flightTypes.length > 0) {
+          flightTypeQuery = `&flightType=${encodeURIComponent(
+            segment.flightTypes.join(",")
+          )}`;
+        }
+  
+        // Now include flightType param in the fetch URL
+        const url = `/api/search-flights?from=${cleanedFrom}&to=${cleanedTo}&departureDate=${
           segment.departureDate
-        }T${segment.departureTime}:00Z&travelerCount=${segment.passengers}`;
+        }T${segment.departureTime}:00Z&travelerCount=${segment.passengers}${flightTypeQuery}`;
 
         try {
           const res = await fetch(url);
