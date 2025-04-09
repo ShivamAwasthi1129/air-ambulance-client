@@ -137,8 +137,8 @@ function PaymentSuccessContent() {
                         </div>
 
                         {/* Flight Type + Trip Type */}
-                        <div className="mb-2 text-gray-800 font-bold">
-                          {bookingData.flight_type || "Private Jet"} -{" "}
+                        <div className="mb-2 text-gray-800 font-bold" >
+                          {bookingData.segments[idx].selectedFleet.type || "Private Jet"} -{" "}
                           {bookingData.trip_type || "One-Way"}
                         </div>
 
