@@ -108,8 +108,6 @@ const NavBar = () => {
     }
 
     try {
-      // This uses the same API route you mentioned:
-      // /api/user/${encodeURIComponent(emailOrPhone)}
       const resp = await fetch(
         `/api/user/${encodeURIComponent(identifier)}`,
         { method: "GET" }
@@ -120,14 +118,14 @@ const NavBar = () => {
       const userData = await resp.json();
       setInfoFetched(true);
 
-      // If your API returns an array:
+      // If API returns an array:
       if (Array.isArray(userData) && userData.length > 0) {
         const userObj = userData[0];
         setPhoneNumber(userObj.phone || "");
         setEmail(userObj.email || "");
         setFetchedName(userObj.name || "");
       }
-      // If your API returns an object, adjust accordingly:
+      // If  API returns an object, adjust accordingly:
       else if (userData && userData.phone) {
         setPhoneNumber(userData.phone || "");
         setEmail(userData.email || "");
@@ -145,13 +143,12 @@ const NavBar = () => {
       setFetchedName("");
     }
   };
-
   // ----------------------------------------------------------------
   // Send OTP
   // ----------------------------------------------------------------
   const handleSendOtp = async () => {
-    // We need at least phone or email to send OTP
-    // For example, if your OTP is phone-based, phoneNumber must exist
+    // getting at least phone or email to send OTP
+    // For example, if our OTP is phone-based, phoneNumber must exist
     if (!phoneNumber && !email) {
       toast.error("Please enter a valid phone or email first.");
       return;
@@ -159,7 +156,6 @@ const NavBar = () => {
 
     setOtpSendStatus("sending");
     try {
-      // Using the same path you had in your snippet:
       const resp = await fetch("/api/user/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -199,7 +195,6 @@ const NavBar = () => {
     }
 
     try {
-      // Example using your snippet's approach
       const query = `/api/user/signin?email=${encodeURIComponent(
         email
       )}&otp=${encodeURIComponent(enteredOtp)}&phone=${encodeURIComponent(
@@ -216,8 +211,7 @@ const NavBar = () => {
         data.message.toLowerCase().includes("otp verified successfully")
       ) {
         toast.success("OTP verified successfully! Logging in...");
-
-        // Mark user as verified in session
+        // Marking user as verified in session
         const userLoginData = {
           email,
           phone: phoneNumber,
@@ -231,7 +225,7 @@ const NavBar = () => {
         sessionStorage.setItem("loginData", JSON.stringify(userLoginData));
         sessionStorage.setItem("userVerified", "true");
 
-          // Optionally send final data
+          // Optionally sending final data
           const finalDataFromSession = sessionStorage.getItem("searchData");
           if (finalDataFromSession) {
             const finalDataToSend = JSON.parse(finalDataFromSession);
@@ -304,8 +298,7 @@ const NavBar = () => {
           phone: phoneNumber,
           token: data.token,
         };
-
-        // Merge into searchData
+        // Merging into searchData
         const searchDataStr = sessionStorage.getItem("searchData");
         let searchData = searchDataStr ? JSON.parse(searchDataStr) : {};
         searchData.userInfo = { ...searchData.userInfo, ...userLoginData };
@@ -313,7 +306,7 @@ const NavBar = () => {
         sessionStorage.setItem("loginData", JSON.stringify(userLoginData));
         sessionStorage.setItem("userVerified", "true");
 
-        // Optionally send final data
+        // Optionally sending the final data
         const finalDataFromSession = sessionStorage.getItem("searchData");
         if (finalDataFromSession) {
           const finalDataToSend = JSON.parse(finalDataFromSession);

@@ -778,7 +778,7 @@ export default function FlightCard({
                         {arrTime}
                       </p>
                     </div>
-                    <div className="text-right flex my-4 font-bold">
+                    <div className="text-right flex my-2 font-bold">
                       <div className="flex flex-col items-center text-sm text-gray-500 mr-6">
                         <p>{fromIATA}</p>
                         <p>{fromCity}</p>
@@ -802,7 +802,7 @@ export default function FlightCard({
 
                   {/* Amenities row (carousel) */}
                   <div className="flex flex-col items-center flex-wrap ">
-                    <p className="font-medium mt-2">In-Flight Amenities</p>
+                    <p className="font-medium ">In-Flight Amenities</p>
 
                     {length === 0 ? (
                       <div className="text-sm text-gray-500">
@@ -870,13 +870,18 @@ export default function FlightCard({
                       </div>
                     )}
                   </div>
-
+                  <p className="font-medium ">Add on Facilities</p>
+                  <p className="font-extralight italic text-xs">No additional Facilities available to show....</p>
                   {/* SHARE and SELECT-FOR-SHARING row */}
                   {!readOnly && (
-                    <div className="flex items-center justify-center mt-2 px-4 w-full ">
+                    <div className="flex items-center justify-between w-full  mt-4 px-6">
+                       <p className="text-xs text-gray-600 text-center ml-2">
+                            *Note: Certain booking parameters may be updated or adjusted as required, based on specific needs or ciscumstances.
+                          </p>
                       {/* Left: share icons + "Share" text */}
                       <div className="flex flex-col items-center justify-center gap-2">
-                        <div className="flex gap-2">
+                        <div className="flex gap-2  items-center">
+                       
                           <div
                             className="flex flex-col items-center text-blue-600 cursor-pointer"
                             onClick={openWhatsAppModal}
@@ -889,8 +894,7 @@ export default function FlightCard({
                           >
                             <AiOutlineMail size={24} />
                           </div>
-                        </div>
-                        <div className="flex">
+                          <div className="flex">
                           <label className="flex items-center space-x-2 text-sm text-gray-600 cursor-pointer">
                             <input
                               type="checkbox"
@@ -903,6 +907,8 @@ export default function FlightCard({
                             Share
                           </p>
                         </div>
+                        </div>
+                      
                       </div>
                     </div>
                   )}
