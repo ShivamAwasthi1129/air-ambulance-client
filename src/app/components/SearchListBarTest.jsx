@@ -306,10 +306,8 @@ export const SearchBar = () => {
           if (!email.trim()) setEmail(parsedLoginData.email || "");
         }
       }
-
       // Ensure setState is processed
       await new Promise((resolve) => setTimeout(resolve, 0));
-
       const currentName = name.trim();
       const currentPhone = phone.trim();
       const currentEmail = email.trim();
@@ -317,7 +315,7 @@ export const SearchBar = () => {
       // Basic validations if user is not verified
       if (!currentName || !currentPhone || !currentEmail || !agreedToPolicy) {
         toast.error(
-          // "Name, phone, email, and agreeing to Terms & Conditions are required."
+          "Name, phone, email, and agreeing to Terms & Conditions are required."
         );
         setIsLoading(false);
         return;

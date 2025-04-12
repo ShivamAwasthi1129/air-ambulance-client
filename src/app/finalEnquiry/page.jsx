@@ -450,9 +450,9 @@ const FinalEnquiryPage = () => {
       <Banner />
 
       {/* trips and price calculation section */}
-      <div className="flex flex-col md:flex-row justify-center gap-6 p-4">
+      <div className="flex flex-col md:flex-row justify-center gap-2 p-4">
         {/* LEFT COLUMN: Flights */}
-        <div className="w-[60%] md:w-[65rem] flex flex-col space-y-4">
+        <div className="xl:w-[70rem] md: w-[90rem] flex flex-col space-y-4 ">
           {searchData.segments.map((segment, segmentIndex) => {
             const flightsForSegment = fetchedSegmentsData[segmentIndex] || [];
             return (
@@ -486,7 +486,7 @@ const FinalEnquiryPage = () => {
         </div>
 
         {/* RIGHT COLUMN: JetSteals + Cost Details + Buttons */}
-        <div className="w-[28%] hidden md:block">
+        <div className="xl: w-[28%] hidden md:block">
           <div className="bg-white border-2 border-dashed border-gray-400 rounded-lg p-4 shadow-sm">
             {/* Dynamic trip info */}
             <h2 className="text-xl font-semibold mb-1">
@@ -519,7 +519,7 @@ const FinalEnquiryPage = () => {
               <button
                 onClick={() => setIsPaymentModalOpen(true)}
                 disabled={loading}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors text-sm font-semibold"
+                className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded transition-colors text-sm font-semibold"
               >
                 {loading ? "Processing..." : "BOOK Now"}
                 <div className="text-xs font-normal">With Partial Payment</div>
@@ -529,7 +529,7 @@ const FinalEnquiryPage = () => {
               <button
                 onClick={sendWhatsAppMessage}
                 disabled={isWhatsAppSending}
-                className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded transition-colors text-sm font-semibold"
+                className="bg-green-500 hover:bg-green-600 text-white p-2 rounded transition-colors text-sm font-semibold"
               >
                 {isWhatsAppSending ? "Sending..." : "SEND Enquiry"}
                 <div className="text-xs font-normal">via Whatsapp</div>
@@ -539,7 +539,7 @@ const FinalEnquiryPage = () => {
               <button
                 onClick={sendEmailMessage}
                 disabled={isEmailSending}
-                className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:opacity-90 text-white px-3 py-2 rounded transition-colors text-sm font-semibold"
+                className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:opacity-90 text-white p-2 rounded transition-colors text-sm font-semibold"
               >
                 {isEmailSending ? "Sending..." : "SEND Enquiry"}
                 <div className="text-xs font-normal">via Email</div>

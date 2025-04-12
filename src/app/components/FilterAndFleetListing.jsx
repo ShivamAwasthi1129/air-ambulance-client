@@ -514,7 +514,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                 return (
                   <label
                     key={type}
-                    className="inline-flex items-center space-x-2 cursor-pointer"
+                    className="inline-flex items-center space-x-2 cursor-pointer mr-4"
                   >
                     <input
                       type="checkbox"
@@ -568,7 +568,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
 
           {/* Amenities */}
           <div>
-            <p className="font-semibold text-gray-700 mb-3">Available Services</p>
+            <p className="font-semibold text-gray-700 mb-3">In Flight Amenities</p>
             <div className="flex flex-wrap gap-4 items-center">
               {allAmenities.map((amenity) => {
                 const checked = selectedAmenities.includes(amenity);

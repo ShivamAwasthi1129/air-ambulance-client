@@ -818,7 +818,7 @@ export default function FlightCard({
 
                         {/* Carousel window */}
                         <div
-                          className="h-[8rem] flex justify-center items-center overflow-hidden"
+                          className="h-[8rem] flex items-center overflow-hidden"
                           style={{ width: "350px" }}
                         >
                           {/* Amenity row */}
