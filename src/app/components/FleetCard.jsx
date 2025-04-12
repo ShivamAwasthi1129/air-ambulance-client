@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import html2canvas from "html2canvas";
-
 // React-Toastify
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -509,7 +508,7 @@ export default function FlightCard({
           className="absolute bottom-4 left-4 bg-black/50 text-white text-sm md:text-base 
                      px-3 py-1 rounded cursor-pointer"
         >
-          See Flight Experience
+          See More Photos
         </span>
 
         {images.length > 1 && (
@@ -678,10 +677,9 @@ export default function FlightCard({
                       <button
                         onClick={() => onSelectFleet(flight)}
                         className={`mt-3 px-8 py-1 rounded font-semibold text-white
-                          ${
-                            selectedFleet?._id === flightId
-                              ? "bg-red-500"
-                              : "bg-blue-600"
+                          ${selectedFleet?._id === flightId
+                            ? "bg-red-500"
+                            : "bg-blue-600"
                           } shadow-sm`}
                       >
                         {selectedFleet?._id === flightId
@@ -820,7 +818,7 @@ export default function FlightCard({
 
                         {/* Carousel window */}
                         <div
-                          className="overflow-hidden"
+                          className="h-[8rem] flex justify-center items-center overflow-hidden"
                           style={{ width: "350px" }}
                         >
                           {/* Amenity row */}
@@ -834,7 +832,7 @@ export default function FlightCard({
                             {allAmenities.map(([aKey, aVal], idx) => {
                               const IconComp =
                                 amenityIcons[aKey] || <AiOutlineCheckCircle />;
-                                // console.log("aKey , aVal",aKey , aVal)
+                              // console.log("aKey , aVal",aKey , aVal)
                               return (
                                 <div
                                   key={aKey + idx}
@@ -852,13 +850,16 @@ export default function FlightCard({
                                        whitespace-nowrap z-auto mb-1"
                                   >
                                     {aKey} - {aVal.value}
-                                    
+
                                   </div>
                                 </div>
                               );
                             })}
                           </div>
                         </div>
+
+
+
 
                         {/* Right Arrow (always visible) */}
                         <button
@@ -875,13 +876,13 @@ export default function FlightCard({
                   {/* SHARE and SELECT-FOR-SHARING row */}
                   {!readOnly && (
                     <div className="flex items-center justify-between w-full  mt-4 px-6">
-                       <p className="text-xs text-gray-600 text-center ml-2">
-                            *Note: Certain booking parameters may be updated or adjusted as required, based on specific needs or ciscumstances.
-                          </p>
+                      <p className="text-xs text-gray-600 text-center ml-2">
+                        *Note: All Parameters are subject to change time to time.
+                      </p>
                       {/* Left: share icons + "Share" text */}
                       <div className="flex flex-col items-center justify-center gap-2">
                         <div className="flex gap-2  items-center">
-                       
+
                           <div
                             className="flex flex-col items-center text-blue-600 cursor-pointer"
                             onClick={openWhatsAppModal}
@@ -895,20 +896,20 @@ export default function FlightCard({
                             <AiOutlineMail size={24} />
                           </div>
                           <div className="flex">
-                          <label className="flex items-center space-x-2 text-sm text-gray-600 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              className="w-4 h-4"
-                              checked={checkedFlights[flightId] || false}
-                              onChange={(e) => handleCheckboxChange(flight, e)}
-                            />
-                          </label>
-                          <p className="text-xs text-gray-600 text-center ml-2">
-                            Share
-                          </p>
+                            <label className="flex items-center space-x-2 text-sm text-gray-600 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                className="w-4 h-4"
+                                checked={checkedFlights[flightId] || false}
+                                onChange={(e) => handleCheckboxChange(flight, e)}
+                              />
+                            </label>
+                            <p className="text-xs text-gray-600 text-center ml-2">
+                              Share
+                            </p>
+                          </div>
                         </div>
-                        </div>
-                      
+
                       </div>
                     </div>
                   )}
@@ -942,11 +943,10 @@ export default function FlightCard({
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`py-1 px-3 font-semibold ${
-                      activeTab === tab
-                        ? "text-blue-600 border-b-2 border-blue-600"
-                        : "text-gray-500"
-                    }`}
+                    className={`py-1 px-3 font-semibold ${activeTab === tab
+                      ? "text-blue-600 border-b-2 border-blue-600"
+                      : "text-gray-500"
+                      }`}
                   >
                     {tab}
                   </button>
@@ -961,28 +961,34 @@ export default function FlightCard({
                 <div key={f._id}>
                   {activeTab !== "video" && gallery[activeTab] && (
                     <div className="flex flex-wrap gap-4">
-                      {Object.entries(gallery[activeTab]).map(([view, url]) => (
-                        <img
-                          key={view}
-                          src={url}
-                          alt={view}
-                          className="w-72 h-48 object-cover rounded"
-                        />
-                      ))}
+                      {Object.entries(gallery[activeTab])
+                        .filter(([view]) => view !== "_id")
+                        .map(([view, url]) => (
+                          <img
+                            key={view}
+                            src={url}
+                            alt={view}
+                            className="w-72 h-48 object-cover rounded"
+                          />
+                        ))}
                     </div>
                   )}
                   {activeTab === "video" && gallery.video && (
-                    <div className="w-full h-[80%] relative">
+                    <div className="w-full h-[80%] relative border-none">
                       <video
-                        src={gallery.video}
                         controls
-                        className="absolute inset-0 w-full h-full object-cover"
+                        autoPlay
+                        // muted
+                        loop
+                        src={gallery.video}
+                        className="absolute inset-0 w-full h-[60vh] object-cover border-none"
                       />
                     </div>
                   )}
                 </div>
               );
             })}
+
           </div>
         </div>
       )}

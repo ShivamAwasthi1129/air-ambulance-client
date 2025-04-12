@@ -317,7 +317,7 @@ export const SearchBar = () => {
       // Basic validations if user is not verified
       if (!currentName || !currentPhone || !currentEmail || !agreedToPolicy) {
         toast.error(
-          "Name, phone, email, and agreeing to Terms & Conditions are required."
+          // "Name, phone, email, and agreeing to Terms & Conditions are required."
         );
         setIsLoading(false);
         return;
