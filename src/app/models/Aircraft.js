@@ -28,6 +28,8 @@ const AircraftGallerySchema = new mongoose.Schema({
 
 const FleetDetailsSchema = new mongoose.Schema({
     baseStation: { type: String, required: true },
+    cabinHeight: { type: Number },
+    engineType: { type: String },
     flightType: { type: String, required: true },
     flyingRange: { type: String, required: true },
     insuranceExpiry: { type: String, required: true },
