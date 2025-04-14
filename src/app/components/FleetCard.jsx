@@ -204,7 +204,6 @@ export default function FlightCard({
       }
     }
   }, []);
-
   // If user session has an email, prefill
   useEffect(() => {
     if (userSession?.email) {
@@ -557,12 +556,6 @@ export default function FlightCard({
     if (offset >= length) offset = 0;
     setAmenityOffsets((prev) => ({ ...prev, [flightId]: offset }));
   };
-
-  // We'll show all items in a single row. Each item is ~64px wide (or so).
-  // The offset determines how many items to shift. The window always
-  // displays 7 items. So we want to shift by offset * 64 px.
-  // If length <= 7, we won't truly "scroll," but the arrows remain anyway.
-
   // ------------------------------------------------
   // Render
   // ------------------------------------------------
@@ -600,7 +593,6 @@ export default function FlightCard({
             parsedData?.segments?.[currentTripIndex]?.toCity || "New Delhi";
           const toIATA =
             parsedData?.segments?.[currentTripIndex]?.toIATA || "DEL";
-
           // Amenities
           const allAmenities = Object.entries(flight.additionalAmenities || {});
           const offset = getAmenityOffset(flightId);
@@ -609,7 +601,6 @@ export default function FlightCard({
           const length = allAmenities.length;
           const containerWidth = 7 * itemWidth; // show 7 icons
           const translateX = -(offset * itemWidth);
-
           return (
             <div
               key={flightId}
@@ -626,7 +617,7 @@ export default function FlightCard({
               </div>
 
               {/* MIDDLE - Vertical timeline / line (design only on larger screens) */}
-              <div className="hidden md:flex flex-col items-center justify-center px-3 relative ">
+              <div className="hidden md:flex flex-col items-center justify-center px-3 pr-0 relative ">
                 <div className="w-16 h-16 bg-[#d5e3f4] rounded-full -translate-y-8" />
                 <div
                   style={{ height: "70%" }}
@@ -634,13 +625,12 @@ export default function FlightCard({
                 />
                 <div className="w-16 h-16 bg-[#d5e3f4] rounded-full translate-y-8" />
               </div>
-
               {/* RIGHT - Details */}
-              <div className="w-full md:w-[66%] relative flex">
+              <div className="w-full md:w-[72%] relative flex ">
                 {/* Top row: Fleet Info + Price + Select button */}
-                <div className="flex w-[20rem] flex-col sm:justify-evenly sm:items-center mr-8">
+                <div className="flex w-[22rem] flex-col sm:justify-evenly sm:items-center ">
                   {/* Fleet info */}
-                  <div className="flex flex-col items-center justify-center space-x-3">
+                  <div className="flex flex-col items-center justify-center">
                     <img
                       src={
                         flight.logo ||
@@ -653,19 +643,87 @@ export default function FlightCard({
                       <h2 className="text-xl font-bold text-gray-800">
                         {flight.fleetDetails.selectedModel || "Gulfstream G700"}
                       </h2>
-                      <p className="text-sm text-gray-700 font-medium">
+                      <p className="text-md my-1">JET X 2(Twin Engine) Private Jet</p>
+                      <p className="text-md text-gray-700 font-medium">
                         Reg. No: {flight.fleetDetails.registrationNo || "N/A"}
                       </p>
                     </div>
+                    <div className="text-left flex flex-col justify-center items-center mt-6">
+                      <p className="text-sky-400 font-bold text-xl">Approx Time</p>
+                      <div className="flex items-center justify-center">
+                      <p className="text-2xl font-bold text-gray-800 mr-2">
+                        {depTime}
+                      </p>
+                      <div className="text-center text-gray-500">
+                      <p className="text-xl font-bold text-gray-800">
+                          - -{" "}
+                          <IoIosAirplane
+                            size={28}
+                            className="inline-block text-gray-700"
+                          />{" "}
+                          - -
+                        </p>
+                      </div>
+                      <p className="text-2xl font-bold text-gray-800 ml-2">
+                        {arrTime}
+                      </p>
+                      </div>
+                    </div>
                   </div>
-                  {/* Price & Select */}
-                  <div className="mt-3 sm:mt-0 text-right flex flex-col items-center">
+                </div>
+                {/* Middle / Bottom content */}
+                <div className="flex justify-around w-full items-center flex-col bg-stone-50">
+                <div className="flex w-full items-center justify-around">
+                <div className="">
+                   {/* Seats, Luggage, Speed row */}
+                   <div className="flex items-center space-x-5 mt-4">
+                    <div className="flex items-center text-gray-600">
+                      <MdAirlineSeatReclineExtra className="mr-1" size={24} />
+                      <span className="font-bold text-md">
+                        {flight.fleetDetails.seatCapacity || 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center text-gray-600">
+                      <BsFillLuggageFill className="mr-1" size={18} />
+                      <span className="font-bold text-md">
+                        {flight.fleetDetails.luggage || 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center text-gray-600">
+                      <IoMdSpeedometer className="mr-1" size={24} />
+                      <span className="font-bold text-md">
+                        {flight.fleetDetails.maxSpeed || 0}nm
+                      </span>
+                    </div>
+                  </div>
+                   {/* Times row (Large times + flight duration) */}
+                   <div className="flex flex-col items-start justify-between my-2 mb-0">
+                    <div className="text-right flex justify-center items-center my-2 font-bold">
+                      <div className="flex flex-col items-start text-sm text-gray-500 mr-4">
+                        <p className="font-bold text-black text-xl">{fromIATA}</p>
+                        <p className="text-xl text-gray-900 font-normal">{fromCity}</p>
+                      </div>
+                      <div className="text-center text-gray-500">
+                      <p className="text-md font-bold text-gray-800">
+                       - - -{flightTime} - - -
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-start text-sm text-gray-500 ml-2">
+                        <p className="font-bold text-black text-xl">{toIATA}</p>
+                        <p className="text-xl text-gray-900 font-normal">{toCity}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-sky-600">Refuel on Fly - 3.30hr | Cabin Height - 6ft</p>
+                 </div>
+                   {/* Price & Select */}
+                   <div className="mt-3 sm:mt-0 text-right flex flex-col items-end ml-2">
                     <p className="text-xs text-gray-400">Approx~</p>
                     <p className="text-xl font-bold text-gray-800">
                       USD {flightPriceUSD.toLocaleString()}
                     </p>
-                    <div className="flex font-medium">
-                      <p className="text-sm text-gray-600 pr-2">
+                    <div className="flex font-medium flex-col">
+                      <p className="text-sm text-gray-600">
                         INR {inrPrice.toLocaleString()}
                       </p>
                       <p className="text-sm text-gray-600">
@@ -719,7 +777,7 @@ export default function FlightCard({
                           <button
                             onClick={handleProceedToPay}
                             disabled={isProceeding}
-                            className="w-full md:w-auto px-6 py-2 rounded
+                            className="w-full md:w-auto px-2 py-1 rounded
                                    bg-green-600 text-white font-semibold
                                    shadow-sm flex items-center justify-center"
                           >
@@ -737,71 +795,10 @@ export default function FlightCard({
                     )}
                   </div>
                 </div>
-                {/* Middle / Bottom content */}
-                <div className="flex w-full items-center flex-col  bg-stone-50">
-                  {/* Seats, Luggage, Speed row */}
-                  <div className="flex items-center space-x-5 mt-4">
-                    <div className="flex items-center text-gray-600">
-                      <MdAirlineSeatReclineExtra className="mr-1" size={20} />
-                      <span className="font-bold text-sm">
-                        {flight.fleetDetails.seatCapacity || 0}
-                      </span>
-                    </div>
-                    <div className="flex items-center text-gray-600">
-                      <BsFillLuggageFill className="mr-1" size={18} />
-                      <span className="font-bold text-sm">
-                        {flight.fleetDetails.luggage || 0}
-                      </span>
-                    </div>
-                    <div className="flex items-center text-gray-600">
-                      <IoMdSpeedometer className="mr-1" size={20} />
-                      <span className="font-bold text-sm">
-                        {flight.fleetDetails.maxSpeed || 0}nm
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Times row (Large times + flight duration) */}
-                  <div className="flex flex-col items-center justify-between my-6 mb-2">
-                    <div className="text-left flex justify-center items-center">
-                      <p className="text-5xl font-semibold text-gray-800 mr-4">
-                        {depTime}
-                      </p>
-                      <div className="text-center text-gray-500">
-                        <p className="text-md font-bold text-gray-800">
-                          - - - {flightTime} - - - -
-                        </p>
-                      </div>
-                      <p className="text-5xl font-semibold text-gray-800 ml-4">
-                        {arrTime}
-                      </p>
-                    </div>
-                    <div className="text-right flex my-2 font-bold">
-                      <div className="flex flex-col items-center text-sm text-gray-500 mr-6">
-                        <p>{fromIATA}</p>
-                        <p>{fromCity}</p>
-                      </div>
-                      <div className="text-center text-gray-500">
-                        <p className="text-xl font-bold text-gray-800">
-                          - - -{" "}
-                          <IoIosAirplane
-                            size={38}
-                            className="inline-block text-gray-700"
-                          />{" "}
-                          - - - -
-                        </p>
-                      </div>
-                      <div className="flex flex-col items-center text-sm text-gray-500 ml-6">
-                        <p>{toIATA}</p>
-                        <p>{toCity}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Amenities row (carousel) */}
+                   <div className="">
+                      {/* Amenities row (carousel) */}
                   <div className="flex flex-col items-center flex-wrap ">
                     <p className="font-medium ">In-Flight Amenities</p>
-
                     {length === 0 ? (
                       <div className="text-sm text-gray-500">
                         No amenities listed.
@@ -815,7 +812,6 @@ export default function FlightCard({
                         >
                           <FaArrowLeft />
                         </button>
-
                         {/* Carousel window */}
                         <div
                           className="h-[8rem] flex items-center overflow-hidden"
@@ -858,9 +854,6 @@ export default function FlightCard({
                           </div>
                         </div>
 
-
-
-
                         {/* Right Arrow (always visible) */}
                         <button
                           onClick={() => shiftAmenityRight(flightId, length)}
@@ -871,15 +864,18 @@ export default function FlightCard({
                       </div>
                     )}
                   </div>
-                  <p className="font-medium ">Add on Facilities</p>
-                  <p className="font-extralight italic text-xs">No additional Facilities available to show....</p>
+                   <div className="text-center">
+                   <p className="font-medium ">Add on Facilities</p>
+                   <p className="font-extralight italic text-xs">No additional Facilities available to show....</p>
+                   </div>
                   {/* SHARE and SELECT-FOR-SHARING row */}
-                  {!readOnly && (
-                    <div className="flex items-center justify-between w-full  mt-4 px-6">
+                  
+                    <div className="flex items-center justify-between w-full  mt-4">
                       <p className="text-xs text-gray-600 text-center ml-2">
                         *Note: All Parameters are subject to change time to time.
                       </p>
                       {/* Left: share icons + "Share" text */}
+                      {!readOnly && (
                       <div className="flex flex-col items-center justify-center gap-2">
                         <div className="flex gap-2  items-center">
 
@@ -909,10 +905,9 @@ export default function FlightCard({
                             </p>
                           </div>
                         </div>
-
-                      </div>
+                      </div>  )}
                     </div>
-                  )}
+                   </div>
                 </div>
               </div>
             </div>
