@@ -8,6 +8,7 @@ import {
   addHoursToDate,
 } from "@/utils/helperFunction";
 import FleetTime from "@/app/models/FleetTime";
+import Amenity from "@/app/models/Amenity";
 
 export async function GET(req) {
   try {
@@ -57,6 +58,8 @@ export async function GET(req) {
     const arrival = await searchStation(from.trim());
     const destination = await searchStation(to.trim());
 
+    const addOnService = await Amenity.find({"airports": {$in: [arrival[0].iata_code]}})
+
     const finalFleet = availableFleets.map((fleet) => {
       const { maxSpeed, pricing } = fleet.fleetDetails;
       const cruisingSpeed = parseFloat(maxSpeed) * 1.852; // Convert knots to km/h
@@ -81,6 +84,7 @@ export async function GET(req) {
     return NextResponse.json({
       message: "Available fleets retrieved successfully.",
       finalFleet,
+      addOnService
     });
   } catch (error) {
     console.error("Error retrieving fleets:", error);
