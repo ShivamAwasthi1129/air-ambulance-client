@@ -17,15 +17,9 @@ const amenitySchema = new mongoose.Schema({
       message: 'At least one category is required'
     }
   },
-  icon_svg: {
+  img_path: {
     type: String,
-    required: true,
-    validate: {
-      validator: function(v) {
-        return /^data:image\/svg\+xml;base64,/.test(v); 
-      },
-      message: 'Invalid SVG base64 string'
-    }
+    required: true
   },
   airports: {
     type: [String],
