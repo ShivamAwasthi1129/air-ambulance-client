@@ -35,6 +35,6 @@ const amenitySchema = new mongoose.Schema({
   timestamps: true 
 });
 
-const Amenity = mongoose.model('Amenity', amenitySchema, 'xAmenities');
+const Amenity = mongoose.models.xAmenities || mongoose.model('xAmenities', amenitySchema);
 
 export default Amenity;
