@@ -8,16 +8,19 @@ import UserInfoModal from "../components/UserInfoModal";
 import Link from "next/link";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
-// Make sure your Icondiv supports multi-select flightTypes array
-import { Icondiv } from "./Icondiv"; 
-
+import { Icondiv } from "./Icondiv";
+import GoogleMapModal from "./GoogleMapModal";
+import MapIcon from "@mui/icons-material/Map";
+import MapboxModal from "./MapboxModal";
 export const SearchBar = () => {
   // === State ===
   const [tripType, setTripType] = useState("oneway");
   const [showMultiCityDetails, setShowMultiCityDetails] = useState(false);
   const [isMultiCityCollapsed, setIsMultiCityCollapsed] = useState(false);
   const [dateSelected, setDateSelected] = useState(false);
+  const [mapModal, setMapModal] = useState({ open: false, segIdx: null });
+  const segmentHasHeli = (seg) =>
+    (seg.flightTypes || []).some((t) => t.toLowerCase() === "helicopter");
 
   // Each segment has `flightTypes` (an array) for multi-select
   const [segments, setSegments] = useState([
@@ -27,7 +30,7 @@ export const SearchBar = () => {
       departureDate: new Date().toISOString().split("T")[0],
       departureTime: "12:00",
       passengers: 1,
-      flightTypes: [], // <--- flight types stored here
+      flightTypes: [],
     },
   ]);
 
@@ -49,7 +52,6 @@ export const SearchBar = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isUserInfoModalOpen, setIsUserInfoModalOpen] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
-
   const containerRef = useRef(null);
 
   // === Effects ===
@@ -62,7 +64,6 @@ export const SearchBar = () => {
 
       if (parsed.tripType) setTripType(parsed.tripType);
       if (parsed.segments) setSegments(parsed.segments);
-
       if (parsed.userInfo) setUserInfo(parsed.userInfo);
       if (parsed.tripType === "multicity") {
         setShowMultiCityDetails(true);
@@ -174,9 +175,7 @@ export const SearchBar = () => {
     }
     fetchIP();
   }, []);
-
   // === Handlers ===
-
   // Toggle trip type (oneway/multicity)
   const handleTripTypeChange = (type) => {
     setTripType(type);
@@ -209,14 +208,12 @@ export const SearchBar = () => {
       ]);
     }
   };
-
   // Update any field in a given segment
   const handleSegmentChange = (index, field, value) => {
     const updatedSegments = [...segments];
     updatedSegments[index][field] = value;
     setSegments(updatedSegments);
   };
-
   // On selecting an airport from dropdown
   const handleSelectAirport = (
     airport,
@@ -250,7 +247,6 @@ export const SearchBar = () => {
     setFocusedField(null);
     setSearchQuery("");
   };
-
   // Swap "from" & "to" in one-way mode
   const handleSwap = (index) => {
     if (tripType !== "oneway") return;
@@ -260,7 +256,6 @@ export const SearchBar = () => {
     updated[index].to = temp;
     setSegments(updated);
   };
-
   // Multi-city: add new segment with next-day date
   const handleAddCity = () => {
     setSegments((prev) => {
@@ -285,10 +280,13 @@ export const SearchBar = () => {
       ];
     });
   };
-
   // Remove a segment (multi-city only)
   const handleRemoveCity = (index) => {
     setSegments((prev) => prev.filter((_, i) => i !== index));
+  };
+  const handleSaveCoords = (coords, index) => {
+    console.log(`Segment #${index} →`, coords);
+    // handleSegmentChange(index, "heliCoords", coords);
   };
 
   // Final "Search" button
@@ -320,10 +318,8 @@ export const SearchBar = () => {
         setIsLoading(false);
         return;
       }
-
       // Append country code to phone
       const fullPhoneNumber = `${countryCode}${currentPhone}`;
-
       // Merge user info
       const mergedUserInfo = {
         ...userInfo,
@@ -332,7 +328,6 @@ export const SearchBar = () => {
         email: currentEmail,
         agreedToPolicy,
       };
-
       // If not verified, send OTP
       if (!isVerified) {
         try {
@@ -350,9 +345,9 @@ export const SearchBar = () => {
           if (data.message === "user already exists") {
             toast.info(
               data.message +
-                " with email : " +
-                currentEmail +
-                " Check your email for credentials"
+              " with email : " +
+              currentEmail +
+              " Check your email for credentials"
             );
             setIsLoading(false);
             return;
@@ -364,22 +359,19 @@ export const SearchBar = () => {
           toast.error("Failed to send OTP. Please try again.");
         }
       }
-
       // Build final payload (each segment includes flightTypes array)
       const finalData = {
         tripType,
         segments, // => each has flightTypes: [...]
         userInfo: mergedUserInfo,
       };
-
       // Store in session
       sessionStorage.setItem("searchData", JSON.stringify(finalData));
       setUserInfo(mergedUserInfo);
       setRefreshKey((prev) => prev + 1);
-
       // Optionally POST to /api/query for flight listing
       const finalDataFromSession = sessionStorage.getItem("searchData");
-      console.log("final payload : " , finalDataFromSession);
+      console.log("final payload : ", finalDataFromSession);
       if (finalDataFromSession) {
         const finalDataToSend = JSON.parse(finalDataFromSession);
         await fetch("/api/query", {
@@ -388,7 +380,6 @@ export const SearchBar = () => {
           body: JSON.stringify(finalDataToSend),
         });
       }
-
       // If multi-city, collapse after searching
       if (tripType === "multicity") {
         setIsMultiCityCollapsed(true);
@@ -400,7 +391,6 @@ export const SearchBar = () => {
       setIsLoading(false);
     }
   };
-
   // === Render ===
   return (
     <>
@@ -417,7 +407,6 @@ export const SearchBar = () => {
           }}
         />
       )}
-
       <div className="w-full flex flex-col items-center relative">
         {/* Main Container */}
         <div
@@ -434,7 +423,6 @@ export const SearchBar = () => {
               }
             />
           )}
-
           {/* (2) Trip Type Radio Buttons */}
           <div className="flex items-center justify-start gap-6 mb-6">
             <label className="inline-flex items-center cursor-pointer">
@@ -448,7 +436,6 @@ export const SearchBar = () => {
               />
               <span className="ml-2 text-gray-800 font-medium">One Way</span>
             </label>
-
             <label className="inline-flex items-center cursor-pointer">
               <input
                 type="radio"
@@ -461,7 +448,6 @@ export const SearchBar = () => {
               <span className="ml-2 text-gray-800 font-medium">Multi City</span>
             </label>
           </div>
-
           {/* (3) Main Fields Box */}
           <div className="bg-white rounded-xl border-4 border-gray-300 p-4">
             {/* One Way Fields */}
@@ -545,7 +531,16 @@ export const SearchBar = () => {
                       handleSegmentChange(0, "to", e.target.value);
                       setSearchQuery(e.target.value);
                     }}
+
                   />
+                  {segmentHasHeli(segments[0]) && (   
+                    <button
+                      type="button"
+                      onClick={() => setMapModal({ open: true, segIdx: 0 })} 
+                    >
+                      <MapIcon />
+                    </button>
+                  )}
                   {showDropdown &&
                     focusedSegmentIndex === 0 &&
                     focusedField === "to" &&
@@ -570,6 +565,7 @@ export const SearchBar = () => {
                         ))}
                       </ul>
                     )}
+
                 </div>
 
                 {/* Departure Date & Time */}
@@ -580,7 +576,7 @@ export const SearchBar = () => {
                   <input
                     type="datetime-local"
                     value={`${segments[0].departureDate}T${segments[0].departureTime || "12:00"}`}
-                    onFocus={() => setDateSelected(false)} 
+                    onFocus={() => setDateSelected(false)}
                     onChange={(e) => {
                       const [date, time] = e.target.value.split("T");
                       if (!dateSelected) {
@@ -653,13 +649,13 @@ export const SearchBar = () => {
                         </div>
 
                         {/* Icon div for each segment */}
-                      <div className="mt-20 ml-10"> 
-                         <Icondiv
-                          flightTypes={segment.flightTypes}
-                          setFlightTypes={(updatedFlightTypes) =>
-                            handleSegmentChange(index, "flightTypes", updatedFlightTypes)
-                          }
-                        /></div>
+                        <div className="mt-20 ml-10">
+                          <Icondiv
+                            flightTypes={segment.flightTypes}
+                            setFlightTypes={(updatedFlightTypes) =>
+                              handleSegmentChange(index, "flightTypes", updatedFlightTypes)
+                            }
+                          /></div>
 
                         {/* Actual fields */}
                         <div className="ml-10 flex flex-wrap lg:flex-nowrap items-end gap-4 mt-4">
@@ -733,6 +729,15 @@ export const SearchBar = () => {
                                 setSearchQuery(e.target.value);
                               }}
                             />
+                            {segmentHasHeli(segment) && (
+                              <button
+                                type="button"
+                                onClick={() => setMapModal({ open: true, segIdx: index })}
+                                className="absolute right-2 top-8 text-blue-600 hover:text-blue-800"
+                              >
+                                <MapIcon />
+                              </button>
+                            )}
                             {showDropdown &&
                               focusedSegmentIndex === index &&
                               focusedField === "to" &&
@@ -759,6 +764,8 @@ export const SearchBar = () => {
                                 </ul>
                               )}
                           </div>
+
+
 
                           {/* DATE & TIME */}
                           <div className="w-full sm:w-1/2 md:w-[200px]">
@@ -931,13 +938,23 @@ export const SearchBar = () => {
             </div>
           </div>
         </div>
-
         {/* (6) Conditionally render the flight listing (if verified) */}
         {!isLoading && isVerified && <FilterAndFleetListing key={refreshKey} />}
-      </div>
-
+      </div >
+      {/* < GoogleMapModal
+        open={mapModal.open}
+        onClose={() => setMapModal({ open: false, segIdx: null })}
+        onSave={(coords) => handleSaveCoords(coords, mapModal.segIdx)}
+        // apiKey={apiKey}
+      /> */}
+      < MapboxModal
+        open={mapModal.open}
+        onClose={() => setMapModal({ open: false, segIdx: null })}
+        onSave={(coords) => handleSaveCoords(coords, mapModal.segIdx)}
+        // apiKey={apiKey}
+      />
       {/* React-Toastify container */}
-      <ToastContainer
+      < ToastContainer
         autoClose={4000}
         hideProgressBar={false}
         newestOnTop={false}
@@ -952,8 +969,11 @@ export const SearchBar = () => {
           left: "50%",
           transform: "translate(-50%, -50%)",
           zIndex: 100,
-        }}
+        }
+        }
+
       />
+    
     </>
   );
 };

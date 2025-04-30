@@ -643,7 +643,8 @@ export default function FlightCard({
                       <h2 className="text-xl font-bold text-gray-800">
                         {flight.fleetDetails.selectedModel || "Gulfstream G700"}
                       </h2>
-                      <p className="text-md my-1">JET X 2(Twin Engine) Private Jet</p>
+                      {/* <p className="text-md my-1">JET X 2(Twin Engine) Private Jet</p> */}
+                      <p className="text-md my-1">{flight.fleetDetails.engineType} - {flight.fleetDetails.flightType}</p>
                       <p className="text-md text-gray-700 font-medium">
                         Reg. No: {flight.fleetDetails.registrationNo || "N/A"}
                       </p>
@@ -692,7 +693,7 @@ export default function FlightCard({
                     <div className="flex items-center text-gray-600">
                       <IoMdSpeedometer className="mr-1" size={24} />
                       <span className="font-bold text-md">
-                        {flight.fleetDetails.maxSpeed || 0}nm
+                        {Math.trunc(flight.fleetDetails.maxSpeed*1.852) || 0} km/h
                       </span>
                     </div>
                   </div>
@@ -714,7 +715,8 @@ export default function FlightCard({
                       </div>
                     </div>
                   </div>
-                  <p className="text-sky-600">Refuel on Fly - 3.30hr | Cabin Height - 6ft</p>
+                  <p className="text-sky-600">Refuel on Fly - 3.30hr | Cabin Height - {flight.fleetDetails.cabinHeight} ft</p>
+                  {/* <p className="text-sky-600">Refuel on Fly - 3.30hr | Cabin Height - 6ft</p> */}
                  </div>
                    {/* Price & Select */}
                    <div className="mt-3 sm:mt-0 text-right flex flex-col items-end ml-2">
@@ -842,7 +844,7 @@ export default function FlightCard({
                                   <div
                                     className="opacity-0 group-hover:opacity-100
                                       absolute bg-black text-white text-sm 
-                                      py-1 px-2 rounded bottom-full left-1/2 -translate-x-1/2 
+                                      py-1 px-2 rounded bottom-full left-1/2 -translate-x-0 
                                        whitespace-nowrap z-auto mb-1"
                                   >
                                     {aKey} - {aVal.value}
@@ -961,7 +963,7 @@ export default function FlightCard({
                         .map(([view, url]) => (
                           <img
                             key={view}
-                            src={url}
+                            src={url || null}
                             alt={view}
                             className="w-72 h-48 object-cover rounded"
                           />
