@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { IoIosAirplane } from "react-icons/io";
-import FlightCard from "./FleetCard"; // <--- Our updated FlightCard
+import FlightCard from "./FleetCard"; 
 import { BsExclamationTriangle } from "react-icons/bs";
 
 const FilterAndFleetListing = ({ refreshKey }) => {
@@ -31,6 +31,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
             priceRange: 0,
             loading: true,
             noData: false,
+            addOnServices  : [],
           }));
           setSegmentStates(initialSegmentStates);
 
@@ -90,6 +91,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
 
         const data = await response.json();
         if (data?.finalFleet) {
+          const addOnServices = data.addOnService || []; 
           const withParsedPrices = data.finalFleet.map((flight) => {
             const numeric = parseInt(flight.totalPrice.replace(/\D/g, ""), 10) || 0;
             return { ...flight, _numericPrice: numeric };
@@ -107,6 +109,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
               minPrice: minP,
               maxPrice: maxP,
               priceRange: maxP,
+              addOnServices, 
               loading: false,
               noData: false,
             };
@@ -238,6 +241,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
     filteredData = [],
     loading = false,
     noData = false,
+    addOnServices = [], 
   } = currentSegmentState;
 
   // Combine flight types from API data + user-chosen
@@ -622,6 +626,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                 currentTripIndex={currentTripIndex}
                 tripCount={tripCount}
                 isMultiCity={isMultiCity}
+                addOnServices={addOnServices}
               />
             )}
           </div>

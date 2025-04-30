@@ -11,6 +11,7 @@ import { Banner } from "../components/Banner";
 import { Bottom } from "../components/Bottom";
 import PaymentModal from "../components/PaymentModal";
 import NavBar from "../components/Navbar";
+import BankingPartnersModal from "../components/BankingPartnerModal";
 
 // Remove parentheses from airport name
 function cleanAirportName(str) {
@@ -30,6 +31,7 @@ const FinalEnquiryPage = () => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isWhatsAppSending, setIsWhatsAppSending] = useState(false);
   const [isEmailSending, setIsEmailSending] = useState(false);
+  const [open, setOpen] = useState(false); //for offline payment page modal
 
   // 1) Read searchData from sessionStorage & fallback to loginData for user details
   useEffect(() => {
@@ -81,11 +83,10 @@ const FinalEnquiryPage = () => {
             segment.flightTypes.join(",")
           )}`;
         }
-  
+
         // Now include flightType param in the fetch URL
-        const url = `/api/search-flights?from=${cleanedFrom}&to=${cleanedTo}&departureDate=${
-          segment.departureDate
-        }T${segment.departureTime}:00Z&travelerCount=${segment.passengers}${flightTypeQuery}`;
+        const url = `/api/search-flights?from=${cleanedFrom}&to=${cleanedTo}&departureDate=${segment.departureDate
+          }T${segment.departureTime}:00Z&travelerCount=${segment.passengers}${flightTypeQuery}`;
 
         try {
           const res = await fetch(url);
@@ -205,9 +206,8 @@ const FinalEnquiryPage = () => {
     );
   }, 0);
 
-  const totalFlyingHours = `${Math.floor(totalFlyingTimeMinutes / 60)} Hrs ${
-    totalFlyingTimeMinutes % 60
-  } Min`;
+  const totalFlyingHours = `${Math.floor(totalFlyingTimeMinutes / 60)} Hrs ${totalFlyingTimeMinutes % 60
+    } Min`;
 
   // Summation for cost details
   const allSelectedFlights = fetchedSegmentsData.flat();
@@ -435,7 +435,6 @@ const FinalEnquiryPage = () => {
     // Save final PDF
     doc.save("Proforma_Invoice.pdf");
   };
-
   return (
     <div className="flex flex-col items-center">
       <div
@@ -448,7 +447,6 @@ const FinalEnquiryPage = () => {
         <NavBar />
       </div>
       <Banner />
-
       {/* trips and price calculation section */}
       <div className="flex flex-col md:flex-row justify-center gap-2 p-4">
         {/* LEFT COLUMN: Flights */}
@@ -545,7 +543,12 @@ const FinalEnquiryPage = () => {
                 <div className="text-xs font-normal">via Email</div>
               </button>
             </div>
-
+            <button
+              onClick={() => setOpen(true)}
+              className="rounded-lg bg-sky-600 px-6 py-3 font-semibold text-black"
+            >
+              Show Banking Details
+            </button>
             {/* Download PDF Button */}
             <button
               className="border border-orange-400 text-orange-500 px-4 py-2 rounded-md hover:bg-orange-100 transition-colors w-full text-center"
@@ -565,9 +568,8 @@ const FinalEnquiryPage = () => {
         loading={loading}
         estimatedCost={estimatedCost}
       />
-
+       <BankingPartnersModal open={open} height="90vh" onClose={() => setOpen(false)} />
       <Bottom />
-
       {/* React-Toastify container */}
       <ToastContainer
         autoClose={5000}

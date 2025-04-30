@@ -137,9 +137,11 @@ export default function FlightCard({
   currentTripIndex,
   tripCount,
   isMultiCity,
+  addOnServices = [],
   readOnly = false,
 }) {
   const router = useRouter();
+  console.log("filteredData : ", filteredData);
 
   // ------------------------------------------------
   // States & Refs
@@ -652,118 +654,136 @@ export default function FlightCard({
                     <div className="text-left flex flex-col justify-center items-center mt-6">
                       <p className="text-sky-400 font-bold text-xl">Approx Time</p>
                       <div className="flex items-center justify-center">
-                      <p className="text-2xl font-bold text-gray-800 mr-2">
-                        {depTime}
-                      </p>
-                      <div className="text-center text-gray-500">
-                      <p className="text-xl font-bold text-gray-800">
-                          - -{" "}
-                          <IoIosAirplane
-                            size={28}
-                            className="inline-block text-gray-700"
-                          />{" "}
-                          - -
+                        <p className="text-2xl font-bold text-gray-800 mr-2">
+                          {depTime}
                         </p>
-                      </div>
-                      <p className="text-2xl font-bold text-gray-800 ml-2">
-                        {arrTime}
-                      </p>
+                        <div className="text-center text-gray-500">
+                          <p className="text-xl font-bold text-gray-800">
+                            - -{" "}
+                            <IoIosAirplane
+                              size={28}
+                              className="inline-block text-gray-700"
+                            />{" "}
+                            - -
+                          </p>
+                        </div>
+                        <p className="text-2xl font-bold text-gray-800 ml-2">
+                          {arrTime}
+                        </p>
                       </div>
                     </div>
                   </div>
                 </div>
                 {/* Middle / Bottom content */}
                 <div className="flex justify-around w-full items-center flex-col bg-stone-50">
-                <div className="flex w-full items-center justify-around">
-                <div className="">
-                   {/* Seats, Luggage, Speed row */}
-                   <div className="flex items-center space-x-5 mt-4">
-                    <div className="flex items-center text-gray-600">
-                      <MdAirlineSeatReclineExtra className="mr-1" size={24} />
-                      <span className="font-bold text-md">
-                        {flight.fleetDetails.seatCapacity || 0}
-                      </span>
-                    </div>
-                    <div className="flex items-center text-gray-600">
-                      <BsFillLuggageFill className="mr-1" size={18} />
-                      <span className="font-bold text-md">
-                        {flight.fleetDetails.luggage || 0}
-                      </span>
-                    </div>
-                    <div className="flex items-center text-gray-600">
-                      <IoMdSpeedometer className="mr-1" size={24} />
-                      <span className="font-bold text-md">
-                        {Math.trunc(flight.fleetDetails.maxSpeed*1.852) || 0} km/h
-                      </span>
-                    </div>
-                  </div>
-                   {/* Times row (Large times + flight duration) */}
-                   <div className="flex flex-col items-start justify-between my-2 mb-0">
-                    <div className="text-right flex justify-center items-center my-2 font-bold">
-                      <div className="flex flex-col items-start text-sm text-gray-500 mr-4">
-                        <p className="font-bold text-black text-xl">{fromIATA}</p>
-                        <p className="text-xl text-gray-900 font-normal">{fromCity}</p>
+                  <div className="flex w-full items-center justify-around">
+                    <div className="">
+                      {/* Seats, Luggage, Speed row */}
+                      <div className="flex items-center space-x-5 mt-4">
+                        <div className="flex items-center text-gray-600">
+                          <MdAirlineSeatReclineExtra className="mr-1" size={24} />
+                          <span className="font-bold text-md">
+                            {flight.fleetDetails.seatCapacity || 0}
+                          </span>
+                        </div>
+                        <div className="flex items-center text-gray-600">
+                          <BsFillLuggageFill className="mr-1" size={18} />
+                          <span className="font-bold text-md">
+                            {flight.fleetDetails.luggage || 0}
+                          </span>
+                        </div>
+                        <div className="flex items-center text-gray-600">
+                          <IoMdSpeedometer className="mr-1" size={24} />
+                          <span className="font-bold text-md">
+                            {Math.trunc(flight.fleetDetails.maxSpeed * 1.852) || 0} km/h
+                          </span>
+                        </div>
                       </div>
-                      <div className="text-center text-gray-500">
-                      <p className="text-md font-bold text-gray-800">
-                       - - -{flightTime} - - -
+                      {/* Times row (Large times + flight duration) */}
+                      <div className="flex flex-col items-start justify-between my-2 mb-0">
+                        <div className="text-right flex justify-center items-center my-2 font-bold">
+                          <div className="flex flex-col items-start text-sm text-gray-500 mr-4">
+                            <p className="font-bold text-black text-xl">{fromIATA}</p>
+                            <p className="text-xl text-gray-900 font-normal">{fromCity}</p>
+                          </div>
+                          <div className="text-center text-gray-500">
+                            <p className="text-md font-bold text-gray-800">
+                              - - -{flightTime} - - -
+                            </p>
+                          </div>
+                          <div className="flex flex-col items-start text-sm text-gray-500 ml-2">
+                            <p className="font-bold text-black text-xl">{toIATA}</p>
+                            <p className="text-xl text-gray-900 font-normal">{toCity}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-sky-600">Refuel on Fly - 3.30hr | Cabin Height - {flight.fleetDetails.cabinHeight} ft</p>
+                      {/* <p className="text-sky-600">Refuel on Fly - 3.30hr | Cabin Height - 6ft</p> */}
+                    </div>
+                    {/* Price & Select */}
+                    <div className="mt-3 sm:mt-0 text-right flex flex-col items-end ml-2">
+                      <p className="text-xs text-gray-400">Approx~</p>
+                      <p className="text-xl font-bold text-gray-800">
+                        USD {flightPriceUSD.toLocaleString()}
+                      </p>
+                      <div className="flex font-medium flex-col">
+                        <p className="text-sm text-gray-600">
+                          INR {inrPrice.toLocaleString()}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          GBP {gbpPrice.toLocaleString()}
                         </p>
                       </div>
-                      <div className="flex flex-col items-start text-sm text-gray-500 ml-2">
-                        <p className="font-bold text-black text-xl">{toIATA}</p>
-                        <p className="text-xl text-gray-900 font-normal">{toCity}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-sky-600">Refuel on Fly - 3.30hr | Cabin Height - {flight.fleetDetails.cabinHeight} ft</p>
-                  {/* <p className="text-sky-600">Refuel on Fly - 3.30hr | Cabin Height - 6ft</p> */}
-                 </div>
-                   {/* Price & Select */}
-                   <div className="mt-3 sm:mt-0 text-right flex flex-col items-end ml-2">
-                    <p className="text-xs text-gray-400">Approx~</p>
-                    <p className="text-xl font-bold text-gray-800">
-                      USD {flightPriceUSD.toLocaleString()}
-                    </p>
-                    <div className="flex font-medium flex-col">
-                      <p className="text-sm text-gray-600">
-                        INR {inrPrice.toLocaleString()}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        GBP {gbpPrice.toLocaleString()}
-                      </p>
-                    </div>
 
-                    {!readOnly && (
-                      <button
-                        onClick={() => onSelectFleet(flight)}
-                        className={`mt-3 px-8 py-1 rounded font-semibold text-white
+                      {!readOnly && (
+                        <button
+                          onClick={() => onSelectFleet(flight)}
+                          className={`mt-3 px-8 py-1 rounded font-semibold text-white
                           ${selectedFleet?._id === flightId
-                            ? "bg-red-500"
-                            : "bg-blue-600"
-                          } shadow-sm`}
-                      >
-                        {selectedFleet?._id === flightId
-                          ? "Selected"
-                          : "Select"}
-                      </button>
-                    )}
-                    {/* If this flight is selected, show next step or proceed */}
-                    {!readOnly && selectedFleet?._id === flightId && (
-                      <div className="my-2">
-                        {isMultiCity ? (
-                          currentTripIndex < tripCount - 1 ? (
-                            <button
-                              onClick={onNextSegment}
-                              className="w-full md:w-auto px-6 py-2 rounded 
+                              ? "bg-red-500"
+                              : "bg-blue-600"
+                            } shadow-sm`}
+                        >
+                          {selectedFleet?._id === flightId
+                            ? "Selected"
+                            : "Select"}
+                        </button>
+                      )}
+                      {/* If this flight is selected, show next step or proceed */}
+                      {!readOnly && selectedFleet?._id === flightId && (
+                        <div className="my-2">
+                          {isMultiCity ? (
+                            currentTripIndex < tripCount - 1 ? (
+                              <button
+                                onClick={onNextSegment}
+                                className="w-full md:w-auto px-6 py-2 rounded 
                                      bg-green-600 text-white font-semibold shadow-sm"
-                            >
-                              Select Next Fleet
-                            </button>
+                              >
+                                Select Next Fleet
+                              </button>
+                            ) : (
+                              <button
+                                onClick={handleProceedToPay}
+                                disabled={isProceeding}
+                                className="w-full md:w-auto px-6 py-2 rounded bg-green-600 text-white font-semibold shadow-sm flex items-center justify-center"
+                              >
+                                {isProceeding ? (
+                                  <>
+                                    <span className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin mr-2" />
+                                    Proceeding...
+                                  </>
+                                ) : (
+                                  "Proceed to Pay"
+                                )}
+                              </button>
+                            )
                           ) : (
                             <button
                               onClick={handleProceedToPay}
                               disabled={isProceeding}
-                              className="w-full md:w-auto px-6 py-2 rounded bg-green-600 text-white font-semibold shadow-sm flex items-center justify-center"
+                              className="w-full md:w-auto px-2 py-1 rounded
+                                   bg-green-600 text-white font-semibold
+                                   shadow-sm flex items-center justify-center"
                             >
                               {isProceeding ? (
                                 <>
@@ -774,142 +794,156 @@ export default function FlightCard({
                                 "Proceed to Pay"
                               )}
                             </button>
-                          )
-                        ) : (
-                          <button
-                            onClick={handleProceedToPay}
-                            disabled={isProceeding}
-                            className="w-full md:w-auto px-2 py-1 rounded
-                                   bg-green-600 text-white font-semibold
-                                   shadow-sm flex items-center justify-center"
-                          >
-                            {isProceeding ? (
-                              <>
-                                <span className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin mr-2" />
-                                Proceeding...
-                              </>
-                            ) : (
-                              "Proceed to Pay"
-                            )}
-                          </button>
-                        )}
-                      </div>
-                    )}
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-                   <div className="">
-                      {/* Amenities row (carousel) */}
-                  <div className="flex flex-col items-center flex-wrap ">
-                    <p className="font-medium ">In-Flight Amenities</p>
-                    {length === 0 ? (
-                      <div className="text-sm text-gray-500">
-                        No amenities listed.
-                      </div>
-                    ) : (
-                      <div className="relative flex items-center h-12">
-                        {/* Left Arrow (always visible) */}
-                        <button
-                          onClick={() => shiftAmenityLeft(flightId, length)}
-                          className="mr-2 bg-white p-1 rounded-full border hover:bg-gray-50 shadow"
-                        >
-                          <FaArrowLeft />
-                        </button>
-                        {/* Carousel window */}
-                        <div
-                          className="h-[8rem] flex items-center overflow-hidden"
-                          style={{ width: "350px" }}
-                        >
-                          {/* Amenity row */}
-                          <div
-                            className="flex transition-transform duration-300 ease-out"
-                            style={{
-                              transform: `translateX(${translateX}px)`,
-                              width: `${length * itemWidth}px`,
-                            }}
+                  <div className="">
+                    {/* Amenities row (carousel) */}
+                    <div className="flex flex-col items-center flex-wrap ">
+                      <p className="font-medium ">In-Flight Amenities</p>
+                      {length === 0 ? (
+                        <div className="text-sm text-gray-500">
+                          No amenities listed.
+                        </div>
+                      ) : (
+                        <div className="relative flex items-center h-12">
+                          {/* Left Arrow (always visible) */}
+                          <button
+                            onClick={() => shiftAmenityLeft(flightId, length)}
+                            className="mr-2 bg-white p-1 rounded-full border hover:bg-gray-50 shadow"
                           >
-                            {allAmenities.map(([aKey, aVal], idx) => {
-                              const IconComp =
-                                amenityIcons[aKey] || <AiOutlineCheckCircle />;
-                              // console.log("aKey , aVal",aKey , aVal)
-                              return (
-                                <div
-                                  key={aKey + idx}
-                                  style={{ width: "50px" }}
-                                  className="group relative h-16 flex items-center justify-center"
-                                >
-                                  {/* The icon */}
-                                  <span className="text-2xl text-gray-600 cursor-pointer">
-                                    {IconComp}
-                                  </span>
+                            <FaArrowLeft />
+                          </button>
+                          {/* Carousel window */}
+                          <div
+                            className="h-[8rem] flex items-center overflow-hidden"
+                            style={{ width: "350px" }}
+                          >
+                            {/* Amenity row */}
+                            <div
+                              className="flex transition-transform duration-300 ease-out"
+                              style={{
+                                transform: `translateX(${translateX}px)`,
+                                width: `${length * itemWidth}px`,
+                              }}
+                            >
+                              {allAmenities.map(([aKey, aVal], idx) => {
+                                const IconComp =
+                                  amenityIcons[aKey] || <AiOutlineCheckCircle />;
+                                // console.log("aKey , aVal",aKey , aVal)
+                                return (
                                   <div
-                                    className="opacity-0 group-hover:opacity-100
+                                    key={aKey + idx}
+                                    style={{ width: "50px" }}
+                                    className="group relative h-16 flex items-center justify-center"
+                                  >
+                                    {/* The icon */}
+                                    <span className="text-2xl text-gray-600 cursor-pointer">
+                                      {IconComp}
+                                    </span>
+                                    <div
+                                      className="opacity-0 group-hover:opacity-100
                                       absolute bg-black text-white text-sm 
                                       py-1 px-2 rounded bottom-full left-1/2 -translate-x-0 
                                        whitespace-nowrap z-auto mb-1"
-                                  >
-                                    {aKey} - {aVal.value}
+                                    >
+                                      {aKey} - {aVal.value}
 
+                                    </div>
                                   </div>
-                                </div>
-                              );
-                            })}
+                                );
+                              })}
+                            </div>
                           </div>
-                        </div>
 
-                        {/* Right Arrow (always visible) */}
-                        <button
-                          onClick={() => shiftAmenityRight(flightId, length)}
-                          className="ml-2 bg-white p-1 rounded-full border hover:bg-gray-50 shadow"
-                        >
-                          <FaArrowRight />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                   <div className="text-center">
-                   <p className="font-medium ">Add on Facilities</p>
-                   <p className="font-extralight italic text-xs">No additional Facilities available to show....</p>
-                   </div>
-                  {/* SHARE and SELECT-FOR-SHARING row */}
-                  
+                          {/* Right Arrow (always visible) */}
+                          <button
+                            onClick={() => shiftAmenityRight(flightId, length)}
+                            className="ml-2 bg-white p-1 rounded-full border hover:bg-gray-50 shadow"
+                          >
+                            <FaArrowRight />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    {/* —— Add-on Facilities row —— */}
+                    <div className="text-center mt-4">
+                      <p className="font-medium">Add-on Facilities</p>
+
+                      {addOnServices.length === 0 ? (
+                        <p className="font-extralight italic text-xs">
+                          No additional facilities available…
+                        </p>
+                      ) : (
+                        <div className="flex flex-wrap gap-4 justify-center mt-2">
+                          {addOnServices.map((svc) => (
+                            <div
+                              key={svc._id}
+                              className="group relative w-16 h-16 flex items-center justify-center"
+                            >
+                              {/* the icon / image */}
+                              <img
+                                src={svc.img_path}
+                                alt={svc.name}
+                                className="w-10 h-10 object-contain"
+                              />
+
+                              {/* tooltip on hover */}
+                              <div
+                                className="opacity-0 group-hover:opacity-100
+                       absolute bottom-full mb-1 px-2 py-1 rounded
+                       bg-black text-white text-xs whitespace-nowrap"
+                              >
+                                {svc.name}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* SHARE and SELECT-FOR-SHARING row */}
+
                     <div className="flex items-center justify-between w-full  mt-4">
                       <p className="text-xs text-gray-600 text-center ml-2">
                         *Note: All Parameters are subject to change time to time.
                       </p>
                       {/* Left: share icons + "Share" text */}
                       {!readOnly && (
-                      <div className="flex flex-col items-center justify-center gap-2">
-                        <div className="flex gap-2  items-center">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <div className="flex gap-2  items-center">
 
-                          <div
-                            className="flex flex-col items-center text-blue-600 cursor-pointer"
-                            onClick={openWhatsAppModal}
-                          >
-                            <FaWhatsapp size={24} />
+                            <div
+                              className="flex flex-col items-center text-blue-600 cursor-pointer"
+                              onClick={openWhatsAppModal}
+                            >
+                              <FaWhatsapp size={24} />
+                            </div>
+                            <div
+                              className="flex flex-col items-center text-gray-600 cursor-pointer"
+                              onClick={openEmailModal}
+                            >
+                              <AiOutlineMail size={24} />
+                            </div>
+                            <div className="flex">
+                              <label className="flex items-center space-x-2 text-sm text-gray-600 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  className="w-4 h-4"
+                                  checked={checkedFlights[flightId] || false}
+                                  onChange={(e) => handleCheckboxChange(flight, e)}
+                                />
+                              </label>
+                              <p className="text-xs text-gray-600 text-center ml-2">
+                                Share
+                              </p>
+                            </div>
                           </div>
-                          <div
-                            className="flex flex-col items-center text-gray-600 cursor-pointer"
-                            onClick={openEmailModal}
-                          >
-                            <AiOutlineMail size={24} />
-                          </div>
-                          <div className="flex">
-                            <label className="flex items-center space-x-2 text-sm text-gray-600 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                className="w-4 h-4"
-                                checked={checkedFlights[flightId] || false}
-                                onChange={(e) => handleCheckboxChange(flight, e)}
-                              />
-                            </label>
-                            <p className="text-xs text-gray-600 text-center ml-2">
-                              Share
-                            </p>
-                          </div>
-                        </div>
-                      </div>  )}
+                        </div>)}
                     </div>
-                   </div>
+                  </div>
                 </div>
               </div>
             </div>
