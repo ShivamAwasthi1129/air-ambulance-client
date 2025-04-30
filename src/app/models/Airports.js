@@ -12,7 +12,9 @@ const AirportSchema = new mongoose.Schema({
   latitude: { type: Number, required: true },
   longitude: { type: Number, required: true },
   tags: { type: String, default: "" },
-  status: { type: String, enum: ["Active", "Inactive"], required: true }
+  status: { type: String, enum: ["Active", "Inactive"], required: true },
+  address: { type: String, default: "" },
+  contact: { type: String, default: "" },
 }, { timestamps: true });
 
 AirportSchema.index({ name: "text", city: "text", country: "text", iata_code: "text", icao_code: "text" });

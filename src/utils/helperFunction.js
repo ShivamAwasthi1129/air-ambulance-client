@@ -1,5 +1,4 @@
 import Airports from "@/app/models/Airports";
-import { connectToDatabase } from "@/config/mongo";
 import jwt from "jsonwebtoken";
 
 const SECRET_KEY = process.env.JWT_SECRET;
@@ -25,8 +24,6 @@ export function haversine(lat1, lon1, lat2, lon2) {
 
 export async function searchStation(query) {
   try {
-    await connectToDatabase();
-
     const results = await Airports.aggregate([
       {
         $match: {
@@ -135,6 +132,9 @@ export async function searchStation(query) {
           score: -1, // Sort by score in descending order
         },
       },
+      {
+        $limit: 10
+      }
     ])
 
     return results;

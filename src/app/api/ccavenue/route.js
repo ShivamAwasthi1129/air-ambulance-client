@@ -39,6 +39,7 @@ export async function POST(req) {
       trip_type: tripType,
       user_info: userInfo,
       total_amount: totalAmount,
+      payment_via: "cc",
       status: "pending",
     };
 
