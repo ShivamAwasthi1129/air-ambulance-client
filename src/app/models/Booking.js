@@ -21,6 +21,14 @@ const segmentSchema = new mongoose.Schema({
   fromCity: { type: String, required: false },
   fromIATA: { type: String, required: false },
   fromICAO: { type: String, required: false },
+  fromLoc: {
+    lat: { type: Number },
+    lng: { type: Number },
+  },
+  toLoc: {
+    lat: { type: Number },
+    lng: { type: Number },
+  },
   toCity: { type: String, required: true },
   toIATA: { type: String, required: true },
   toICAO: { type: String, required: true },
