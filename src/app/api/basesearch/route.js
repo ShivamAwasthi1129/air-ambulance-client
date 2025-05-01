@@ -24,7 +24,7 @@ export async function GET(req) {
                   spherical: true,
                 },
               },
-              { $limit: 10 },
+              { $limit: 5 },
               {
                 $project: {
                   name: 1,
