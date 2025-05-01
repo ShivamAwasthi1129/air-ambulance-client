@@ -42,38 +42,38 @@ export async function POST(req) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to: phone,
-          type: "template",
-          template: {
-            name: "otp_verify",
-            language: {
-              code: "en",
+          "to": `whatsapp:${phone}`,
+          "messaging_product": "whatsapp",
+          "type": "template",
+          "template": {
+            "name": "otp_verify",
+            "language": {
+              "code": "en_US"
             },
-            components: [
+            "components": [
               {
-                type: "body",
-                parameters: [
+                "type": "body",
+                "parameters": [
                   {
-                    type: "text",
-                    text: otp,
-                  },
-                ],
+                    "type": "text",
+                    "text": otp
+                  }
+                ]
               },
               {
-                type: "button",
-                sub_type: "url",
-                index: "0",
-                parameters: [
+                "type": "button",
+                "sub_type": "url",
+                "index": "0",
+                "parameters": [
                   {
-                    type: "text",
-                    text: "short-text",
-                  },
-                ],
-              },
-            ],
-          },
-        }),
+                    "type": "text",
+                    "text": otp
+                  }
+                ]
+              }
+            ]
+          }
+        })
       }
     );
 
