@@ -1,25 +1,12 @@
 import { NextResponse } from "next/server";
 import { encrypt } from "@/utils/ccavutil";
 import Booking from "@/app/models/Booking";
-
-function generateUniqueString() {
-  const chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  return Array.from({ length: 6 }, () =>
-    chars.charAt(Math.floor(Math.random() * chars.length))
-  ).join("");
-}
+import { generateUniqueString } from "@/utils/helperFunction";
 
 export async function POST(req) {
   try {
-    let {
-      amount,
-      currency,
-      segments,
-      tripType,
-      userInfo,
-      totalAmount,
-    } = await req.json();
+    let { amount, currency, segments, tripType, userInfo, totalAmount } =
+      await req.json();
 
     // CCAvenue credentials
     const merchantId = process.env.CCA_MERCHANT_ID;
@@ -30,16 +17,16 @@ export async function POST(req) {
 
     const orderId = generateUniqueString();
 
-    segments = segments.map((sg, i) => ({_id: `${orderId}-${i + 1}`, ...sg}));
- 
+    segments = segments.map((sg, i) => ({ _id: `${orderId}-${i + 1}`, ...sg }));
+
     const bookingInfo = {
       amount_paid: amount,
       currency,
+      payment: { payment_via: "cc" },
       segments,
       trip_type: tripType,
       user_info: userInfo,
       total_amount: totalAmount,
-      payment_via: "cc",
       status: "pending",
     };
 
@@ -68,6 +55,6 @@ export async function POST(req) {
     return NextResponse.json({ paymentUrl });
   } catch (error) {
     console.error("error: ", error);
-    return NextResponse.json({ error: error.message }, {status: 500});
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

@@ -3,6 +3,14 @@ import jwt from "jsonwebtoken";
 
 const SECRET_KEY = process.env.JWT_SECRET;
 
+export function generateUniqueString() {
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  return Array.from({ length: 6 }, () =>
+    chars.charAt(Math.floor(Math.random() * chars.length))
+  ).join("");
+}
+
 // Haversine Formula to calculate distance
 export function haversine(lat1, lon1, lat2, lon2) {
   const R = 6371; // Earth's radius in km

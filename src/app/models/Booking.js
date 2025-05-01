@@ -42,11 +42,18 @@ const userInfoSchema = new mongoose.Schema({
   phone: { type: String, required: true },
 });
 
+const paymentSchema = new mongoose.Schema({
+  payment_via: {type: String, default: "cc"},
+  reference_id: {type: String, default: ""},
+  to_account_no: {type: String, default: ""},
+  to_account_name: {type: String, default: ""},
+})
+
 const BookingSchema = new mongoose.Schema(
   {
     _id: { type: String, required: true },
     amount_paid: { type: Number, required: true },
-    payment_via: {type: String, default: "cc"},
+    payment: paymentSchema,
     currency: { type: String, required: true, default: "INR" },
     segments: [segmentSchema],
     trip_type: { type: String, required: true },
