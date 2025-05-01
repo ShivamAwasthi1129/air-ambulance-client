@@ -37,7 +37,7 @@ export const BANKS = [
   /* ───────────── INDIAN PUBLIC SECTOR ───────────── */
   {
     bankName: "STATE BANK OF INDIA",
-    logo: "/logos/sbi.png",
+    logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/SBI.png",
     timing: "10.00 am – 4.30 pm*",
     emails: sameEmails,
     accounts: {
@@ -68,7 +68,7 @@ export const BANKS = [
   /* ───────────── INDIAN PRIVATE BANKS ───────────── */
   {
     bankName: "HDFC BANK LTD",
-    logo: "/logos/hdfc.png",
+    logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/HDFC.png",
     timing: "Bank Time 10.00 am to 3.00 pm*",
     emails: sameEmails,
     accounts: {
@@ -85,14 +85,14 @@ export const BANKS = [
   },
   {
     bankName: "ICICI BANK LTD",
-    logo: "/logos/icici.png",
+    logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/ICICI.png",
     timing: "10.00 am – 4.30 pm*",
     emails: sameEmails,
     accounts: genericThree("ICICI BANK"),
   },
   {
     bankName: "AXIS BANK LTD",
-    logo: "/logos/axis.png",
+    logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/Axis.png",
     timing: "Bank Time 10.00 am to 3.30 pm*",
     emails: sameEmails,
     accounts: {
@@ -121,7 +121,7 @@ export const BANKS = [
   },
   {
     bankName: "YES BANK",
-    logo: "/logos/yes.png",
+    logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/Yes+Bank.png",
     timing: "10.00 am – 4.30 pm*",
     emails: sameEmails,
     accounts: genericThree("YES BANK"),
@@ -130,7 +130,7 @@ export const BANKS = [
   /* ───────────── FORMER PSU / ASSOCIATE ───────────── */
   {
     bankName: "STATE BANK TRAVANCORE (SBT)",
-    logo: "/logos/sbt.png",
+    logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/State+Bank+Of+Travancore.png",
     timing: "Bank Time 10.00 am to 3.00 pm*",
     emails: sameEmails,
     accounts: {
@@ -159,25 +159,25 @@ export const BANKS = [
   },
 
   /* ───────────── INTERNATIONAL NAMES ───────────── */
-  { bankName: "KOTAK MAHINDRA BANK LTD", logo: "/logos/kotak.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("KOTAK BANK") },
-  { bankName: "STANDARD CHARTERED", logo: "/logos/standard-chartered.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("STANDARD CHARTERED") },
-  { bankName: "SWISS BANK", logo: "/logos/swiss.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("SWISS BANK") },
-  { bankName: "BARCLAYS BANK", logo: "/logos/barclays.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("BARCLAYS BANK") },
-  { bankName: "ABN AMRO BANK", logo: "/logos/abn-amro.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("ABN AMRO BANK") },
-  { bankName: "RBS BANK", logo: "/logos/rbs.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("RBS BANK") },
-  { bankName: "BANK OF AMERICA", logo: "/logos/boa.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("BANK OF AMERICA") },
-  { bankName: "SCOTIA BANK", logo: "/logos/scotiabank.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("SCOTIA BANK") },
-  { bankName: "AMERICAN EXPRESS BANK", logo: "/logos/amex.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("AMERICAN EXPRESS BANK") },
-  { bankName: "DCB BANK", logo: "/logos/dcb.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("DCB BANK") },
-  { bankName: "DEUTSCHE BANK", logo: "/logos/deutsche.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("DEUTSCHE BANK") },
-  { bankName: "UBS BANK", logo: "/logos/ubs.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("UBS BANK") },
-  { bankName: "HSBC BANK LTD", logo: "/logos/hsbc.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("HSBC BANK") },
-  { bankName: "CITI BANK LTD", logo: "/logos/citi.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("CITI BANK") },
+  { bankName: "KOTAK MAHINDRA BANK LTD", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/Kotak.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("KOTAK BANK") },
+  { bankName: "STANDARD CHARTERED", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/Standard+Chartered.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("STANDARD CHARTERED") },
+  { bankName: "SWISS BANK", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/Swiss+Bank.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("SWISS BANK") },
+  { bankName: "BARCLAYS BANK", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/Barclays.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("BARCLAYS BANK") },
+  { bankName: "ABN AMRO BANK", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/ABN+AMRO.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("ABN AMRO BANK") },
+  { bankName: "RBS BANK", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/RBS.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("RBS BANK") },
+  { bankName: "BANK OF AMERICA", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/Bank-Of-America.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("BANK OF AMERICA") },
+  { bankName: "SCOTIA BANK", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/Scotia+Bank.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("SCOTIA BANK") },
+  { bankName: "AMERICAN EXPRESS BANK", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/American+Express.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("AMERICAN EXPRESS BANK") },
+  { bankName: "DCB BANK", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/DCB.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("DCB BANK") },
+  { bankName: "DEUTSCHE BANK", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/Deutsche.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("DEUTSCHE BANK") },
+  { bankName: "UBS BANK", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/UBS.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("UBS BANK") },
+  { bankName: "HSBC BANK LTD", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/HSBC.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("HSBC BANK") },
+  { bankName: "CITI BANK LTD", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/Citi.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("CITI BANK") },
 
   /* ING Vysya (now Kotak) – screenshot had real numbers */
   {
     bankName: "ING VYSYA BANK",
-    logo: "/logos/ing.png",
+    logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/ING.png",
     timing: "10.00 am – 4.30 pm*",
     emails: sameEmails,
     accounts: {
@@ -448,15 +448,15 @@ function BankTable({ banks }) {
           {banks.map((bank) => (
             <tr key={bank.bankName} className="border-t last:border-0">
               {/* logo + name */}
-              <td className="flex items-center gap-2 px-4 py-5">
+              <td className="flex items-center flex-col-reverse gap-2 px-4 py-5">
                 <Image
                   src={bank.logo}
                   alt={bank.bankName}
                   width={52}
-                  height={52}
-                  className="h-10 w-10 object-contain"
+                  height={52} 
+                  className="h-[4.5rem] w-[18.5rem] object-contain"
                 />
-                <span className="font-medium">{bank.bankName}</span>
+                <span className="font-normal text-xs">{bank.bankName}</span>
               </td>
 
               {/* the three account columns */}
@@ -464,7 +464,7 @@ function BankTable({ banks }) {
                 <td key={acc} className="whitespace-pre-line px-4 py-5 align-top">
                   {Object.entries(bank.accounts[acc]).map(([k, v]) => (
                     <div key={k}>
-                      <b>{k}</b> {v}
+                      <b>{k}</b>{v}
                     </div>
                   ))}
                 </td>

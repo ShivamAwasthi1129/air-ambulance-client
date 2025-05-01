@@ -31,7 +31,7 @@ export async function POST(req) {
     const orderId = generateUniqueString();
 
     segments = segments.map((sg, i) => ({_id: `${orderId}-${i + 1}`, ...sg}));
-
+ 
     const bookingInfo = {
       amount_paid: amount,
       currency,
