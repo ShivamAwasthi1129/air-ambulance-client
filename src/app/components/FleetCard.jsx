@@ -101,6 +101,8 @@ const amenityIcons = {
   "Lounge Access": <AiOutlineCheckCircle className="text-gray-600" />,
 };
 
+
+
 // Helper to parse times
 function parseTimeString(timeStr) {
   const [hhStr, mmStr] = timeStr.split(":");
@@ -138,6 +140,7 @@ export default function FlightCard({
   isMultiCity,
   addOnServices = [],
   readOnly = false,
+  segment, 
 }) {
   const router = useRouter();
   // ------------------------------------------------
@@ -565,13 +568,15 @@ export default function FlightCard({
       </div>
     );
   }
+  if (!parsedData?.segments) {
+    return <div>Loading flight data…</div>;
+  }
 
   return (
     <div className="bg-[#d5e3f4] p-4 md:p-8">
       <div className="space-y-6">
         {filteredData.map((flight) => {
           const flightId = flight._id;
-
           // Price calculations
           const flightPriceUSD = flight.totalPrice
             ? parseInt(flight.totalPrice.replace(/\D/g, ""), 10)
@@ -600,6 +605,58 @@ export default function FlightCard({
           const length = allAmenities.length;
           const containerWidth = 7 * itemWidth; // show 7 icons
           const translateX = -(offset * itemWidth);
+          // const isHelicopter = flight.fleetDetails?.flightType === "Helicopter";
+          // let fromLabel, toLabel;
+          // if (isHelicopter) {
+          //   const seg = parsedData?.segments?.[currentTripIndex];
+          //   console.log("segement latitude and longitude : ",seg);
+          //   fromLabel = `${Number(seg.fromLoc.lat).toFixed(2)}, ${Number(seg.fromLoc.lng).toFixed(2)}`;
+          //   toLabel = `${Number(seg.toLoc.lat).toFixed(2)}, ${Number(seg.toLoc.lng).toFixed(2)}`;
+          // } else {
+          //   fromLabel = fromIATA;
+          //   toLabel = toIATA;
+          // }
+
+          /* ───────────────────────────────────────────────
+ * Build dynamic labels for the time-line section
+ * ───────────────────────────────────────────────*/
+          const seg = segment || {};         // <-- always the correct leg
+
+
+          /* An airport leg always has an IATA/ICAO code.
+             A true “point” leg never has those codes. */
+             const fromIsAirport = Boolean(seg.fromIATA);  // IATA present ⇒ airport
+             const toIsAirport   = Boolean(seg.toIATA);
+             
+             const fromIsPoint = !fromIsAirport;
+             const toIsPoint   = !toIsAirport;
+             
+             const fmtCoord = (loc) => `${loc.lat.toFixed(2)}, ${loc.lng.toFixed(2)}`;
+             
+
+             let fromTopLabel, fromBottomLabel;
+             if (fromIsPoint && toIsPoint) {              // point ➜ point
+               fromTopLabel    = seg.fromAddress || fmtCoord(seg.fromLoc);
+               fromBottomLabel = "";
+             } else if (fromIsPoint) {                    // point ➜ airport
+               fromTopLabel    = fmtCoord(seg.fromLoc);
+               fromBottomLabel = seg.fromAddress || "";
+             } else {                                     // airport origin
+               fromTopLabel    = seg.fromIATA;
+               fromBottomLabel = seg.fromCity;
+             }
+             
+             let toTopLabel, toBottomLabel;
+             if (fromIsPoint && toIsPoint) {              // point ➜ point
+               toTopLabel    = seg.toAddress || fmtCoord(seg.toLoc);
+               toBottomLabel = "";
+             } else if (toIsPoint) {                      // airport ➜ point
+               toTopLabel    = fmtCoord(seg.toLoc);
+               toBottomLabel = seg.toAddress || "";
+             } else {                                     // airport destination
+               toTopLabel    = seg.toIATA;
+               toBottomLabel = seg.toCity;
+             }
           return (
             <div
               key={flightId}
@@ -697,21 +754,31 @@ export default function FlightCard({
                         </div>
                       </div>
                       {/* Times row (Large times + flight duration) */}
+
                       <div className="flex flex-col items-start justify-between my-2 mb-0">
                         <div className="text-right flex justify-center items-center my-2 font-bold">
+                          {/* ORIGIN ------------------------------------------------ */}
                           <div className="flex flex-col items-start text-sm text-gray-500 mr-4">
-                            <p className="font-bold text-black text-xl">{fromIATA}</p>
-                            <p className="text-xl text-gray-900 font-normal">{fromCity}</p>
+                            <p className="font-bold text-black text-xl">{fromTopLabel}</p>
+                            {fromBottomLabel && (
+                              <p className="text-xl text-gray-900 font-normal">{fromBottomLabel}</p>
+                            )}
                           </div>
+
                           <div className="text-center text-gray-500">
                             <p className="text-md font-bold text-gray-800">
-                              - - -{flightTime} - - -
+                              - - - {flightTime} - - -
                             </p>
                           </div>
+
+                          {/* DESTINATION ------------------------------------------ */}
                           <div className="flex flex-col items-start text-sm text-gray-500 ml-2">
-                            <p className="font-bold text-black text-xl">{toIATA}</p>
-                            <p className="text-xl text-gray-900 font-normal">{toCity}</p>
+                            <p className="font-bold text-black text-xl">{toTopLabel}</p>
+                            {toBottomLabel && (
+                              <p className="text-xl text-gray-900 font-normal">{toBottomLabel}</p>
+                            )}
                           </div>
+
                         </div>
                       </div>
                       <p className="text-sky-600">Refuel on Fly - 3.30hr | Cabin Height - {flight.fleetDetails.cabinHeight} ft</p>

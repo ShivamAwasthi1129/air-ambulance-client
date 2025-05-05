@@ -3,15 +3,13 @@ import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { IoIosAirplane } from "react-icons/io";
-import FlightCard from "./FleetCard"; 
+import FlightCard from "./FleetCard";
 import { BsExclamationTriangle } from "react-icons/bs";
-
 const FilterAndFleetListing = ({ refreshKey }) => {
   const [searchData, setSearchData] = useState(null);
   const [segmentStates, setSegmentStates] = useState([]);
   const [currentTripIndex, setCurrentTripIndex] = useState(0);
   const [selectedFleets, setSelectedFleets] = useState([]);
-
   useEffect(() => {
     try {
       const sessionData = JSON.parse(sessionStorage.getItem("searchData"));
@@ -31,7 +29,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
             priceRange: 0,
             loading: true,
             noData: false,
-            addOnServices  : [],
+            addOnServices: [],
           }));
           setSegmentStates(initialSegmentStates);
 
@@ -44,108 +42,197 @@ const FilterAndFleetListing = ({ refreshKey }) => {
     }
   }, [refreshKey]);
 
-  function cleanAirportName(str) {
-    // remove anything in parentheses + extra spaces
-    return str.replace(/\s*\(.*?\)\s*/, "").trim();
+  // function cleanAirportName(str) {
+  //   // remove anything in parentheses + extra spaces
+  //   return str.replace(/\s*\(.*?\)\s*/, "").trim();
+  // }
+  // function locToQuery(obj) {
+  //   // {"lat":24.9,"lng":67.16} -> %7B%22lat%22%3A24.9%2C%22lng%22%3A67.16%7D
+  //   return encodeURIComponent(JSON.stringify(obj));
+  // }
+
+  // 🔄 unified helper – handles both string airport names and {lat,lng} objects
+  function toRapidoParam(
+    place // string | {lat:number,lng:number}
+  ) {
+    if (typeof place === "string") {
+      // remove text inside (…) and extra spaces
+      const cleaned = place.replace(/\s*\(.*?\)\s*/, "").trim();
+      return encodeURIComponent(cleaned);
+    }
+    // lat/lng object
+    return encodeURIComponent(JSON.stringify(place));
+  }
+/**
+ * Build every Rapido request (and its label) for ONE segment.
+ * • Airport → Airport  → keep user-chosen flightTypes.
+ * • Any route touching coords → force flightType=Helicopter.
+ * • Coordinate part of label =  "lat,lng-(address)"  if address exists,
+ *   otherwise just "lat,lng".
+ */
+function buildRapidoUrls(seg) {
+  /* helpers */
+  const stripCode = (s) => s.replace(/\s*\(.*?\)\s*/, "").trim();
+  const toRapidoParam = (p) =>
+    typeof p === "string"
+      ? encodeURIComponent(stripCode(p))
+      : encodeURIComponent(JSON.stringify(p));
+
+  const coordOnly = (loc) =>
+    `${loc.lat.toFixed(2)},${loc.lng.toFixed(2)}`;
+
+  // 11.93,79.81-(Some Address)
+  const fmtPoint = (loc, addr) =>
+    addr ? `${coordOnly(loc)}-(${addr})` : coordOnly(loc);
+
+  /* shared query tail */
+  const common =
+    `departureDate=${seg.departureDate}T${seg.departureTime}:00Z` +
+    `&travelerCount=${seg.passengers}`;
+
+  /* assemble one {url,label} object */
+  const make = ({ fromArg, toArg, label, heliOnly }) => {
+    const fltParam = heliOnly
+      ? "&flightType=Helicopter"
+      : seg.flightTypes?.length
+      ? `&flightType=${encodeURIComponent(seg.flightTypes.join(","))}`
+      : "";
+
+    return {
+      url: `/api/rapido?from=${fromArg}&to=${toArg}&${common}${fltParam}`,
+      label,
+    };
+  };
+
+  const list = [];
+
+  /* 1️⃣ Airport ➜ Airport */
+  if (seg.from && seg.to) {
+    list.push(
+      make({
+        fromArg: toRapidoParam(seg.from),
+        toArg: toRapidoParam(seg.to),
+        label: `${stripCode(seg.from)} ➜ ${stripCode(seg.to)}`,
+        heliOnly: false,
+      })
+    );
   }
 
+  /* 2️⃣ Coord ➜ Coord */
+  if (seg.fromLoc && seg.toLoc) {
+    list.push(
+      make({
+        fromArg: toRapidoParam(seg.fromLoc),
+        toArg: toRapidoParam(seg.toLoc),
+        label: `${fmtPoint(seg.fromLoc, seg.fromAddress)} ➜ ${fmtPoint(
+          seg.toLoc,
+          seg.toAddress
+        )}`,
+        heliOnly: true,
+      })
+    );
+  }
+
+  /* 3️⃣ Airport ➜ Coord */
+  if (seg.from && seg.toLoc) {
+    list.push(
+      make({
+        fromArg: toRapidoParam(seg.from),
+        toArg: toRapidoParam(seg.toLoc),
+        label: `${stripCode(seg.from)} ➜ ${fmtPoint(
+          seg.toLoc,
+          seg.toAddress
+        )}`,
+        heliOnly: true,
+      })
+    );
+  }
+
+  /* 4️⃣ (optional) Coord ➜ Airport — uncomment if needed */
+  if (seg.fromLoc && seg.to) {
+    list.push(
+      make({
+        fromArg: toRapidoParam(seg.fromLoc),
+        toArg: toRapidoParam(seg.to),
+        label: `${fmtPoint(seg.fromLoc, seg.fromAddress)} ➜ ${stripCode(seg.to)}`,
+        heliOnly: true,
+      })
+    );
+  }
+
+  return list;
+}
+
+
   // Fetch data for each segment
+  const fetchSegmentFleets = async (segmentIndex) => {
+    const seg = searchData.segments[segmentIndex];
+    const urlObjs = buildRapidoUrls(seg);           // ← now array of {url,label}
+
+    try {
+      const results = await Promise.all(
+        urlObjs.map((o) => fetch(o.url).then((r) => (r.ok ? r.json() : null)))
+      );
+
+      const fleets = [];
+      const addOnServices = [];
+
+      results.forEach((res, i) => {
+        if (res?.finalFleet?.length) {
+          const label = urlObjs[i].label;           // the human-friendly route
+          addOnServices.push(...(res.addOnService || []));
+          res.finalFleet.forEach((f) =>
+            fleets.push({
+              ...f,
+              _numericPrice: parseInt(f.totalPrice.replace(/\D/g, ""), 10) || 0,
+              _sourceLabel: label,                  // ⭐ keep track of origin
+            })
+          );
+        }
+      });
+
+      if (!fleets.length) throw new Error("no-fleets");
+
+      const prices = fleets.map((f) => f._numericPrice);
+      const [minP, maxP] = [Math.min(...prices), Math.max(...prices)];
+
+      setSegmentStates((prev) => {
+        const copy = [...prev];
+        copy[segmentIndex] = {
+          ...copy[segmentIndex],
+          fleetData: fleets,
+          filteredData: fleets,
+          minPrice: minP,
+          maxPrice: maxP,
+          priceRange: maxP,
+          addOnServices,
+          loading: false,
+          noData: false,
+        };
+        return copy;
+      });
+    } catch (err) {
+      setSegmentStates((prev) => {
+        const copy = [...prev];
+        copy[segmentIndex] = {
+          ...copy[segmentIndex],
+          fleetData: [],
+          filteredData: [],
+          loading: false,
+          noData: true,
+        };
+        return copy;
+      });
+    }
+  };
+
   useEffect(() => {
     if (!searchData?.segments?.length) return;
-
-    const fetchSegmentFleets = async (segmentIndex) => {
-      const segment = searchData.segments[segmentIndex];
-      const cleanedFrom = cleanAirportName(segment.from);
-      const cleanedTo = cleanAirportName(segment.to);
-
-      // Build the flightType parameter if the user selected any
-      let flightTypeQuery = "";
-      if (segment.flightTypes && segment.flightTypes.length > 0) {
-        flightTypeQuery = `&flightType=${encodeURIComponent(
-          segment.flightTypes.join(",")
-        )}`;
-      }
-
-      // Now include flightType param in the fetch URL
-      const url = `/api/search-flights?from=${cleanedFrom}&to=${cleanedTo}&departureDate=${
-        segment.departureDate
-      }T${segment.departureTime}:00Z&travelerCount=${segment.passengers}${flightTypeQuery}`;
-
-      try {
-        const response = await fetch(url);
-
-        if (response.status === 400) {
-          setSegmentStates((prev) => {
-            const newState = [...prev];
-            newState[segmentIndex] = {
-              ...newState[segmentIndex],
-              fleetData: [],
-              filteredData: [],
-              loading: false,
-              noData: true,
-            };
-            return newState;
-          });
-          return;
-        }
-
-        const data = await response.json();
-        if (data?.finalFleet) {
-          const addOnServices = data.addOnService || []; 
-          const withParsedPrices = data.finalFleet.map((flight) => {
-            const numeric = parseInt(flight.totalPrice.replace(/\D/g, ""), 10) || 0;
-            return { ...flight, _numericPrice: numeric };
-          });
-          const prices = withParsedPrices.map((f) => f._numericPrice);
-          const minP = Math.min(...prices);
-          const maxP = Math.max(...prices);
-
-          setSegmentStates((prev) => {
-            const newState = [...prev];
-            newState[segmentIndex] = {
-              ...newState[segmentIndex],
-              fleetData: withParsedPrices,
-              filteredData: withParsedPrices,
-              minPrice: minP,
-              maxPrice: maxP,
-              priceRange: maxP,
-              addOnServices, 
-              loading: false,
-              noData: false,
-            };
-            return newState;
-          });
-        } else {
-          setSegmentStates((prev) => {
-            const newState = [...prev];
-            newState[segmentIndex] = {
-              ...newState[segmentIndex],
-              fleetData: [],
-              filteredData: [],
-              loading: false,
-              noData: true,
-            };
-            return newState;
-          });
-        }
-      } catch (error) {
-        console.error(`Error fetching data for segment ${segmentIndex}:`, error);
-        setSegmentStates((prev) => {
-          const newState = [...prev];
-          newState[segmentIndex] = {
-            ...newState[segmentIndex],
-            fleetData: [],
-            filteredData: [],
-            loading: false,
-            noData: true,
-          };
-          return newState;
-        });
-      }
-    };
-
     searchData.segments.forEach((_, i) => fetchSegmentFleets(i));
   }, [searchData]);
+
+
+
 
   // Filter logic
   const handleFilterChange = (segmentIndex, newStates) => {
@@ -241,7 +328,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
     filteredData = [],
     loading = false,
     noData = false,
-    addOnServices = [], 
+    addOnServices = [],
   } = currentSegmentState;
 
   // Combine flight types from API data + user-chosen
@@ -255,6 +342,25 @@ const FilterAndFleetListing = ({ refreshKey }) => {
     const fromSet = new Set([...fromData, ...selectedTypes]);
     return [...fromSet];
   }, [fleetData, selectedTypes]);
+  // ---------- group filtered flights by the label we injected ----------
+  const groupedFlights = useMemo(() => {
+    const map = {};            // label -> array<flight>
+    filteredData.forEach((f) => {
+      const label = f._sourceLabel || "Route";
+      (map[label] = map[label] || []).push(f);
+    });
+    return map;                // e.g.  { "SIN ➜ DXB": [..], "SIN ➜ 25.23,55.33":[..] }
+  }, [filteredData]);
+  // --- list of every label we expect for the CURRENT segment,
+  //     even if that label returned 0 fleets --------------------
+  const routeLabels = useMemo(() => {
+    if (!searchData?.segments?.length) return [];
+    return buildRapidoUrls(searchData.segments[segmentIndex]).map(
+      (o) => o.label
+    );
+  }, [searchData, segmentIndex]);
+
+
 
   // Collect all amenities
   const allAmenities = useMemo(() => {
@@ -398,10 +504,9 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                     }
                     className={`py-2 px-4 rounded-md shadow-md text-sm font-medium
                       focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition-all
-                      ${
-                        !!selectedFleets[0]
-                          ? "bg-gray-400 text-white cursor-not-allowed"
-                          : "bg-blue-600 hover:bg-blue-500 text-white"
+                      ${!!selectedFleets[0]
+                        ? "bg-gray-400 text-white cursor-not-allowed"
+                        : "bg-blue-600 hover:bg-blue-500 text-white"
                       }
                     `}
                   >
@@ -556,11 +661,9 @@ const FilterAndFleetListing = ({ refreshKey }) => {
               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer
                  focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
               style={{
-                background: `linear-gradient(to right, #3b82f6 ${
-                  ((priceRange - minPrice) / (maxPrice - minPrice)) * 100
-                }%, #e5e7eb ${
-                  ((priceRange - minPrice) / (maxPrice - minPrice)) * 100
-                }%)`,
+                background: `linear-gradient(to right, #3b82f6 ${((priceRange - minPrice) / (maxPrice - minPrice)) * 100
+                  }%, #e5e7eb ${((priceRange - minPrice) / (maxPrice - minPrice)) * 100
+                  }%)`,
               }}
             />
             {priceRange !== maxPrice && (
@@ -595,42 +698,48 @@ const FilterAndFleetListing = ({ refreshKey }) => {
           </div>
         </motion.div>
 
+
         {/* Fleet Listing Section */}
         <div className="w-full bg-white flex flex-col items-center p-4 border border-blue-100 rounded-xl">
-          <div className="mb-10 w-full">
-            <h3 className="text-lg font-bold flex">
-              Trip {segmentIndex + 1}: {searchData.segments[segmentIndex].from}
-              ------
-              <span className="inline-block mx-1">
-                <IoIosAirplane size={34} />
-              </span>
-              ------
-              {searchData.segments[segmentIndex].to}
-            </h3>
-            <p className="text-neutral-800 text-xl mb-4">
-              Recommending flights based on convenience and fare
-            </p>
+          {routeLabels.map((label) => {
+            const flights = groupedFlights[label] || [];       
+            return (
+              <div key={label} className="mb-10 w-full">
+                <h3 className="text-lg font-bold flex items-center">{label}</h3>
 
-            {filteredData.length === 0 ? (
-              <div className="flex flex-col items-center justify-center mt-10">
-                <BsExclamationTriangle className="text-5xl text-gray-400 mb-2" />
-                <p className="text-lg text-gray-600">No fleets available</p>
+                <p className="text-neutral-800 text-xl mb-4">
+                  Recommending flights based on convenience and fare
+                </p>
+
+                {flights.length === 0 ? (
+                  /* ---- empty-state card ---- */
+                  <div className="w-full bg-gray-100 border border-dashed border-gray-400
+                          p-6 rounded-lg flex flex-col items-center justify-center">
+                    <BsExclamationTriangle className="text-4xl text-gray-400 mb-2" />
+                    <p className="text-md text-gray-700 font-medium text-center">
+                      No fleet available&nbsp;for&nbsp;
+                      <span className="font-semibold">{label}</span>
+                    </p>
+                  </div>
+                ) : (
+                  /* ---- normal card list ---- */
+                  <FlightCard
+                    filteredData={flights}
+                    onSelectFleet={(flight) => handleFleetSelection(segmentIndex, flight)}
+                    selectedFleet={selectedFleets[segmentIndex]}
+                    onNextSegment={handleNextSegment}
+                    currentTripIndex={currentTripIndex}
+                    tripCount={tripCount}
+                    isMultiCity={isMultiCity}
+                    addOnServices={addOnServices}
+                    segment={searchData.segments[segmentIndex]}
+                  />
+                )}
               </div>
-            ) : (
-              <FlightCard
-                // Pass entire array so user can check multiple flights
-                filteredData={filteredData}
-                onSelectFleet={(flight) => handleFleetSelection(segmentIndex, flight)}
-                selectedFleet={selectedFleets[segmentIndex]}
-                onNextSegment={handleNextSegment}
-                currentTripIndex={currentTripIndex}
-                tripCount={tripCount}
-                isMultiCity={isMultiCity}
-                addOnServices={addOnServices}
-              />
-            )}
-          </div>
+            );
+          })}
         </div>
+
       </div>
     </div>
   );

@@ -39,9 +39,7 @@ const NavBar = () => {
   useEffect(() => {
     fetch("https://admin.airambulanceaviation.co.in/api/contact?limit=255")
       .then((r) => r.json())
-      .then((json) => {
-        setCountries(json.data.map((c) => c.country));
-      })
+      .then((json) => setCountries(json.data))
       .catch(console.error);
   }, []);
   // fetch phoneNumbers whenever selection changes (and isn’t “worldwide”)
@@ -476,17 +474,19 @@ const NavBar = () => {
               className="rounded px-2 py-1 text-sm"
             >
               <option value="worldwide">Worldwide</option>
-              {countries.map((c) => (
-                <option key={c} value={c}>
-                  {c.split("-").map(w => w[0].toUpperCase() + w.slice(1)).join(" ")}
+              + {countries.map((c) => (
+                <option key={c._id} value={c.country}>
+                  {c.country
+                    .split("-")
+                    .map((w) => w[0].toUpperCase() + w.slice(1))
+                    .join(" ")}
                 </option>
               ))}
             </select>
 
             {/* show two WhatsApp numbers */}
-            {countryPhones.map((num) => (
-              <a
-                key={num}
+            {countryPhones.map((num, idx) => (
+              <a key={`${num}-${idx}`}
                 href={`https://wa.me/${num.replace(/^\+/, "")}`}
                 target="_blank"
                 rel="noopener noreferrer"
