@@ -128,7 +128,6 @@ function calculateArrivalTime(departureTimeStr, flightDurationStr) {
   const mm = String(totalMinutes).padStart(2, "0");
   return `${hh}:${mm}`;
 }
-
 export default function FlightCard({
   filteredData = [],
   onSelectFleet,
@@ -141,8 +140,6 @@ export default function FlightCard({
   readOnly = false,
 }) {
   const router = useRouter();
-  console.log("filteredData : ", filteredData);
-
   // ------------------------------------------------
   // States & Refs
   // ------------------------------------------------

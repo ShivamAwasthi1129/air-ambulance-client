@@ -18,7 +18,7 @@ export const SearchBar = () => {
   const [showMultiCityDetails, setShowMultiCityDetails] = useState(false);
   const [isMultiCityCollapsed, setIsMultiCityCollapsed] = useState(false);
   const [dateSelected, setDateSelected] = useState(false);
-  const [mapModal, setMapModal] = useState({ open: false, segIdx: null });
+  const [mapModal, setMapModal] = useState({ open: false, segIdx: null, field: null, });
   const segmentHasHeli = (seg) =>
     (seg.flightTypes || []).some((t) => t.toLowerCase() === "helicopter");
 
@@ -284,9 +284,20 @@ export const SearchBar = () => {
   const handleRemoveCity = (index) => {
     setSegments((prev) => prev.filter((_, i) => i !== index));
   };
-  const handleSaveCoords = (coords, index) => {
-    console.log(`Segment #${index} →`, coords);
-    // handleSegmentChange(index, "heliCoords", coords);
+  const handleSaveCoords = (coords, address, segIdx, field) => {
+    setSegments((prev) => {
+      const updated = [...prev];
+      if (!updated[segIdx]) return prev;
+
+      if (field === "from") {
+        updated[segIdx].fromLoc = { lat: coords.lat, lng: coords.lng };
+        updated[segIdx].fromAddress = address;
+      } else if (field === "to") {
+        updated[segIdx].toLoc = { lat: coords.lat, lng: coords.lng };
+        updated[segIdx].toAddress = address;
+      }
+      return updated;
+    });
   };
 
   // Final "Search" button
@@ -473,7 +484,18 @@ export const SearchBar = () => {
                       handleSegmentChange(0, "from", e.target.value);
                       setSearchQuery(e.target.value);
                     }}
+
                   />
+                  {segmentHasHeli(segments[0]) && (
+                    
+                    <button
+                      type="button"
+                      onClick={() => setMapModal({ open: true, segIdx: 0, field: "from" })}
+                    >
+                      <MapIcon />
+                    </button>
+                  )}
+
                   {/* Dropdown */}
                   {showDropdown &&
                     focusedSegmentIndex === 0 &&
@@ -533,10 +555,10 @@ export const SearchBar = () => {
                     }}
 
                   />
-                  {segmentHasHeli(segments[0]) && (   
+                  {segmentHasHeli(segments[0]) && (
                     <button
                       type="button"
-                      onClick={() => setMapModal({ open: true, segIdx: 0 })} 
+                      onClick={() => setMapModal({ open: true, segIdx: 0, field: "to" })}
                     >
                       <MapIcon />
                     </button>
@@ -565,9 +587,7 @@ export const SearchBar = () => {
                         ))}
                       </ul>
                     )}
-
                 </div>
-
                 {/* Departure Date & Time */}
                 <div className="w-full sm:w-1/2 md:w-[200px]">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -680,6 +700,15 @@ export const SearchBar = () => {
                                 setSearchQuery(e.target.value);
                               }}
                             />
+                            {segmentHasHeli(segment) && (
+                              <button
+                                type="button"
+                                onClick={() => setMapModal({ open: true, segIdx: index, field: "from" })}
+                                className="absolute right-2 top-8 text-blue-600 hover:text-blue-800"
+                              >
+                                <MapIcon />
+                              </button>
+                            )}
                             {/* Dropdown */}
                             {showDropdown &&
                               focusedSegmentIndex === index &&
@@ -707,7 +736,6 @@ export const SearchBar = () => {
                                 </ul>
                               )}
                           </div>
-
                           {/* TO */}
                           <div className="flex-1 relative">
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -732,7 +760,7 @@ export const SearchBar = () => {
                             {segmentHasHeli(segment) && (
                               <button
                                 type="button"
-                                onClick={() => setMapModal({ open: true, segIdx: index })}
+                                onClick={() => setMapModal({ open: true, segIdx: index, field: "to" })}
                                 className="absolute right-2 top-8 text-blue-600 hover:text-blue-800"
                               >
                                 <MapIcon />
@@ -764,9 +792,6 @@ export const SearchBar = () => {
                                 </ul>
                               )}
                           </div>
-
-
-
                           {/* DATE & TIME */}
                           <div className="w-full sm:w-1/2 md:w-[200px]">
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -941,18 +966,18 @@ export const SearchBar = () => {
         {/* (6) Conditionally render the flight listing (if verified) */}
         {!isLoading && isVerified && <FilterAndFleetListing key={refreshKey} />}
       </div >
-      {/* < GoogleMapModal
+      < GoogleMapModal
+        open={mapModal.open}
+        onClose={() => setMapModal({ open: false, segIdx: null, field: null })}
+        onSave={(coords, address) => handleSaveCoords(coords, address, mapModal.segIdx, mapModal.field)}
+      // apiKey={apiKey}
+      />
+      {/* < MapboxModal
         open={mapModal.open}
         onClose={() => setMapModal({ open: false, segIdx: null })}
-        onSave={(coords) => handleSaveCoords(coords, mapModal.segIdx)}
+        onSave={(coords) => handleSaveCoords(coords, mapModal.segIdx, field)}
         // apiKey={apiKey}
       /> */}
-      < MapboxModal
-        open={mapModal.open}
-        onClose={() => setMapModal({ open: false, segIdx: null })}
-        onSave={(coords) => handleSaveCoords(coords, mapModal.segIdx)}
-        // apiKey={apiKey}
-      />
       {/* React-Toastify container */}
       < ToastContainer
         autoClose={4000}
@@ -973,7 +998,7 @@ export const SearchBar = () => {
         }
 
       />
-    
+
     </>
   );
 };

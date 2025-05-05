@@ -1,13 +1,8 @@
 "use client";
-
 import { useState, useCallback } from "react";
 import Image from "next/image";
 import { IoClose } from "react-icons/io5";
-
-/* ---------- 1.  JSON DATA  ---------- */
-/* ------------------------------------------------------------------
-   FULL LIST  – every bank that appears in the three screenshots
-   ------------------------------------------------------------------ */
+import { useRouter } from "next/navigation";  // ← add this
 const sameEmails = [
   "info@airambulance.co.in",
   "info@airambulanceaviation.com",
@@ -317,8 +312,9 @@ function PaymentNotice() {
     </div>
   );
 }
-
 function PaymentForm() {
+  const router = useRouter();     
+  const [isLoading, setIsLoading] = useState(false);
   const [accName, setAccName] = useState("");
   const [accNo, setAccNo] = useState("");
   const [referenceId, setReferenceId] = useState("");
@@ -330,30 +326,44 @@ function PaymentForm() {
       <form
         onSubmit={async (e) => {
           e.preventDefault();
+          setIsLoading(true);
 
-          /* ---------------- 1. update sessionStorage ---------------- */
+          // 1. load current searchData
+          const raw = sessionStorage.getItem("searchData") || "{}";
+          const current = JSON.parse(raw);
+
+          // 2. merge name/email/phone from loginData into snake-case user_info
+          const loginRaw = sessionStorage.getItem("loginData") || "{}";
+          const login = JSON.parse(loginRaw);
+          current.userInfo = {
+            ...(current.userInfo || {}),
+            name: current.userInfo?.name || login.name,
+            email: current.userInfo?.email || login.email,
+            phone: current.userInfo?.phone || login.phone,
+          };
+
+          // 3. append payment fields
+          current.acc_name = accName.trim();
+          current.acc_no = accNo.trim();
+          current.reference_id = referenceId.trim();
+          current.amount = Number(amount);
+          current.currency = "INR";
+          current.totalAmount = current.amount;
+
+          // 4. write back to sessionStorage
+          sessionStorage.setItem("searchData", JSON.stringify(current));
+
+          // 5. POST to backend
           try {
-            const raw = sessionStorage.getItem("searchData") || "{}";
-            const current = JSON.parse(raw);
-
-            /* add / overwrite the four required keys */
-            current.acc_name = accName.trim();
-            current.acc_no = accNo.trim();
-            current.reference_id = referenceId.trim();
-            current.amount = Number(amount);   // numeric
-
-            sessionStorage.setItem("searchData", JSON.stringify(current));
-
-            /* ---------------- 2. POST to /api/booking ---------------- */
-            await fetch("/api/booking", {
+            const res = await fetch("/api/booking", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(current),
             });
+            if (!res.ok) throw new Error(res.statusText);
+            const { redirectUrl } = await res.json();
+            router.push(redirectUrl);
 
-            alert("Thank you! Your booking details were sent successfully. 😊");
-
-            /* ---------------- 3. clear local fields ------------------ */
             setAccName("");
             setAccNo("");
             setReferenceId("");
@@ -361,6 +371,8 @@ function PaymentForm() {
           } catch (err) {
             console.error("Booking submission failed:", err);
             alert("Sorry, something went wrong while submitting your booking.");
+          } finally {
+            setIsLoading(false);
           }
         }}
         className="grid gap-6 md:grid-cols-2"
@@ -386,13 +398,6 @@ function PaymentForm() {
           value={referenceId}
           onChange={(e) => setReferenceId(e.target.value)}
         />
-        {/* currency */}
-        {/* <Select
-          label="Currency in which amount paid"
-          options={["INR", "USD", "GBP", "EUR"]}
-          placeholder="Choose…"
-        /> */}
-        {/* amount */}
         <Input
           label="Amount"
           type="number"
@@ -406,15 +411,28 @@ function PaymentForm() {
         <div className="md:col-span-2">
           <button
             type="submit"
+            disabled={isLoading}
             className="inline-flex w-full items-center justify-center gap-2 rounded-lg
-                       bg-green-600 px-6 py-2.5 text-sm font-semibold text-white
-                       shadow-md transition hover:bg-green-700 focus:outline-none
-                       focus-visible:ring-2 focus-visible:ring-green-500"
+             bg-green-600 px-6 py-2.5 text-sm font-semibold text-white
+             shadow-md transition hover:bg-green-700 focus:outline-none
+             focus-visible:ring-2 focus-visible:ring-green-500"
           >
-            Submit Details
+            {isLoading ? (
+              <>
+                <svg className="h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+                Sending…
+              </>
+            ) : (
+              "Submit Details"
+            )}
           </button>
+
         </div>
       </form>
+
     </div>
   );
 }
@@ -453,7 +471,7 @@ function BankTable({ banks }) {
                   src={bank.logo}
                   alt={bank.bankName}
                   width={52}
-                  height={52} 
+                  height={52}
                   className="h-[4.5rem] w-[18.5rem] object-contain"
                 />
                 <span className="font-normal text-xs">{bank.bankName}</span>
@@ -469,7 +487,6 @@ function BankTable({ banks }) {
                   ))}
                 </td>
               ))}
-
               {/* timing & e-mails */}
               <td className="whitespace-pre-line px-4 py-5 align-top">
                 <b>Time&nbsp;</b> {bank.timing}

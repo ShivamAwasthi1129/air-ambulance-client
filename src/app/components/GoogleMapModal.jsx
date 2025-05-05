@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
-import "@googlemaps/extended-component-library/place_picker.js";
+import { Autocomplete } from "@react-google-maps/api";
 import CloseIcon from "@mui/icons-material/Close";
 /* ─────────────────── constants ──────────────────── */
 // one static array → no more “LoadScript reloaded” warning
@@ -29,8 +29,28 @@ function getLatLng(place) {
   return null;
 }
 
+
 /* ────────────────── component ───────────────────── */
 export default function GoogleMapModal({ open, onClose, onSave }) {
+  const [lastAddress, setLastAddress] = useState("");
+const autocompleteRef = useRef(null);
+const onLoadAutocomplete = (autocomplete) => {
+  autocompleteRef.current = autocomplete;
+};
+const onPlaceChanged = () => {
+  const place = autocompleteRef.current.getPlace();
+  if (place.geometry?.location) {
+    const pos = {
+      lat: place.geometry.location.lat(),
+      lng: place.geometry.location.lng(),
+    };
+    const addr  = place.formatted_address || place.name;
+    setCenter(pos);
+    setMarkerPos(pos);
+    setLastAddress(addr);
+  }
+};
+
   const [center, setCenter] = useState(null);
   const [markerPos, setMarkerPos] = useState(null);
 
@@ -39,9 +59,8 @@ export default function GoogleMapModal({ open, onClose, onSave }) {
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY,
     version: "beta",
-    libraries: MAP_LIBRARIES, // static reference
+    libraries: MAP_LIBRARIES, 
   });
-
   /* (1) locate the user once */
   useEffect(() => {
     if (!isLoaded || center) return;
@@ -85,10 +104,17 @@ export default function GoogleMapModal({ open, onClose, onSave }) {
     setMarkerPos(pos);
   }, []);
 
-  const save = () => {
-    if (markerPos) onSave(markerPos);
-    onClose();
-  };
+   const save = () => {
+       if (!markerPos) return onClose();
+    
+       // 1) get the human‐readable address the user just picked
+       //    if you’re still on gmpx-place-picker:
+       const address = pickerRef.current?.value?.description || pickerRef.current?.value?.formatted_address || pickerRef.current?.value;
+       // 2) pass BOTH coords and address back
+       onSave(markerPos, address);
+       onSave(markerPos, lastAddress);
+       onClose();
+     };;
 
   /* early exits */
   if (!open) return null;
@@ -119,19 +145,18 @@ export default function GoogleMapModal({ open, onClose, onSave }) {
 
         <div className="p-4 space-y-4">
           {/* place picker */}
-          <gmpx-place-picker
-            ref={pickerRef}
-            style={{ display: "block" }}
-            className="w-full"
+          <Autocomplete
+            onLoad={onLoadAutocomplete}
+            onPlaceChanged={onPlaceChanged}
           >
             <input
-              slot="input"
               type="text"
               placeholder="Search an address…"
               className="w-full border border-gray-300 rounded-md p-2
-                         focus:outline-none focus:ring-2 focus:ring-blue-500"
+               focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-          </gmpx-place-picker>
+          </Autocomplete>
+
 
           {/* map */}
           <GoogleMap
@@ -162,11 +187,10 @@ export default function GoogleMapModal({ open, onClose, onSave }) {
             <button
               disabled={!markerPos}
               onClick={save}
-              className={`px-4 py-1 rounded-md text-white ${
-                markerPos
+              className={`px-4 py-1 rounded-md text-white ${markerPos
                   ? "bg-blue-600 hover:bg-blue-700"
                   : "bg-blue-300 cursor-not-allowed"
-              }`}
+                }`}
             >
               Use this point
             </button>

@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { FaEye, FaEyeSlash, FaSpinner, FaCheckCircle } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaSpinner, FaCheckCircle, FaWhatsapp } from "react-icons/fa";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -31,7 +31,46 @@ const NavBar = () => {
   // Dropdown
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
-
+  // ─── country picker states ──────────────────────────────────────────
+  const [countries, setCountries] = useState([]);
+  const [selectedCountry, setSelectedCountry] = useState("worldwide");
+  const [countryPhones, setCountryPhones] = useState([]);
+  // fetch full list on mount
+  useEffect(() => {
+    fetch("https://admin.airambulanceaviation.co.in/api/contact?limit=255")
+      .then((r) => r.json())
+      .then((json) => {
+        setCountries(json.data.map((c) => c.country));
+      })
+      .catch(console.error);
+  }, []);
+  // fetch phoneNumbers whenever selection changes (and isn’t “worldwide”)
+  useEffect(() => {
+    if (selectedCountry === "worldwide") {
+      // ─── default load: GET /api/contact and take the first entry’s two numbers ───
+      fetch("https://admin.airambulanceaviation.co.in/api/contact")
+        .then((r) => r.json())
+        .then((json) => {
+          const all = json.data;
+          if (Array.isArray(all) && all.length > 0) {
+            setCountryPhones(all[0].phoneNumbers);
+          }
+        })
+        .catch(console.error);
+    } else {
+      // ─── user picked a specific country ───
+      fetch(
+        `https://admin.airambulanceaviation.co.in/api/contact/search?q=${encodeURIComponent(
+          selectedCountry
+        )}`
+      )
+        .then((r) => r.json())
+        .then((arr) => {
+          if (arr.length > 0) setCountryPhones(arr[0].phoneNumbers);
+        })
+        .catch(console.error);
+    }
+  }, [selectedCountry]);
   // ----------------------------------------------------------------
   // Effects
   // ----------------------------------------------------------------
@@ -225,16 +264,16 @@ const NavBar = () => {
         sessionStorage.setItem("loginData", JSON.stringify(userLoginData));
         sessionStorage.setItem("userVerified", "true");
 
-          // Optionally sending final data
-          const finalDataFromSession = sessionStorage.getItem("searchData");
-          if (finalDataFromSession) {
-            const finalDataToSend = JSON.parse(finalDataFromSession);
-            await fetch("/api/query", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(finalDataToSend),
-            });
-          }
+        // Optionally sending final data
+        const finalDataFromSession = sessionStorage.getItem("searchData");
+        if (finalDataFromSession) {
+          const finalDataToSend = JSON.parse(finalDataFromSession);
+          await fetch("/api/query", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(finalDataToSend),
+          });
+        }
 
         // Close and reset
         setIsLoginModalOpen(false);
@@ -351,7 +390,7 @@ const NavBar = () => {
     <>
       {/* --------------------------------- NAV BAR --------------------------------- */}
       <nav className="w-full z-20">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="w-full mx-auto px-4 py-3 flex items-center justify-evenly">
           {/* Left side: Logo */}
           <Link href="/" className="flex items-center">
             <img
@@ -428,6 +467,37 @@ const NavBar = () => {
               </button>
             )}
           </div>
+          {/* ─── country chooser + phones ──────────────────────────────────── */}
+          <div className="flex items-center space-x-4 ml-6">
+            {/* <label className="text-white text-sm">Choose your country:</label> */}
+            <select
+              value={selectedCountry}
+              onChange={(e) => setSelectedCountry(e.target.value)}
+              className="rounded px-2 py-1 text-sm"
+            >
+              <option value="worldwide">Worldwide</option>
+              {countries.map((c) => (
+                <option key={c} value={c}>
+                  {c.split("-").map(w => w[0].toUpperCase() + w.slice(1)).join(" ")}
+                </option>
+              ))}
+            </select>
+
+            {/* show two WhatsApp numbers */}
+            {countryPhones.map((num) => (
+              <a
+                key={num}
+                href={`https://wa.me/${num.replace(/^\+/, "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center text-green-200 hover:text-green-400 text-sm"
+              >
+                <FaWhatsapp className="mr-1" />
+                {num}
+              </a>
+            ))}
+          </div>
+
         </div>
       </nav>
 
@@ -462,9 +532,8 @@ const NavBar = () => {
                   setIsOtpMode(true);
                   setOtpSendStatus("idle");
                 }}
-                className={`mr-2 px-3 py-1 border ${
-                  isOtpMode ? "bg-gray-300" : "bg-white"
-                }`}
+                className={`mr-2 px-3 py-1 border ${isOtpMode ? "bg-gray-300" : "bg-white"
+                  }`}
               >
                 Login via OTP
               </button>
@@ -475,9 +544,8 @@ const NavBar = () => {
                   setIsOtpMode(false);
                   setOtpSendStatus("idle");
                 }}
-                className={`px-3 py-1 border ${
-                  !isOtpMode ? "bg-gray-300" : "bg-white"
-                }`}
+                className={`px-3 py-1 border ${!isOtpMode ? "bg-gray-300" : "bg-white"
+                  }`}
               >
                 Login via Password
               </button>
