@@ -190,21 +190,33 @@ const TravelHistory = () => {
                         <div className="mb-2 md:mb-0">
                           <p className="text-sm text-gray-700">
                             <span className="font-semibold">From:</span>{" "}
-                            {segment.fromCity} ({segment.fromIATA})
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {segment.from}
+                            {segment.from === "custom" ? (
+                              <>
+                                <span className="text-xs">{segment.fromAddress}</span>{" "}
+                                <span className="text-gray-500 text-xs">
+                                  ({segment.fromLoc?.lat.toFixed(2)}, {segment.fromLoc?.lng.toFixed(2)})
+                                </span>
+                              </>
+                            ) : (
+                              `${segment.fromCity} (${segment.fromIATA})`
+                            )}
                           </p>
                         </div>
-                        <div className="text-center text-gray-400 mx-2">
-                          &rarr;
-                        </div>
+                        <div className="text-center text-gray-400 mx-2">&rarr;</div>
                         <div>
                           <p className="text-sm text-gray-700">
                             <span className="font-semibold">To:</span>{" "}
-                            {segment.toCity} ({segment.toIATA})
+                            {segment.to === "custom" ? (
+                              <>
+                                <span className="text-xs">{segment.toAddress}</span>{" "}
+                                <span className="text-gray-500 text-xs">
+                                  ({segment.toLoc?.lat.toFixed(2)}, {segment.toLoc?.lng.toFixed(2)})
+                                </span>
+                              </>
+                            ) : (
+                              `${segment.toCity} (${segment.toIATA})`
+                            )}
                           </p>
-                          <p className="text-xs text-gray-500">{segment.to}</p>
                         </div>
                       </div>
 

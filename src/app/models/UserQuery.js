@@ -1,8 +1,10 @@
 import mongoose from "mongoose";
 
 const SegmentSchema = new mongoose.Schema({
-  from: { type: String, required: true },
-  to: { type: String, required: true },
+  from: { type: String },
+  fromAddress: { type: String },
+  to: { type: String },
+  toAddress: { type: String },
   fromLoc: {
     lat: { type: Number },
     lng: { type: Number },

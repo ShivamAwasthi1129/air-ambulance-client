@@ -37,7 +37,7 @@ const NavBar = () => {
   const [countryPhones, setCountryPhones] = useState([]);
   // fetch full list on mount
   useEffect(() => {
-    fetch("https://admin.airambulanceaviation.co.in/api/contact?limit=255")
+    fetch("https://admin.airambulanceaviation.co.in/api/contact?limit=255",{mode: "cors"})
       .then((r) => r.json())
       .then((json) => setCountries(json.data))
       .catch(console.error);
@@ -46,7 +46,7 @@ const NavBar = () => {
   useEffect(() => {
     if (selectedCountry === "worldwide") {
       // ─── default load: GET /api/contact and take the first entry’s two numbers ───
-      fetch("https://admin.airambulanceaviation.co.in/api/contact")
+      fetch("https://admin.airambulanceaviation.co.in/api/contact",{mode: "cors"})
         .then((r) => r.json())
         .then((json) => {
           const all = json.data;
@@ -60,7 +60,7 @@ const NavBar = () => {
       fetch(
         `https://admin.airambulanceaviation.co.in/api/contact/search?q=${encodeURIComponent(
           selectedCountry
-        )}`
+        ),{mode: "cors"}}`
       )
         .then((r) => r.json())
         .then((arr) => {
@@ -253,6 +253,7 @@ const NavBar = () => {
           email,
           phone: phoneNumber,
           name: fetchedName,
+          agreedToPolicy: true,
         };
 
         const searchDataStr = sessionStorage.getItem("searchData");
@@ -645,7 +646,6 @@ const NavBar = () => {
             {!isOtpMode && (
               <>
                 <h2 className="text-xl font-bold mb-4">Login with Password</h2>
-
                 <div className="mb-4 relative">
                   <input
                     type={showPassword ? "text" : "password"}
@@ -665,7 +665,6 @@ const NavBar = () => {
                     )}
                   </div>
                 </div>
-
                 <button
                   onClick={handleLoginClick}
                   className="w-full py-3 bg-blue-500 text-white rounded hover:bg-blue-600 flex justify-center items-center"

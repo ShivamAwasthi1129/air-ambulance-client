@@ -10,7 +10,8 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Icondiv } from "./Icondiv";
 import GoogleMapModal from "./GoogleMapModal";
-import MapIcon from "@mui/icons-material/Map";
+// import FaMapLocationDot from "@mui/icons-material/Map";
+import { FaMapLocationDot } from "react-icons/fa6";
 import MapboxModal from "./MapboxModal";
 export const SearchBar = () => {
   // === State ===
@@ -25,21 +26,33 @@ export const SearchBar = () => {
   // Each segment has `flightTypes` (an array) for multi-select
   const [segments, setSegments] = useState([
     {
-      from: "Dubai International Airport (DXB)",
-      to: "Indira Gandhi International Airport (DEL)",
+      // from: "Dubai International Airport (DXB)",
+      from: "Dubai International Airport",
+      // to: "Indira Gandhi International Airport (DEL)",
+      to: "Indira Gandhi International Airport",
       departureDate: new Date().toISOString().split("T")[0],
       departureTime: "12:00",
       passengers: 1,
-      flightTypes: [],
+      flightTypes: ["Private Jet"],
     },
   ]);
+
+  useEffect(() => {
+    setSegments((prevSegments) => {
+      return prevSegments.map((segment) => {
+        if (!segment.flightTypes || segment.flightTypes.length === 0) {
+          return { ...segment, flightTypes: ["Private Jet"] }; // Default to "Private Jet"
+        }
+        return segment;
+      });
+    });
+  }, []);
 
   const [airports, setAirports] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [focusedSegmentIndex, setFocusedSegmentIndex] = useState(null);
   const [focusedField, setFocusedField] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
-
   // Personal info fields
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -52,10 +65,10 @@ export const SearchBar = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isUserInfoModalOpen, setIsUserInfoModalOpen] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
+  const [toastShown, setToastShown] = useState(false);
   const containerRef = useRef(null);
-
+  const toastTriggeredRef = useRef(false);
   // === Effects ===
-
   // (A) Load from session or set defaults
   useEffect(() => {
     const savedSearchData = sessionStorage.getItem("searchData");
@@ -74,15 +87,17 @@ export const SearchBar = () => {
         const updated = [...prev];
         updated[0] = {
           ...updated[0],
-          from: "Dubai International Airport (DXB)",
+          // from: "Dubai International Airport (DXB)",
+          from: "Dubai International Airport",
           fromCity: "Dubai",
           fromIATA: "DXB",
           fromICAO: "OMDB",
-          to: "Indira Gandhi International Airport (DEL)",
+          // to: "Indira Gandhi International Airport (DEL)",
+          to: "Indira Gandhi International Airport",
           toCity: "New Delhi",
           toIATA: "DEL",
           toICAO: "VIDP",
-          flightTypes: [],
+          flightTypes: ["Private Jet"],
         };
         return updated;
       });
@@ -185,12 +200,14 @@ export const SearchBar = () => {
       setIsMultiCityCollapsed(false);
       setSegments([
         {
-          from: "Dubai International Airport (DXB)",
-          to: "Indira Gandhi International Airport (DEL)",
+          // from: "Dubai International Airport (DXB)",
+          from: "Dubai International Airport",
+          to: "Indira Gandhi International Airport",
+          // to: "Indira Gandhi International Airport (DEL)",
           departureDate: new Date().toISOString().split("T")[0],
           departureTime: "12:00",
           passengers: 1,
-          flightTypes: [],
+          flightTypes: ["Private Jet"],
         },
       ]);
     } else if (type === "multicity") {
@@ -198,12 +215,14 @@ export const SearchBar = () => {
       setIsMultiCityCollapsed(false);
       setSegments([
         {
-          from: "Dubai International Airport (DXB)",
-          to: "Indira Gandhi International Airport (DEL)",
+          // from: "Dubai International Airport (DXB)",
+          from: "Dubai International Airport",
+          to: "Indira Gandhi International Airport",
+          // to: "Indira Gandhi International Airport (DEL)",
           departureDate: new Date().toISOString().split("T")[0],
           departureTime: "12:00",
           passengers: 1,
-          flightTypes: [],
+          flightTypes: ["Private Jet"],
         },
       ]);
     }
@@ -289,6 +308,24 @@ export const SearchBar = () => {
       const updated = [...prev];
       if (!updated[segIdx]) return prev;
 
+      // Check if "From" and "To" coordinates are the same
+      const otherField = field === "from" ? "toLoc" : "fromLoc";
+      if (
+        updated[segIdx][otherField] &&
+        updated[segIdx][otherField].lat === coords.lat &&
+        updated[segIdx][otherField].lng === coords.lng
+      ) {
+        if (!toastTriggeredRef.current) {
+          toast.error("Selected coordinates of destination and arrival cannot be the same.");
+          toastTriggeredRef.current = true; // Prevent further toasts
+          setTimeout(() => {
+            toastTriggeredRef.current = false; // Reset after 3 seconds
+          }, 3000);
+        }
+        return prev;
+      }
+
+      // Update the selected field
       if (field === "from") {
         updated[segIdx].fromLoc = { lat: coords.lat, lng: coords.lng };
         updated[segIdx].fromAddress = address;
@@ -299,6 +336,7 @@ export const SearchBar = () => {
       return updated;
     });
   };
+
 
   // Final "Search" button
   const handleSearch = async () => {
@@ -315,6 +353,7 @@ export const SearchBar = () => {
           if (!email.trim()) setEmail(parsedLoginData.email || "");
         }
       }
+
       // Ensure setState is processed
       await new Promise((resolve) => setTimeout(resolve, 0));
       const currentName = name.trim();
@@ -322,15 +361,25 @@ export const SearchBar = () => {
       const currentEmail = email.trim();
 
       // Basic validations if user is not verified
-      if (!currentName || !currentPhone || !currentEmail || !agreedToPolicy) {
+      // if (!currentName || !currentPhone || !currentEmail || !agreedToPolicy) {
+      //   toast.error(
+      //     "Name, phone, email, and agreeing to Terms & Conditions are required."
+      //   );
+      //   setIsLoading(false);
+      //   return;
+      // }
+      const storedLoginData = sessionStorage.getItem("loginData");
+      if (!storedLoginData && (!currentName || !currentPhone || !currentEmail || !agreedToPolicy)) {
         toast.error(
           "Name, phone, email, and agreeing to Terms & Conditions are required."
         );
         setIsLoading(false);
         return;
       }
+
       // Append country code to phone
       const fullPhoneNumber = `${countryCode}${currentPhone}`;
+
       // Merge user info
       const mergedUserInfo = {
         ...userInfo,
@@ -339,6 +388,18 @@ export const SearchBar = () => {
         email: currentEmail,
         agreedToPolicy,
       };
+
+      // Save the merged user info to sessionStorage as loginData
+      // sessionStorage.setItem(
+      //   "loginData",
+      //   JSON.stringify({
+      //     name: currentName,
+      //     phone: fullPhoneNumber,
+      //     email: currentEmail,
+      //     agreedToPolicy,
+      //   })
+      // );
+
       // If not verified, send OTP
       if (!isVerified) {
         try {
@@ -370,16 +431,19 @@ export const SearchBar = () => {
           toast.error("Failed to send OTP. Please try again.");
         }
       }
+
       // Build final payload (each segment includes flightTypes array)
       const finalData = {
         tripType,
         segments, // => each has flightTypes: [...]
         userInfo: mergedUserInfo,
       };
+
       // Store in session
       sessionStorage.setItem("searchData", JSON.stringify(finalData));
       setUserInfo(mergedUserInfo);
       setRefreshKey((prev) => prev + 1);
+
       // Optionally POST to /api/query for flight listing
       const finalDataFromSession = sessionStorage.getItem("searchData");
       console.log("final payload : ", finalDataFromSession);
@@ -391,6 +455,7 @@ export const SearchBar = () => {
           body: JSON.stringify(finalDataToSend),
         });
       }
+
       // If multi-city, collapse after searching
       if (tripType === "multicity") {
         setIsMultiCityCollapsed(true);
@@ -463,7 +528,7 @@ export const SearchBar = () => {
           <div className="bg-white rounded-xl border-4 border-gray-300 p-4">
             {/* One Way Fields */}
             {tripType === "oneway" && (
-              <div className="flex flex-wrap md:flex-nowrap items-end gap-4 mb-4 border-b-2 border-gray-300 pb-4">
+              <div className="flex flex-wrap md:flex-nowrap items-start gap-4 mb-4 border-b-2 border-gray-300 pb-4">
                 {/* FROM */}
                 <div className="flex-1 relative">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -486,15 +551,23 @@ export const SearchBar = () => {
                     }}
 
                   />
+                  {segments[0].fromLoc && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Selected Coordinates: {segments[0].fromLoc.lat.toFixed(2)}, {segments[0].fromLoc.lng.toFixed(2)}
+                    </p>
+                  )}
+
+
                   {segmentHasHeli(segments[0]) && (
-                    
                     <button
                       type="button"
                       onClick={() => setMapModal({ open: true, segIdx: 0, field: "from" })}
+                      className="absolute right-2 top-8 text-blue-600 hover:text-blue-800"
                     >
-                      <MapIcon />
+                      <FaMapLocationDot size={26} />
                     </button>
                   )}
+
 
                   {/* Dropdown */}
                   {showDropdown &&
@@ -555,12 +628,18 @@ export const SearchBar = () => {
                     }}
 
                   />
+                  {segments[0].toLoc && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Selected Coordinates: {segments[0].toLoc.lat.toFixed(2)}, {segments[0].toLoc.lng.toFixed(2)}
+                    </p>
+                  )}
                   {segmentHasHeli(segments[0]) && (
                     <button
                       type="button"
                       onClick={() => setMapModal({ open: true, segIdx: 0, field: "to" })}
+                      className="absolute right-2 top-8 text-blue-600 hover:text-blue-800"
                     >
-                      <MapIcon />
+                      <FaMapLocationDot size={26} />
                     </button>
                   )}
                   {showDropdown &&
@@ -678,7 +757,7 @@ export const SearchBar = () => {
                           /></div>
 
                         {/* Actual fields */}
-                        <div className="ml-10 flex flex-wrap lg:flex-nowrap items-end gap-4 mt-4">
+                        <div className="ml-10 flex flex-wrap lg:flex-nowrap items-start gap-4 mt-4">
                           {/* FROM */}
                           <div className="flex-1 relative">
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -700,13 +779,18 @@ export const SearchBar = () => {
                                 setSearchQuery(e.target.value);
                               }}
                             />
+                            {segment.fromLoc && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                Selected Coordinates: {segment.fromLoc.lat.toFixed(2)}, {segment.fromLoc.lng.toFixed(2)}
+                              </p>
+                            )}
                             {segmentHasHeli(segment) && (
                               <button
                                 type="button"
                                 onClick={() => setMapModal({ open: true, segIdx: index, field: "from" })}
                                 className="absolute right-2 top-8 text-blue-600 hover:text-blue-800"
                               >
-                                <MapIcon />
+                                <FaMapLocationDot size={26} />
                               </button>
                             )}
                             {/* Dropdown */}
@@ -757,13 +841,18 @@ export const SearchBar = () => {
                                 setSearchQuery(e.target.value);
                               }}
                             />
+                            {segment.toLoc && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                Selected Coordinates: {segment.toLoc.lat.toFixed(2)}, {segment.toLoc.lng.toFixed(2)}
+                              </p>
+                            )}
                             {segmentHasHeli(segment) && (
                               <button
                                 type="button"
                                 onClick={() => setMapModal({ open: true, segIdx: index, field: "to" })}
                                 className="absolute right-2 top-8 text-blue-600 hover:text-blue-800"
                               >
-                                <MapIcon />
+                                <FaMapLocationDot size={26} />
                               </button>
                             )}
                             {showDropdown &&

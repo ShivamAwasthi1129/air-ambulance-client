@@ -12,6 +12,7 @@ import { Bottom } from "../components/Bottom";
 import PaymentModal from "../components/PaymentModal";
 import NavBar from "../components/Navbar";
 import BankingPartnersModal from "../components/BankingPartnerModal";
+import SelectedFleetCard from "../components/SelectedFleetCard";
 
 // Remove parentheses from airport name
 function cleanAirportName(str) {
@@ -20,6 +21,119 @@ function cleanAirportName(str) {
 // Helper: format to US dollars, e.g. `$ 650,000`
 function formatUSD(amount) {
   return `$ ${amount.toLocaleString("en-US")}`;
+}
+
+/**
+ * Unified helper – handles both string airport names and {lat,lng} objects
+ */
+function toRapidoParam(place) {
+  if (typeof place === "string") {
+    // remove text inside (…) and extra spaces
+    const cleaned = place.replace(/\s*\(.*?\)\s*/, "").trim();
+    return encodeURIComponent(cleaned);
+  }
+  // lat/lng object
+  return encodeURIComponent(JSON.stringify(place));
+}
+
+/**
+ * Build every Rapido request (and its label) for ONE segment.
+ * • Airport → Airport  → keep user-chosen flightTypes.
+ * • Any route touching coords → force flightType=Helicopter.
+ * • Coordinate part of label =  "lat,lng-(address)"  if address exists,
+ *   otherwise just "lat,lng".
+ */
+function buildRapidoUrls(seg) {
+  /* helpers */
+  const stripCode = (s) => s.replace(/\s*\(.*?\)\s*/, "").trim();
+  const toRapidoParam = (p) =>
+    typeof p === "string"
+      ? encodeURIComponent(stripCode(p))
+      : encodeURIComponent(JSON.stringify(p));
+
+  const coordOnly = (loc) =>
+    `${loc.lat.toFixed(2)},${loc.lng.toFixed(2)}`;
+
+  // 11.93,79.81-(Some Address)
+  const fmtPoint = (loc, addr) =>
+    addr ? `${coordOnly(loc)}-(${addr})` : coordOnly(loc);
+
+  /* shared query tail */
+  const common =
+    `departureDate=${seg.departureDate}T${seg.departureTime}:00Z` +
+    `&travelerCount=${seg.passengers}`;
+
+  /* assemble one {url,label} object */
+  const make = ({ fromArg, toArg, label, heliOnly }) => {
+    const fltParam = heliOnly
+      ? "&flightType=Helicopter"
+      : seg.flightTypes?.length
+        ? `&flightType=${encodeURIComponent(seg.flightTypes.join(","))}`
+        : "";
+
+    return {
+      url: `/api/rapido?from=${fromArg}&to=${toArg}&${common}${fltParam}`,
+      label,
+    };
+  };
+
+  const list = [];
+
+  /* 1️⃣ Airport ➜ Airport */
+  if (seg.from && seg.to) {
+    list.push(
+      make({
+        fromArg: toRapidoParam(seg.from),
+        toArg: toRapidoParam(seg.to),
+        label: `${stripCode(seg.from)} ➜ ${stripCode(seg.to)}`,
+        heliOnly: false,
+      })
+    );
+  }
+
+  /* 2️⃣ Coord ➜ Coord */
+  if (seg.fromLoc && seg.toLoc) {
+    list.push(
+      make({
+        fromArg: toRapidoParam(seg.fromLoc),
+        toArg: toRapidoParam(seg.toLoc),
+        label: `${fmtPoint(seg.fromLoc, seg.fromAddress)} ➜ ${fmtPoint(
+          seg.toLoc,
+          seg.toAddress
+        )}`,
+        heliOnly: true,
+      })
+    );
+  }
+
+  /* 3️⃣ Airport ➜ Coord */
+  if (seg.from && seg.toLoc) {
+    list.push(
+      make({
+        fromArg: toRapidoParam(seg.from),
+        toArg: toRapidoParam(seg.toLoc),
+        label: `${stripCode(seg.from)} ➜ ${fmtPoint(
+          seg.toLoc,
+          seg.toAddress
+        )}`,
+        heliOnly: true,
+      })
+    );
+  }
+
+  /* 4️⃣ Coord ➜ Airport */
+  if (seg.fromLoc && seg.to) {
+    list.push(
+      make({
+        fromArg: toRapidoParam(seg.fromLoc),
+        toArg: toRapidoParam(seg.to),
+        label: `${fmtPoint(seg.fromLoc, seg.fromAddress)} ➜ ${stripCode(seg.to)}`,
+        heliOnly: true,
+      })
+    );
+  }
+
+  return list;
 }
 
 const FinalEnquiryPage = () => {
@@ -32,6 +146,43 @@ const FinalEnquiryPage = () => {
   const [isWhatsAppSending, setIsWhatsAppSending] = useState(false);
   const [isEmailSending, setIsEmailSending] = useState(false);
   const [open, setOpen] = useState(false); //for offline payment page modal
+
+  useEffect(() => {
+    const storedData = sessionStorage.getItem("searchData");
+    if (storedData) {
+      const parsedSearchData = JSON.parse(storedData);
+  
+      // Iterate through each segment and update fields if fromLoc and toLoc are filled
+      const updatedSegments = parsedSearchData.segments.map((segment) => {
+        if (segment.fromLoc && segment.toLoc) {
+          return {
+            ...segment,
+            from: "custom",
+            fromCity: "custom",
+            fromIATA: "custom",
+            fromICAO: "custom",
+            to: "custom",
+            toCity: "custom",
+            toIATA: "custom",
+            toICAO: "custom",
+          };
+        }
+        return segment;
+      });
+  
+      // Update the searchData object with modified segments
+      const updatedSearchData = {
+        ...parsedSearchData,
+        segments: updatedSegments,
+      };
+  
+      // Save the updated searchData back to sessionStorage
+      sessionStorage.setItem("searchData", JSON.stringify(updatedSearchData));
+  
+      // Update the state with the modified searchData
+      setSearchData(updatedSearchData);
+    }
+  }, []);
 
   // 1) Read searchData from sessionStorage & fallback to loginData for user details
   useEffect(() => {
@@ -65,7 +216,7 @@ const FinalEnquiryPage = () => {
     }
   }, []);
 
-  // 2) Fetch flights for each segment, filtered by chosen registrationNo
+  // 2) Fetch flights for each segment using the Rapido API
   useEffect(() => {
     const fetchAllSegments = async () => {
       if (!searchData || !searchData.segments) return;
@@ -73,41 +224,50 @@ const FinalEnquiryPage = () => {
 
       for (let i = 0; i < searchData.segments.length; i++) {
         const segment = searchData.segments[i];
-        const cleanedFrom = cleanAirportName(segment.from);
-        const cleanedTo = cleanAirportName(segment.to);
 
-        // Build the flightType parameter if the user selected any
-        let flightTypeQuery = "";
-        if (segment.flightTypes && segment.flightTypes.length > 0) {
-          flightTypeQuery = `&flightType=${encodeURIComponent(
-            segment.flightTypes.join(",")
-          )}`;
-        }
-
-        // Now include flightType param in the fetch URL
-        const url = `/api/search-flights?from=${cleanedFrom}&to=${cleanedTo}&departureDate=${segment.departureDate
-          }T${segment.departureTime}:00Z&travelerCount=${segment.passengers}${flightTypeQuery}`;
+        // Build Rapido URLs for this segment
+        const urlObjs = buildRapidoUrls(segment);
 
         try {
-          const res = await fetch(url);
-          const data = await res.json();
-          const finalFleetArray = data?.finalFleet || [];
+          // Fetch all possible routes in parallel
+          const responses = await Promise.all(
+            urlObjs.map(obj =>
+              fetch(obj.url)
+                .then(res => res.ok ? res.json() : null)
+                .catch(() => null)
+            )
+          );
 
-          // Filter to match chosen registrationNo
-          let filtered = [];
+          // Combine all fleets from different route options
+          let allFleets = [];
+
+          responses.forEach((res, idx) => {
+            if (res?.finalFleet?.length) {
+              const label = urlObjs[idx].label;
+              res.finalFleet.forEach(fleet => {
+                allFleets.push({
+                  ...fleet,
+                  _numericPrice: parseInt(fleet.totalPrice?.replace(/\\D/g, ""), 10) || 0,
+                  _sourceLabel: label
+                });
+              });
+            }
+          });
+
+          // Filter to match chosen registrationNo if specified
           if (segment.selectedFleet?.registrationNo) {
-            filtered = finalFleetArray.filter(
-              (flight) =>
-                flight?.fleetDetails?.registrationNo ===
-                segment.selectedFleet.registrationNo
+            allFleets = allFleets.filter(
+              flight => flight?.fleetDetails?.registrationNo === segment.selectedFleet.registrationNo
             );
           }
-          resultsArr.push(filtered);
+
+          resultsArr.push(allFleets);
         } catch (error) {
           console.error("Error fetching flights for segment", i, error);
           resultsArr.push([]);
         }
       }
+
       setFetchedSegmentsData(resultsArr);
     };
 
@@ -212,11 +372,7 @@ const FinalEnquiryPage = () => {
   // Summation for cost details
   const allSelectedFlights = fetchedSegmentsData.flat();
   // Parse flight.totalPrice => numeric
-  const estimatedCost = allSelectedFlights.reduce((acc, flight) => {
-    if (!flight.totalPrice) return acc;
-    const numericPrice = parseInt(flight.totalPrice.replace(/\D+/g, ""), 10) || 0;
-    return acc + numericPrice;
-  }, 0);
+  const estimatedCost = searchData.segments.reduce((total, segment) => { if (segment.selectedFleet && segment.selectedFleet.price) { const price = parseInt(segment.selectedFleet.price.replace(/\D+/g, ""), 10) || 0; return total + price; } return total; }, 0);
 
   // WhatsApp Enquiry
   const sendWhatsAppMessage = async () => {
@@ -303,10 +459,13 @@ const FinalEnquiryPage = () => {
   const lastSegment = searchData.segments[searchData.segments.length - 1];
 
   const fromOfFirstSegment = firstSegment.from;
-  const toOfLastSegment = lastSegment.to;
+  const toOfLastSegment = searchData.segments[searchData.segments.length - 1]?.selectedFleet?.label.split(" ➜ ")[1] || "N/A";
   const departureTime = firstSegment.departureTime;
   const passengerCount = firstSegment.passengers;
   const departureDate = firstSegment.departureDate;
+  const totalPassengers = searchData.segments.reduce((total, segment) => {
+    return total + (parseInt(segment.passengers, 10) || 0);
+  }, 0);
 
   // PDF Download Function (Proforma Invoice)
   const generatePDF = () => {
@@ -451,36 +610,37 @@ const FinalEnquiryPage = () => {
       <div className="flex flex-col md:flex-row justify-center gap-2 p-4">
         {/* LEFT COLUMN: Flights */}
         <div className="xl:w-[70rem] md: w-[90rem] flex flex-col space-y-4 ">
-          {searchData.segments.map((segment, segmentIndex) => {
-            const flightsForSegment = fetchedSegmentsData[segmentIndex] || [];
-            return (
-              <div
-                key={segmentIndex}
-                className="w-full bg-white flex flex-col items-start px-4 border border-blue-100 rounded-xl"
-              >
-                <h3 className="text-lg font-bold flex items-center mt-4">
-                  Trip {segmentIndex + 1}: {segment.from}
-                  <span className="mx-2">
-                    <IoIosAirplane size={24} />
-                  </span>
-                  {segment.to}
-                </h3>
+          <div className="flex flex-col md:flex-row justify-center gap-2 p-4">
+            {searchData.segments.map((segment, segmentIndex) => {
+              const selectedFleet = segment.selectedFleet;
+              if (!selectedFleet) return null; // Skip if no fleet is selected
 
-                {flightsForSegment.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center mt-6">
-                    <BsExclamationTriangle className="text-5xl text-gray-400 mb-2" />
-                    <p className="text-lg text-gray-600">No fleets available</p>
-                  </div>
-                ) : (
-                  flightsForSegment.map((flight) => (
-                    <div className="w-full my-1" key={flight._id}>
-                      <FlightCard filteredData={[flight]} readOnly />
-                    </div>
-                  ))
-                )}
-              </div>
-            );
-          })}
+              return (
+                <div
+                  key={segmentIndex}
+                // className="w-full bg-white flex flex-col items-start px-4 border border-blue-100 rounded-xl"
+
+                >
+                  {/* Display the label */}
+                  {/* <h3 className="text-lg font-bold flex items-center mt-4">
+                   {selectedFleet.label}
+                  </h3> * /}
+
+                  {/* Pass the label to the FleetCard */}
+                  {/* <FlightCard
+                    filteredData={[selectedFleet]}
+                    readOnly
+                    label={selectedFleet.label} 
+                  /> */}
+                  <SelectedFleetCard
+                    // fleet={segment.selectedFleet}
+                    tripNumber={`Trip ${segmentIndex + 1}`}
+                    label={selectedFleet.label}
+                  />
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* RIGHT COLUMN: JetSteals + Cost Details + Buttons */}
@@ -494,8 +654,7 @@ const FinalEnquiryPage = () => {
               Departure Time: {departureTime || "—"}
             </p>
             <p className="text-sm text-gray-600 mb-4">
-              {passengerCount} Passenger{passengerCount > 1 ? "s" : ""} |{" "}
-              {departureDate}
+              Total <span className="text-lg">{totalPassengers}</span> Passenger{totalPassengers > 1 ? "s" : ""} | {departureDate}
             </p>
 
             {/* Cost breakdown */}
@@ -543,19 +702,33 @@ const FinalEnquiryPage = () => {
                 <div className="text-xs font-normal">via Email</div>
               </button>
             </div>
-            <button
+            {/* <button
               onClick={() => setOpen(true)}
               className="rounded-lg bg-sky-600 px-6 py-3 font-semibold text-black"
             >
               Show Banking Details
-            </button>
+            </button> */}
             {/* Download PDF Button */}
-            <button
+            {/* <button
               className="border border-orange-400 text-orange-500 px-4 py-2 rounded-md hover:bg-orange-100 transition-colors w-full text-center"
               onClick={generatePDF}
             >
               Download Proforma Invoice
-            </button>
+            </button> */}
+            <div className="flex justify-between items-center space-x-4">
+              <button
+                onClick={() => setOpen(true)}
+                className="rounded-lg bg-sky-600 px-6 py-3 font-semibold text-white"
+              >
+                Show Banking Details
+              </button>
+              <button
+                className="border border-orange-400 text-orange-500 px-4 py-2 rounded-md hover:bg-orange-100 transition-colors text-center"
+                onClick={generatePDF}
+              >
+                Download Proforma Invoice
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -568,7 +741,7 @@ const FinalEnquiryPage = () => {
         loading={loading}
         estimatedCost={estimatedCost}
       />
-       <BankingPartnersModal open={open} height="90vh" onClose={() => setOpen(false)} />
+      <BankingPartnersModal open={open} height="90vh" onClose={() => setOpen(false)} />
       <Bottom />
       {/* React-Toastify container */}
       <ToastContainer

@@ -53,10 +53,9 @@ export const POST = async (req) => {
       status: "pending",
     };
     await Booking.create({ _id: orderId, ...bookingInfo });
-    return NextResponse.redirect(
-      `${process.env.LOCAL_URL}/payment-success?order_id=${orderId}&amount=${amount}&currency=INR&status=success`,
-      303
-    );
+    return NextResponse.json({
+      url: `${process.env.LOCAL_URL}/payment-success?order_id=${orderId}&amount=${amount}&currency=INR&status=success`,
+    });
   } catch (err) {
     console.error("error", err.message);
     return NextResponse.json({ error: err.message }, { status: 500 });

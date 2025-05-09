@@ -140,7 +140,8 @@ export default function FlightCard({
   isMultiCity,
   addOnServices = [],
   readOnly = false,
-  segment, 
+  segment,
+  label,
 }) {
   const router = useRouter();
   // ------------------------------------------------
@@ -605,58 +606,37 @@ export default function FlightCard({
           const length = allAmenities.length;
           const containerWidth = 7 * itemWidth; // show 7 icons
           const translateX = -(offset * itemWidth);
-          // const isHelicopter = flight.fleetDetails?.flightType === "Helicopter";
-          // let fromLabel, toLabel;
-          // if (isHelicopter) {
-          //   const seg = parsedData?.segments?.[currentTripIndex];
-          //   console.log("segement latitude and longitude : ",seg);
-          //   fromLabel = `${Number(seg.fromLoc.lat).toFixed(2)}, ${Number(seg.fromLoc.lng).toFixed(2)}`;
-          //   toLabel = `${Number(seg.toLoc.lat).toFixed(2)}, ${Number(seg.toLoc.lng).toFixed(2)}`;
-          // } else {
-          //   fromLabel = fromIATA;
-          //   toLabel = toIATA;
-          // }
+          // Add this helper function inside the component
 
-          /* ───────────────────────────────────────────────
- * Build dynamic labels for the time-line section
- * ───────────────────────────────────────────────*/
-          const seg = segment || {};         // <-- always the correct leg
+          const isCoordinate = (str) => /^-?\d+\.\d+,-?\d+\.\d+$/.test(str.trim().split("-(")[0]);
+          const [fromPart, toPart] = (label || "").split(" ➜ ");
+          console.log("fromPart:", fromPart);
+          console.log("toPart:", toPart);
 
+          let fromTopLabel, fromBottomLabel, toTopLabel, toBottomLabel;
 
-          /* An airport leg always has an IATA/ICAO code.
-             A true “point” leg never has those codes. */
-             const fromIsAirport = Boolean(seg.fromIATA);  // IATA present ⇒ airport
-             const toIsAirport   = Boolean(seg.toIATA);
-             
-             const fromIsPoint = !fromIsAirport;
-             const toIsPoint   = !toIsAirport;
-             
-             const fmtCoord = (loc) => `${loc.lat.toFixed(2)}, ${loc.lng.toFixed(2)}`;
-             
+          // Handle "from" side
+          if (isCoordinate(fromPart)) {
+            const coordsMatch = fromPart.match(/^(-?\d+\.\d+,-?\d+\.\d+)/);
+            const addressMatch = fromPart.match(/\-\((.*?)\)$/);
+            fromTopLabel = coordsMatch ? coordsMatch[1].trim() : "N/A";
+            fromBottomLabel = addressMatch ? addressMatch[1].trim() : "N/A";
+          } else {
+            fromTopLabel = segment.fromIATA || "N/A";
+            fromBottomLabel = segment.fromCity || "N/A";
+          }
 
-             let fromTopLabel, fromBottomLabel;
-             if (fromIsPoint && toIsPoint) {              // point ➜ point
-               fromTopLabel    = seg.fromAddress || fmtCoord(seg.fromLoc);
-               fromBottomLabel = "";
-             } else if (fromIsPoint) {                    // point ➜ airport
-               fromTopLabel    = fmtCoord(seg.fromLoc);
-               fromBottomLabel = seg.fromAddress || "";
-             } else {                                     // airport origin
-               fromTopLabel    = seg.fromIATA;
-               fromBottomLabel = seg.fromCity;
-             }
-             
-             let toTopLabel, toBottomLabel;
-             if (fromIsPoint && toIsPoint) {              // point ➜ point
-               toTopLabel    = seg.toAddress || fmtCoord(seg.toLoc);
-               toBottomLabel = "";
-             } else if (toIsPoint) {                      // airport ➜ point
-               toTopLabel    = fmtCoord(seg.toLoc);
-               toBottomLabel = seg.toAddress || "";
-             } else {                                     // airport destination
-               toTopLabel    = seg.toIATA;
-               toBottomLabel = seg.toCity;
-             }
+          // Handle "to" side
+          if (isCoordinate(toPart)) {
+            const coordsMatch = toPart.match(/^(-?\d+\.\d+,-?\d+\.\d+)/);
+            const addressMatch = toPart.match(/\-\((.*?)\)$/);
+            toTopLabel = coordsMatch ? coordsMatch[1].trim() : "N/A";
+            toBottomLabel = addressMatch ? addressMatch[1].trim() : "N/A";
+          } else {
+            toTopLabel = segment.toIATA || "N/A";
+            toBottomLabel = segment.toCity || "N/A";
+          }
+
           return (
             <div
               key={flightId}
@@ -755,30 +735,54 @@ export default function FlightCard({
                       </div>
                       {/* Times row (Large times + flight duration) */}
 
+                      {/* Flight Details */}
                       <div className="flex flex-col items-start justify-between my-2 mb-0">
                         <div className="text-right flex justify-center items-center my-2 font-bold">
-                          {/* ORIGIN ------------------------------------------------ */}
+                          {/* ORIGIN */}
                           <div className="flex flex-col items-start text-sm text-gray-500 mr-4">
-                            <p className="font-bold text-black text-xl">{fromTopLabel}</p>
+                            <p
+                              className={`font-bold text-black ${isCoordinate(fromTopLabel) ? "text-md" : "text-xl"
+                                }`}
+                            >
+                              {fromTopLabel}
+                            </p>
                             {fromBottomLabel && (
-                              <p className="text-xl text-gray-900 font-normal">{fromBottomLabel}</p>
+                              <p
+                                className={`${isCoordinate(fromTopLabel) ? "text-md" : "text-xl"} text-gray-900 font-normal cursor-pointer `}
+                                title={fromBottomLabel} // Tooltip for full content
+                              >
+                                {isCoordinate(fromTopLabel)
+                                  ? fromBottomLabel.split(" ").slice(0, 2).join(" ") + "..."
+                                  : fromBottomLabel}
+                              </p>
                             )}
                           </div>
 
                           <div className="text-center text-gray-500">
                             <p className="text-md font-bold text-gray-800">
-                              - - - {flightTime} - - -
+                              - - - {flight.flightTime || "N/A"} - - -
                             </p>
                           </div>
 
-                          {/* DESTINATION ------------------------------------------ */}
+                          {/* DESTINATION */}
                           <div className="flex flex-col items-start text-sm text-gray-500 ml-2">
-                            <p className="font-bold text-black text-xl">{toTopLabel}</p>
+                            <p
+                              className={`font-bold text-black ${isCoordinate(toTopLabel) ? "text-md" : "text-xl"
+                                }`}
+                            >
+                              {toTopLabel}
+                            </p>
                             {toBottomLabel && (
-                              <p className="text-xl text-gray-900 font-normal">{toBottomLabel}</p>
+                              <p
+                                className={`${isCoordinate(toTopLabel) ? "text-md" : "text-xl"} text-gray-900 font-normal cursor-pointer`}
+                                title={toBottomLabel} // Tooltip for full content
+                              >
+                                {isCoordinate(toTopLabel)
+                                  ? toBottomLabel.split(" ").slice(0, 2).join(" ") + "..."
+                                  : toBottomLabel}
+                              </p>
                             )}
                           </div>
-
                         </div>
                       </div>
                       <p className="text-sky-600">Refuel on Fly - 3.30hr | Cabin Height - {flight.fleetDetails.cabinHeight} ft</p>
@@ -1228,4 +1232,4 @@ export default function FlightCard({
       />
     </div>
   );
-}
+}   

@@ -166,25 +166,37 @@ function PaymentSuccessContent() {
                         {/* Airport / City Info */}
                         <div className="flex items-center justify-between border-t pt-3">
                           <div>
-                            <div className="text-xs font-semibold text-gray-500">
-                              From
-                            </div>
-                            <div className="text-gray-700">
-                              {seg.from}
+                            <div className="text-xs font-semibold text-gray-500">From</div>
+                            <div className="text-gray-700 text-sm">
+                              {seg.from === "custom" ? (
+                                <>
+                                  <span className="text-xs">{seg.fromAddress}</span>{" "}
+                                  <span className="text-gray-500 text-xs">
+                                    ({seg.fromLoc?.lat.toFixed(2)}, {seg.fromLoc?.lng.toFixed(2)})
+                                  </span>
+                                </>
+                              ) : (
+                                seg.from
+                              )}
                             </div>
                           </div>
                           <div className="text-gray-500 text-sm">---</div>
                           <div>
-                            <div className="text-xs font-semibold text-gray-500">
-                              To
-                            </div>
-                            <div className="text-gray-700">
-                              {seg.to}
+                            <div className="text-xs font-semibold text-gray-500">To</div>
+                            <div className="text-gray-700 text-sm">
+                              {seg.to === "custom" ? (
+                                <>
+                                  <span className="text-xs">{seg.toAddress}</span>{" "}
+                                  <span className="text-gray-500 text-xs">
+                                    ({seg.toLoc?.lat.toFixed(2)}, {seg.toLoc?.lng.toFixed(2)})
+                                  </span>
+                                </>
+                              ) : (
+                                seg.to
+                              )}
                             </div>
                           </div>
-                          <div className="text-xs font-medium text-gray-500">
-                            {segFleet.time || "1h 26m"}
-                          </div>
+                          <div className="text-xs font-medium text-gray-500">{segFleet.time || "1h 26m"}</div>
                         </div>
                       </div>
                     );
@@ -230,7 +242,7 @@ function PaymentSuccessContent() {
                     size={32}
                   />
                   <p className="text-green-600 font-semibold">
-                    Payment Status:{" "}
+                    Full Payment Status:{" "}
                     <span className="uppercase">
                       {bookingData.status || "SUCCESS"}
                     </span>

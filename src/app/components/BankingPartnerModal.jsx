@@ -313,7 +313,7 @@ function PaymentNotice() {
   );
 }
 function PaymentForm() {
-  const router = useRouter();     
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [accName, setAccName] = useState("");
   const [accNo, setAccNo] = useState("");
@@ -328,11 +328,11 @@ function PaymentForm() {
           e.preventDefault();
           setIsLoading(true);
 
-          // 1. load current searchData
+          // 1. Load current searchData
           const raw = sessionStorage.getItem("searchData") || "{}";
           const current = JSON.parse(raw);
 
-          // 2. merge name/email/phone from loginData into snake-case user_info
+          // 2. Merge name/email/phone from loginData into user_info
           const loginRaw = sessionStorage.getItem("loginData") || "{}";
           const login = JSON.parse(loginRaw);
           current.userInfo = {
@@ -342,15 +342,26 @@ function PaymentForm() {
             phone: current.userInfo?.phone || login.phone,
           };
 
-          // 3. append payment fields
+          // 3. Fetch exchangeRates and calculate totalAmount
+          const exchangeRatesRaw = sessionStorage.getItem("exchangeRates") || "{}";
+          const exchangeRates = JSON.parse(exchangeRatesRaw);
+          const inrRate = exchangeRates.inrRate || 1; // Default to 1 if inrRate is not available
+
+          // Calculate totalAmount by summing up converted prices for all segments
+          current.totalAmount = current.segments.reduce((total, segment) => {
+            const priceInDollars = parseFloat(segment.selectedFleet?.price || 0); // Get price from selectedFleet
+            const priceInINR = priceInDollars * inrRate; // Convert to INR
+            return total + priceInINR; // Add to total
+          }, 0);
+
+          // 4. Append payment fields
           current.acc_name = accName.trim();
           current.acc_no = accNo.trim();
           current.reference_id = referenceId.trim();
           current.amount = Number(amount);
           current.currency = "INR";
-          current.totalAmount = current.amount;
 
-          // 4. write back to sessionStorage
+          // 5. Write back to sessionStorage
           sessionStorage.setItem("searchData", JSON.stringify(current));
 
           // 5. POST to backend
@@ -360,10 +371,17 @@ function PaymentForm() {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(current),
             });
-            if (!res.ok) throw new Error(res.statusText);
-            const { redirectUrl } = await res.json();
-            router.push(redirectUrl);
-
+            if (!res.ok) {
+              const errorText = await res.text();
+              throw new Error(`Error: ${errorText}`);
+            }
+            const { url } = await res.json();
+            if (url) {
+              router.push(url);
+            } else {
+              throw new Error("Redirect URL not found in the response.");
+            }
+            // Reset form fields
             setAccName("");
             setAccNo("");
             setReferenceId("");

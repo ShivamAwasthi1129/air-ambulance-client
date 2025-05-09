@@ -42,15 +42,6 @@ const FilterAndFleetListing = ({ refreshKey }) => {
     }
   }, [refreshKey]);
 
-  // function cleanAirportName(str) {
-  //   // remove anything in parentheses + extra spaces
-  //   return str.replace(/\s*\(.*?\)\s*/, "").trim();
-  // }
-  // function locToQuery(obj) {
-  //   // {"lat":24.9,"lng":67.16} -> %7B%22lat%22%3A24.9%2C%22lng%22%3A67.16%7D
-  //   return encodeURIComponent(JSON.stringify(obj));
-  // }
-
   // 🔄 unified helper – handles both string airport names and {lat,lng} objects
   function toRapidoParam(
     place // string | {lat:number,lng:number}
@@ -134,31 +125,31 @@ function buildRapidoUrls(seg) {
   }
 
   /* 3️⃣ Airport ➜ Coord */
-  if (seg.from && seg.toLoc) {
-    list.push(
-      make({
-        fromArg: toRapidoParam(seg.from),
-        toArg: toRapidoParam(seg.toLoc),
-        label: `${stripCode(seg.from)} ➜ ${fmtPoint(
-          seg.toLoc,
-          seg.toAddress
-        )}`,
-        heliOnly: true,
-      })
-    );
-  }
+  // if (seg.from && seg.toLoc) {
+  //   list.push(
+  //     make({
+  //       fromArg: toRapidoParam(seg.from),
+  //       toArg: toRapidoParam(seg.toLoc),
+  //       label: `${stripCode(seg.from)} ➜ ${fmtPoint(
+  //         seg.toLoc,
+  //         seg.toAddress
+  //       )}`,
+  //       heliOnly: true,
+  //     })
+  //   );
+  // }
 
   /* 4️⃣ (optional) Coord ➜ Airport — uncomment if needed */
-  if (seg.fromLoc && seg.to) {
-    list.push(
-      make({
-        fromArg: toRapidoParam(seg.fromLoc),
-        toArg: toRapidoParam(seg.to),
-        label: `${fmtPoint(seg.fromLoc, seg.fromAddress)} ➜ ${stripCode(seg.to)}`,
-        heliOnly: true,
-      })
-    );
-  }
+  // if (seg.fromLoc && seg.to) {
+  //   list.push(
+  //     make({
+  //       fromArg: toRapidoParam(seg.fromLoc),
+  //       toArg: toRapidoParam(seg.to),
+  //       label: `${fmtPoint(seg.fromLoc, seg.fromAddress)} ➜ ${stripCode(seg.to)}`,
+  //       heliOnly: true,
+  //     })
+  //   );
+  // }
 
   return list;
 }
@@ -297,6 +288,7 @@ function buildRapidoUrls(seg) {
       seatingCapacity: flight?.fleetDetails?.seatCapacity,
       price: flight?.totalPrice,
       time: flight?.flightTime,
+      label:flight._sourceLabel,
       // optional: store images, etc.
     };
 
@@ -702,7 +694,8 @@ function buildRapidoUrls(seg) {
         {/* Fleet Listing Section */}
         <div className="w-full bg-white flex flex-col items-center p-4 border border-blue-100 rounded-xl">
           {routeLabels.map((label) => {
-            const flights = groupedFlights[label] || [];       
+            const flights = groupedFlights[label] || []; 
+            console.log("label : ",label);
             return (
               <div key={label} className="mb-10 w-full">
                 <h3 className="text-lg font-bold flex items-center">{label}</h3>
@@ -733,6 +726,7 @@ function buildRapidoUrls(seg) {
                     isMultiCity={isMultiCity}
                     addOnServices={addOnServices}
                     segment={searchData.segments[segmentIndex]}
+                    label={label}
                   />
                 )}
               </div>
