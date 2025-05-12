@@ -37,7 +37,7 @@ const NavBar = () => {
   const [countryPhones, setCountryPhones] = useState([]);
   // fetch full list on mount
   useEffect(() => {
-    fetch("https://admin.airambulanceaviation.co.in/api/contact?limit=255",{mode: "cors"})
+    fetch("https://admin.airambulanceaviation.co.in/api/contact?limit=255")
       .then((r) => r.json())
       .then((json) => setCountries(json.data))
       .catch(console.error);
@@ -46,7 +46,7 @@ const NavBar = () => {
   useEffect(() => {
     if (selectedCountry === "worldwide") {
       // ─── default load: GET /api/contact and take the first entry’s two numbers ───
-      fetch("https://admin.airambulanceaviation.co.in/api/contact",{mode: "cors"})
+      fetch("https://admin.airambulanceaviation.co.in/api/contact")
         .then((r) => r.json())
         .then((json) => {
           const all = json.data;
@@ -60,7 +60,7 @@ const NavBar = () => {
       fetch(
         `https://admin.airambulanceaviation.co.in/api/contact/search?q=${encodeURIComponent(
           selectedCountry
-        ),{mode: "cors"}}`
+        )}`
       )
         .then((r) => r.json())
         .then((arr) => {
