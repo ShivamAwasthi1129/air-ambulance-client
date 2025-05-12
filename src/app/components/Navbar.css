@@ -9,7 +9,7 @@
 
 .animate-marquee {
   display: inline-block;
-  animation: marquee 120s linear infinite;
+  animation: marquee 30s linear infinite;
   white-space: nowrap;
   will-change: transform;
 }

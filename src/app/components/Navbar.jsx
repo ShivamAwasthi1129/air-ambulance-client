@@ -1,6 +1,5 @@
 "use client";
 import "./NavBar.css";
-
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { FaEye, FaEyeSlash, FaSpinner, FaCheckCircle, FaWhatsapp, FaPhoneAlt } from "react-icons/fa";
