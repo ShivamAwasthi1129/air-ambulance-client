@@ -1,5 +1,4 @@
 "use client";
-import "./NavBar.css";
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { FaEye, FaEyeSlash, FaSpinner, FaCheckCircle, FaWhatsapp, FaPhoneAlt } from "react-icons/fa";
@@ -29,9 +28,6 @@ const NavBar = () => {
   const [countries, setCountries] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState("worldwide");
   const [countryPhones, setCountryPhones] = useState([]);
-
-  // Rotating message state
-  const [rotatingMessage, setRotatingMessage] = useState("2025 Updates in Charter Flights Aviation: Embarking on global journeys 24/7. Introducing secure and fastest private jets, business jets, and helicopters. For additional information, please inquire.");
 
   // fetch full list on mount
   useEffect(() => {
@@ -388,8 +384,15 @@ const NavBar = () => {
     <>
       {/* Rotating Message Stripe */}
       <div className="bg-[#0883bb] text-white text-sm py-1 overflow-hidden whitespace-nowrap z-50">
-        <div className="animate-marquee inline-block">
+        {/* <div className="animate-marquee inline-block">
           {rotatingMessage}
+        </div> */}
+        <div className="hidden md:flex bg-customBlue py-2 overflow-hidden">
+          <div className="animate-marquee">
+            <p className="inline-block text-white text-sm md:text-base font-medium">
+              2025 Updates in Charter Flights Aviation: Embarking on global journeys 24/7. Introducing secure and fastest private jets, business jets, and helicopters. For additional information, please inquire.
+            </p>
+          </div>
         </div>
       </div>
 
