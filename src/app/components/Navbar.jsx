@@ -1,40 +1,38 @@
 "use client";
+import "./NavBar.css";
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { FaEye, FaEyeSlash, FaSpinner, FaCheckCircle, FaWhatsapp } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaSpinner, FaCheckCircle, FaWhatsapp, FaPhoneAlt } from "react-icons/fa";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const NavBar = () => {
   // ----------------------------------------------------------------
-  // States
+  // States (same as previous code)
   // ----------------------------------------------------------------
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [user, setUser] = useState(null);
-
-  // Single input for either email or phone:
-  const [identifier, setIdentifier] = useState(""); // user-typed: email or phone
+  const [identifier, setIdentifier] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [fetchedName, setFetchedName] = useState("");
-  // For password login
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  // OTP states
   const [returnedOtp, setReturnedOtp] = useState("");
   const [enteredOtp, setEnteredOtp] = useState("");
-  // We want to show "Login via OTP" first, so default:
   const [isOtpMode, setIsOtpMode] = useState(true);
   const [otpSendStatus, setOtpSendStatus] = useState("idle");
   const [infoFetched, setInfoFetched] = useState(false);
-  // Dropdown
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
-  // ─── country picker states ──────────────────────────────────────────
   const [countries, setCountries] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState("worldwide");
   const [countryPhones, setCountryPhones] = useState([]);
+
+  // Rotating message state
+  const [rotatingMessage, setRotatingMessage] = useState("2025 Updates in Charter Flights Aviation: Embarking on global journeys 24/7. Introducing secure and fastest private jets, business jets, and helicopters. For additional information, please inquire.");
+
   // fetch full list on mount
   useEffect(() => {
     fetch("https://admin.airambulanceaviation.co.in/api/contact?limit=255")
@@ -385,97 +383,86 @@ const NavBar = () => {
     window.location.reload();
   };
 
+
   return (
     <>
-      {/* --------------------------------- NAV BAR --------------------------------- */}
-      <nav className="w-full z-20">
-        <div className="w-full mx-auto px-4 py-3 flex items-center justify-evenly">
-          {/* Left side: Logo */}
+      {/* Rotating Message Stripe */}
+      <div className="bg-[#0883bb] text-white text-sm py-1 overflow-hidden whitespace-nowrap z-50">
+        <div className="animate-marquee inline-block">
+          {rotatingMessage}
+        </div>
+      </div>
+
+      {/* Main Navigation */}
+      <nav className="sticky top-0 bg-gradient-to-r from-[#f0f4f8] via-[#e6f2ff] to-[#fff0e6] shadow-lg z-50 ">
+        <div className="container mx-auto px-4 flex items-center justify-around">
+          {/* Logo */}
           <Link href="/" className="flex items-center">
             <img
               src="https://www.charterflightsaviation.com/images/logo.png"
-              alt="Logo"
-              className="h-16 object-contain mr-2"
+              alt="Charter Flights Aviation Logo"
+              className="h-20 object-contain transition-transform duration-300 hover:scale-105"
             />
           </Link>
 
-          {/* Center: Navigation links */}
-          <div className="space-x-6 hidden md:inline-block text-xl">
-            <Link href="/" className="text-white hover:text-slate-300">
-              Home
-            </Link>
-            <Link href="/about" className="text-white hover:text-slate-300">
-              About
-            </Link>
-            <Link href="#" className="text-white hover:text-slate-300">
-              Aircrafts
-            </Link>
-            <Link href="/#" className="text-white hover:text-slate-300">
-              Get in Touch
-            </Link>
-            <Link
-              href="/termsAndCondition"
-              className="text-white hover:text-slate-300"
-            >
-              Terms and Conditions
-            </Link>
-          </div>
-
-          {/* Right side: Login button or user info with dropdown */}
-          <div className="relative" ref={dropdownRef}>
-            {user ? (
-              <>
-                <div
-                  className="flex items-center space-x-2 cursor-pointer"
-                  onClick={() => setIsDropdownOpen((prev) => !prev)}
-                >
-                  <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                    <span className="text-gray-700">
-                      {user.email?.charAt(0).toUpperCase()}
+          {/* Contact and Dropdown Section */}
+          <div className="flex items-center space-x-6">
+            {/* User Login/Profile Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              {user ? (
+                <>
+                  <div
+                    className="flex items-center space-x-3 cursor-pointer group"
+                    onClick={() => setIsDropdownOpen((prev) => !prev)}
+                  >
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-200 to-blue-400 rounded-full flex items-center justify-center shadow-md group-hover:scale-110 transition-all duration-300">
+                      <span className="text-white font-bold text-lg">
+                        {user.email?.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <span className="text-gray-800 font-semibold text-base group-hover:text-blue-600 transition-colors">
+                      {user.email}
                     </span>
                   </div>
-                  <span className="text-white">{user.email}</span>
-                </div>
-                {isDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-2 bg-white shadow-lg rounded-md py-2 w-48 z-10">
-                    <Link href="/profile">
-                      <div className="px-4 py-2 hover:bg-gray-100">
-                        User Profile
-                      </div>
-                    </Link>
-                    <Link href="/travelHistory">
-                      <div className="px-4 py-2 hover:bg-gray-100">
-                        Travel History
-                      </div>
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </>
-            ) : (
-              <button
-                onClick={() => setIsLoginModalOpen(true)}
-                className="px-4 py-2 rounded-xl text-white bg-gradient-to-r from-sky-300 to-green-500 hover:from-sky-400 hover:to-green-600"
-              >
-                Login
-              </button>
-            )}
-          </div>
-          {/* ─── country chooser + phones ──────────────────────────────────── */}
-          <div className="flex items-center space-x-4 ml-6">
-            {/* <label className="text-white text-sm">Choose your country:</label> */}
+                  {isDropdownOpen && (
+                    <div className="absolute right-0 top-full mt-3 bg-white shadow-2xl rounded-xl py-2 w-56 z-10 border border-gray-100 transform transition-all duration-300 origin-top-right">
+                      <Link href="/profile">
+                        <div className="px-4 py-3 hover:bg-gradient-to-r from-blue-50 to-blue-100 hover:text-blue-700 transition-all duration-300 cursor-pointer">
+                          <span className="font-medium">User Profile</span>
+                        </div>
+                      </Link>
+                      <Link href="/travelHistory">
+                        <div className="px-4 py-3 hover:bg-gradient-to-r from-green-50 to-green-100 hover:text-green-700 transition-all duration-300 cursor-pointer">
+                          <span className="font-medium">Travel History</span>
+                        </div>
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-3 hover:bg-gradient-to-r from-red-50 to-red-100 hover:text-red-700 transition-all duration-300"
+                      >
+                        <span className="font-medium">Logout</span>
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <button
+                  onClick={() => setIsLoginModalOpen(true)}
+                  className="px-6 py-3 rounded-2xl text-white font-bold bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
+                >
+                  Login
+                </button>
+              )}
+            </div>
+
+            {/* Country Dropdown */}
             <select
               value={selectedCountry}
               onChange={(e) => setSelectedCountry(e.target.value)}
-              className="rounded px-2 py-1 text-sm"
+              className="rounded-lg px-3 py-2 text-sm border-2 border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-blue-300 transition-all duration-300"
             >
               <option value="worldwide">Worldwide</option>
-              + {countries.map((c) => (
+              {countries.map((c) => (
                 <option key={c._id} value={c.country}>
                   {c.country
                     .split("-")
@@ -485,24 +472,78 @@ const NavBar = () => {
               ))}
             </select>
 
-            {/* show two WhatsApp numbers */}
-            {countryPhones.map((num, idx) => (
-              <a key={`${num}-${idx}`}
-                href={`https://wa.me/${num.replace(/^\+/, "")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center text-green-200 hover:text-green-400 text-sm"
-              >
-                <FaWhatsapp className="mr-1" />
-                {num}
-              </a>
-            ))}
+            {/* Phone and WhatsApp Numbers */}
+            <div className="flex items-center space-x-4">
+              {countryPhones.map((num, idx) => (
+                <a
+                  key={`${num}-${idx}`}
+                  href={idx === 0 ? `tel:${num}` : `https://wa.me/${num.replace(/^\+/, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center text-gray-700 hover:text-blue-600 group transition-all duration-300 transform hover:scale-110"
+                >
+                  {idx === 0 ? (
+                    <FaPhoneAlt className="mr-2 text-gray-600 group-hover:text-blue-500 transition-colors" />
+                  ) : (
+                    <FaWhatsapp className="mr-2 text-gray-600 group-hover:text-green-500 transition-colors" />
+                  )}
+                  <span className="font-medium text-sm">{num}</span>
+                </a>
+              ))}
+            </div>
           </div>
+        </div>
 
+        {/* Navigation Links */}
+        <div className="border-t-4 border-[#0883bb] bg-gradient-to-r from-[#f0f8ff] via-[#e6f2ff] to-[#f0f0f0] text-gray-800 py-2 shadow-md">
+          <div className="container mx-auto px-4">
+            <div className="flex justify-center items-center space-x-10">
+              {[
+                { name: 'HOME', route: '/' },
+                { name: 'ABOUT', route: '/' },
+                { name: 'AIRCRAFTS', route: '/' },
+                { name: 'GET IN TOUCH', route: '/' },
+                { name: 'TERMS & CONDITIONS', route: '/termsAndCondition' },
+              ].map((item, index) => (
+                <React.Fragment key={item.name}>
+                  <Link
+                    href={item.route}
+                    className="uppercase font-bold text-base tracking-wider 
+           text-gray-700 
+           relative 
+           group 
+           transition-all 
+           duration-300 
+           hover:text-transparent 
+           hover:bg-clip-text 
+           hover:bg-gradient-to-r 
+           hover:from-blue-500 
+           hover:to-purple-600 
+           before:absolute 
+           before:bottom-[-3px] 
+           before:left-0 
+           before:w-0 
+           before:h-1 
+           before:bg-gradient-to-r 
+           before:from-blue-500 
+           before:to-purple-600 
+           before:transition-all 
+           before:duration-300 
+           hover:before:w-full"
+                  >
+                    {item.name}
+                  </Link>
+                  {index !== 4 && (
+                    <div className="h-5 w-px bg-gray-300"></div>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
         </div>
       </nav>
 
-      {/* --------------------------------- MODAL --------------------------------- */}
+      {/* Login Modal (Unchanged from previous code) */}
       {isLoginModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg w-96 relative">
@@ -684,6 +725,7 @@ const NavBar = () => {
           </div>
         </div>
       )}
+
 
       {/* Toast notifications */}
       <ToastContainer

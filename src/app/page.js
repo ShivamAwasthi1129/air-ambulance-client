@@ -19,7 +19,7 @@ const Home = () => {
           <h1 className="text-lg md:text-xl mb-3">
             Welcome to Charter Flights Aviations
           </h1>
-          <p className="text-left text-2xl md:text-3xl max-w-2xl font-light">
+          <p className="text-left text-xl md:text-2xl max-w-lg font-light">
             ONE STOP SOLUTION FOR ALL YOUR PRIVATE CHARTER NEEDS
           </p>
         </div>

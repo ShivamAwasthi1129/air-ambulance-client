@@ -12,7 +12,6 @@ import { Icondiv } from "./Icondiv";
 import GoogleMapModal from "./GoogleMapModal";
 // import FaMapLocationDot from "@mui/icons-material/Map";
 import { FaMapLocationDot } from "react-icons/fa6";
-import MapboxModal from "./MapboxModal";
 export const SearchBar = () => {
   // === State ===
   const [tripType, setTripType] = useState("oneway");
@@ -1059,14 +1058,7 @@ export const SearchBar = () => {
         open={mapModal.open}
         onClose={() => setMapModal({ open: false, segIdx: null, field: null })}
         onSave={(coords, address) => handleSaveCoords(coords, address, mapModal.segIdx, mapModal.field)}
-      // apiKey={apiKey}
       />
-      {/* < MapboxModal
-        open={mapModal.open}
-        onClose={() => setMapModal({ open: false, segIdx: null })}
-        onSave={(coords) => handleSaveCoords(coords, mapModal.segIdx, field)}
-        // apiKey={apiKey}
-      /> */}
       {/* React-Toastify container */}
       < ToastContainer
         autoClose={4000}
