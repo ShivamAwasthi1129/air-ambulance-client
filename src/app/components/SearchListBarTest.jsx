@@ -1061,7 +1061,7 @@ export const SearchBar = () => {
       />
       {/* React-Toastify container */}
       < ToastContainer
-        autoClose={4000}
+        autoClose={3000}
         hideProgressBar={false}
         newestOnTop={false}
         closeOnClick
@@ -1071,7 +1071,7 @@ export const SearchBar = () => {
         pauseOnHover
         style={{
           position: "fixed",
-          top: "12%",
+          top: "32%",
           left: "50%",
           transform: "translate(-50%, -50%)",
           zIndex: 100,
