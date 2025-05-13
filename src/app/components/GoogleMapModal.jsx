@@ -120,7 +120,7 @@ const onPlaceChanged = () => {
   if (!open) return null;
   if (!isLoaded || !center) {
     return (
-      <div className="fixed inset-0 bg-black/50 z-[999] flex items-center justify-center">
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000]">
         <p className="bg-white rounded-lg px-8 py-6 shadow">Loading map…</p>
       </div>
     );
@@ -128,10 +128,10 @@ const onPlaceChanged = () => {
 
   /* ─────────────────── UI ────────────────────────── */
   return (
-    <div className="fixed inset-0 bg-black/50 z-[999] flex items-center justify-center">
+    <div className="fixed inset-0 bg-black/50  flex items-center justify-center z-[1000] mt-32">
       <div className="w-full max-w-2xl bg-white rounded-xl shadow-xl">
         {/* header */}
-        <div className="flex items-center justify-between bg-gray-100 px-4 py-2">
+        {/* <div className="flex items-center justify-between bg-gray-100 px-4 py-2">
           <h3 className="text-sm font-semibold tracking-wide text-gray-700">
             Select location
           </h3>
@@ -141,7 +141,7 @@ const onPlaceChanged = () => {
           >
             <CloseIcon fontSize="small" />
           </button>
-        </div>
+        </div> */}
 
         <div className="p-4 space-y-4">
           {/* place picker */}

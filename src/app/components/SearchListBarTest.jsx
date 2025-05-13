@@ -486,7 +486,7 @@ export const SearchBar = () => {
         {/* Main Container */}
         <div
           ref={containerRef}
-          className="p-4 sm:p-6 md:p-8 max-w-6xl w-full rounded-lg bg-white/40 
+          className="p-4 sm:p-6 md:p-4 max-w-6xl w-full rounded-lg bg-white/40 
                      backdrop-blur-md shadow-md -mt-32 relative z-10"
         >
           {/* (1) Icon bar for ONE-WAY tripType =>  segments[0] */}

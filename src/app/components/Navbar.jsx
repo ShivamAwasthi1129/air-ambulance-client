@@ -378,33 +378,27 @@ const NavBar = () => {
     sessionStorage.clear();
     window.location.reload();
   };
-
-
   return (
     <>
       {/* Rotating Message Stripe */}
-      <div className="bg-[#0883bb] text-white text-sm py-1 overflow-hidden whitespace-nowrap z-50">
-        {/* <div className="animate-marquee inline-block">
-          {rotatingMessage}
-        </div> */}
-        <div className="hidden md:flex bg-customBlue py-2 overflow-hidden">
+      <div className="bg-[#0883bb] text-white text-sm overflow-hidden whitespace-nowrap z-10">
+        <div className="hidden md:flex bg-customBlue py-1 overflow-hidden">
           <div className="animate-marquee">
-            <p className="inline-block text-white text-sm md:text-base font-medium">
+            <p className="inline-block text-white text-sm md:text-base font-normal">
               2025 Updates in Charter Flights Aviation: Embarking on global journeys 24/7. Introducing secure and fastest private jets, business jets, and helicopters. For additional information, please inquire.
             </p>
           </div>
         </div>
       </div>
-
       {/* Main Navigation */}
-      <nav className="sticky top-0 bg-gradient-to-r from-[#f0f4f8] via-[#e6f2ff] to-[#fff0e6] shadow-lg z-50 ">
-        <div className="container mx-auto px-4 flex items-center justify-around">
+      <nav className="sticky top-0 bg-gradient-to-r from-[#f0f4f8] via-[#e6f2ff] to-[#fff0e6] shadow-lg z-20 ">
+        <div className="container mx-auto p-2 flex items-center justify-around">
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <img
               src="https://www.charterflightsaviation.com/images/logo.png"
               alt="Charter Flights Aviation Logo"
-              className="h-20 object-contain transition-transform duration-300 hover:scale-105"
+              className="h-16 object-contain transition-transform duration-300 hover:scale-105"
             />
           </Link>
 
@@ -451,7 +445,7 @@ const NavBar = () => {
               ) : (
                 <button
                   onClick={() => setIsLoginModalOpen(true)}
-                  className="px-6 py-3 rounded-2xl text-white font-bold bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
+                  className="px-6 py-2 rounded-2xl text-white font-bold bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
                 >
                   Login
                 </button>
