@@ -128,7 +128,7 @@ const onPlaceChanged = () => {
 
   /* ─────────────────── UI ────────────────────────── */
   return (
-    <div className="fixed inset-0 bg-black/50  flex items-center justify-center z-[1000] mt-32">
+    <div className="fixed inset-0 bg-black/50  flex items-center justify-center z-30 pt-32">
       <div className="w-full max-w-2xl bg-white rounded-xl shadow-xl">
         {/* header */}
         {/* <div className="flex items-center justify-between bg-gray-100 px-4 py-2">

@@ -379,7 +379,9 @@ const NavBar = () => {
     window.location.reload();
   };
   return (
-    <>
+    <div className="z-20">
+
+
       {/* Rotating Message Stripe */}
       <div className="bg-[#0883bb] text-white text-sm overflow-hidden whitespace-nowrap z-10">
         <div className="hidden md:flex bg-customBlue py-1 overflow-hidden">
@@ -391,7 +393,7 @@ const NavBar = () => {
         </div>
       </div>
       {/* Main Navigation */}
-      <nav className="sticky top-0 bg-gradient-to-r from-[#f0f4f8] via-[#e6f2ff] to-[#fff0e6] shadow-lg z-20 ">
+      <nav className=" bg-gradient-to-r from-[#f0f4f8] via-[#e6f2ff] to-[#fff0e6] shadow-lg z-20 ">
         <div className="container mx-auto p-2 flex items-center justify-around">
           {/* Logo */}
           <Link href="/" className="flex items-center">
@@ -741,7 +743,7 @@ const NavBar = () => {
           zIndex: 100,
         }}
       />
-    </>
+    </div>
   );
 };
 

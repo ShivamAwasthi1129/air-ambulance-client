@@ -85,7 +85,7 @@ function PaymentSuccessContent() {
         <NavBar />
       </div>
       {/* Main Content Container */}
-      <div className="relative z-10 pt-28 pb-10 max-w-6xl mx-auto px-4">
+      <div className="relative z-10 pt-28 pb-10 max-w-6xl mx-auto px-4 ">
         {loading ? (
           // Show skeleton loader while fetching
           <div className="bg-white p-6 rounded-md shadow-xl">
@@ -98,7 +98,7 @@ function PaymentSuccessContent() {
           </div>
         ) : bookingData ? (
           // Show booking info if available
-          <div className="bg-white p-6 md:p-8 rounded-md shadow-xl">
+          <div className="bg-white p-6 md:p-8 rounded-md shadow-xl mt-20">
             {/* Header / Confirmation Row */}
             <div className="flex items-center space-x-4">
               <AiOutlineCheckCircle

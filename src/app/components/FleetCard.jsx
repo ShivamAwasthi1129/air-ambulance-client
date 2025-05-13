@@ -645,7 +645,7 @@ export default function FlightCard({
                          bg-white shadow-md rounded-3xl overflow-hidden "
             >
               {/* LEFT - Image Area */}
-              <div className="relative w-full md:w-[27%] p-6">
+              <div className="relative w-full md:w-[27%] p-2">
                 <ImageSlider
                   aircraftGallery={flight.aircraftGallery}
                   onExperience={(e) => handleExperienceClick(flightId, e)}
@@ -653,7 +653,7 @@ export default function FlightCard({
               </div>
 
               {/* MIDDLE - Vertical timeline / line (design only on larger screens) */}
-              <div className="hidden md:flex flex-col items-center justify-center px-3 pr-0 relative ">
+              <div className="hidden md:flex flex-col items-center justify-center px-1 pr-0 relative ">
                 <div className="w-16 h-16 bg-[#d5e3f4] rounded-full -translate-y-8" />
                 <div
                   style={{ height: "70%" }}
@@ -1022,7 +1022,7 @@ export default function FlightCard({
       {/* EXPERIENCE MODAL */}
       {showExperienceModal && (
         <div
-          className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center mt-16"
+          className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center"
           onClick={closeExperienceModal}
         >
           <div
