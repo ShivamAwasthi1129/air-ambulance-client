@@ -10,7 +10,7 @@ import Link from "next/link";
 
 export const Bottom = () => {
   return (
-    <div className="bg-gray-100 text-gray-800 w-full px-4 py-10 sticky bottom-0 mt-4">
+    <div className="bg-gray-100 text-gray-800 w-full px-4 py-10  mt-4">
       <div className="max-w-screen-xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
         {/* Column 1 */}
         <div>
