@@ -15,14 +15,10 @@ export async function POST(req) {
         { status: 400 }
       );
     }
-
     // Generate a random OTP
     const otp = Math.floor(100000 + Math.random() * 900000);
-
     const expiryTime = Math.floor(Date.now() / 1000) + Number(OTP_EXPIRY_TIME);
-
     await connectToDatabase();
-
     await OTPTable.deleteMany({ $or: [{ email }, { phone }] });
     // Store OTP in MongoDB
     await OTPTable.create({
@@ -32,7 +28,6 @@ export async function POST(req) {
       otp,
       expiryTime,
     });
-
     await fetch(
       `https://graph.facebook.com/v21.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
       {
