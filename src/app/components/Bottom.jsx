@@ -118,7 +118,6 @@ export const Bottom = () => {
             </div>
           </div>
         </div>
-
         {/* Column 2 */}
         <div>
           <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3">

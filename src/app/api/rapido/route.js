@@ -9,6 +9,16 @@ import {
 } from "@/utils/helperFunction";
 import FleetTime from "@/app/models/FleetTime";
 import Amenity from "@/app/models/Amenity";
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*", // Or your specific origin
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  });
+}
 
 function isStringifiedObject(str) {
   try {
