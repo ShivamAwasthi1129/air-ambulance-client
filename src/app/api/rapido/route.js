@@ -142,6 +142,10 @@ export async function GET(req) {
       message: "Available fleets retrieved successfully.",
       finalFleet,
       addOnService,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*", 
+      },
     });
   } catch (error) {
     console.error("Error retrieving fleets:", error);
