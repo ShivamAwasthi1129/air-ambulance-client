@@ -26,9 +26,9 @@ const Home = () => {
         // src="https://s3.ap-south-1.amazonaws.com/aviation.hexerve/pexels-asadphoto-2245279.jpg"
         src="https://images.pexels.com/photos/2245279/pexels-photo-2245279.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
         alt="Private charter plane in sunset sky"
-        className="absolute inset-0 w-full h-full object-cover"
+        className="absolute inset-0 w-full h-[110vh] object-cover"
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-black/70" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-black/70 h-[110vh]" />
      
         <header className="w-full text-white relative overflow-hidden h-[45vh] flex justify-center">
           <div className="container mx-auto px-6 text-left max-w-6xl relative z-10 mt-6">
@@ -49,7 +49,7 @@ const Home = () => {
       <div className="z-10">
         <SearchBar />
       </div>
-      <footer className="mt-auto">
+      <footer className="relative bottom-0 mt-24">
         <Bottom />
       </footer>
     </div>

@@ -53,7 +53,7 @@ export const Bottom = () => {
   }, [showDropdown]);
 
   return (
-    <div className="bg-gray-100 text-gray-800 w-full px-2 py-6 mt-4 text-xs md:text-sm">
+    <div className="bg-gray-100 text-gray-800 w-full px-2 py-10 mt-4 text-xs md:text-sm">
       <div className="max-w-screen-xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-8">
         {/* Column 1 */}
         <div>

@@ -406,6 +406,47 @@ const NavBar = () => {
 
           {/* Contact and Dropdown Section */}
           <div className="flex items-center space-x-6">
+          
+
+            {/* Country Dropdown */}
+            <select
+              value={selectedCountry}
+              onChange={(e) => setSelectedCountry(e.target.value)}
+              className="rounded-lg px-3 py-2 text-sm border-2 border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-blue-300 transition-all duration-300"
+            >
+              <option value="worldwide">Worldwide</option>
+              {countries.map((c) => (
+                <option key={c._id} value={c.country}>
+                  {c.country
+                    .split("-")
+                    .map((w) => w[0].toUpperCase() + w.slice(1))
+                    .join(" ")}
+                </option>
+              ))}
+            </select>
+
+            {/* Phone and WhatsApp Numbers */}
+            <div className="flex items-center space-x-4">
+              {countryPhones.map((num, idx) => (
+                <a
+                  key={`${num}-${idx}`}
+                  href={idx === 0 ? `tel:${num}` : `https://wa.me/${num.replace(/^\+/, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center text-gray-700 hover:text-blue-600 group transition-all duration-300 transform hover:scale-110"
+                >
+                  {idx === 0 ? (
+                    <FaPhoneAlt className="mr-2 text-gray-600 group-hover:text-blue-500 transition-colors" />
+                  ) : (
+                    <FaWhatsapp className="mr-2 text-gray-600 group-hover:text-green-500 transition-colors" />
+                  )}
+                  <span className="font-medium text-sm">{num}</span>
+                </a>
+              ))}
+            </div>
+
+            
+          </div>
             {/* User Login/Profile Dropdown */}
             <div className="relative" ref={dropdownRef}>
               {user ? (
@@ -453,48 +494,11 @@ const NavBar = () => {
                 </button>
               )}
             </div>
-
-            {/* Country Dropdown */}
-            <select
-              value={selectedCountry}
-              onChange={(e) => setSelectedCountry(e.target.value)}
-              className="rounded-lg px-3 py-2 text-sm border-2 border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-blue-300 transition-all duration-300"
-            >
-              <option value="worldwide">Worldwide</option>
-              {countries.map((c) => (
-                <option key={c._id} value={c.country}>
-                  {c.country
-                    .split("-")
-                    .map((w) => w[0].toUpperCase() + w.slice(1))
-                    .join(" ")}
-                </option>
-              ))}
-            </select>
-
-            {/* Phone and WhatsApp Numbers */}
-            <div className="flex items-center space-x-4">
-              {countryPhones.map((num, idx) => (
-                <a
-                  key={`${num}-${idx}`}
-                  href={idx === 0 ? `tel:${num}` : `https://wa.me/${num.replace(/^\+/, "")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center text-gray-700 hover:text-blue-600 group transition-all duration-300 transform hover:scale-110"
-                >
-                  {idx === 0 ? (
-                    <FaPhoneAlt className="mr-2 text-gray-600 group-hover:text-blue-500 transition-colors" />
-                  ) : (
-                    <FaWhatsapp className="mr-2 text-gray-600 group-hover:text-green-500 transition-colors" />
-                  )}
-                  <span className="font-medium text-sm">{num}</span>
-                </a>
-              ))}
-            </div>
-          </div>
+          
         </div>
 
         {/* Navigation Links */}
-        <div className="border-t-4 border-[#0883bb] bg-gradient-to-r from-[#f0f8ff] via-[#e6f2ff] to-[#f0f0f0] text-gray-800 py-2 shadow-md">
+        <div className="border-t-4 border-[#0883bb] bg-gradient-to-r from-[#f0f8ff] via-[#e6f2ff] to-[#f0f0f0] text-gray-800 py-3 shadow-md">
           <div className="container mx-auto px-4">
             <div className="flex justify-center items-center space-x-10">
               {[
