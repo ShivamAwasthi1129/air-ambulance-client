@@ -9,6 +9,7 @@ import {
 } from "@/utils/helperFunction";
 import FleetTime from "@/app/models/FleetTime";
 import Amenity from "@/app/models/Amenity";
+
 export async function OPTIONS() {
   return new Response(null, {
     status: 204,
@@ -23,7 +24,7 @@ export async function OPTIONS() {
 function isStringifiedObject(str) {
   try {
     const parsed = JSON.parse(str);
-    return typeof parsed === 'object' && parsed !== null; // Check if it's an object (not null)
+    return typeof parsed === "object" && parsed !== null; // Check if it's an object (not null)
   } catch (e) {
     return false; // Invalid JSON, so not a stringified object
   }
@@ -43,7 +44,13 @@ export async function GET(req) {
     if (!from || !to || !departureDate || !travelerCount || !flightTypes) {
       return NextResponse.json(
         { message: "Missing required parameters." },
-        { status: 400 }
+        { status: 400 ,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "*",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          },
+         }
       );
     }
 
@@ -80,7 +87,7 @@ export async function GET(req) {
       "fleetDetails.baseStation": { $in: fromStations },
       "fleetDetails.flightType": { $in: flightTypes },
       "fleetDetails.restrictedAirports": {
-        $nin: toStations
+        $nin: toStations,
       },
       "fleetDetails.seatCapacity": { $gte: Number(travelerCount) },
       "fleetDetails.verified": true,
@@ -91,8 +98,7 @@ export async function GET(req) {
       fleet_id: { $in: fleetIds },
       departure_time: { $gte: new Date(departureDate) },
       arrival_time: { $lte: new Date(departureDate) },
-    })
-    .lean(); //added
+    }).lean(); //added
 
     const bookedFleet = fleetTimes.map((fleet) => fleet._id);
 
@@ -103,7 +109,14 @@ export async function GET(req) {
     if (availableFleets.length === 0) {
       return NextResponse.json(
         { message: "No available fleets match the criteria." },
-        { status: 404 }
+        {
+          status: 404,
+          headers: {
+            "Access-Control-Allow-Origin": "*", 
+            "Access-Control-Allow-Methods": "*",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          },
+        }
       );
     }
 
@@ -142,10 +155,6 @@ export async function GET(req) {
       message: "Available fleets retrieved successfully.",
       finalFleet,
       addOnService,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*", 
-      },
     });
   } catch (error) {
     console.error("Error retrieving fleets:", error);
