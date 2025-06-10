@@ -32,7 +32,7 @@ export const BANKS = [
   /* ───────────── INDIAN PUBLIC SECTOR ───────────── */
   {
     bankName: "STATE BANK OF INDIA",
-    logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/SBI.png",
+    logo: "https://airambulance.s3.ap-south-1.amazonaws.com/BankImages/Bank+Logos/SBI.png",
     timing: "10.00 am – 4.30 pm*",
     emails: sameEmails,
     accounts: {
@@ -63,7 +63,7 @@ export const BANKS = [
   /* ───────────── INDIAN PRIVATE BANKS ───────────── */
   {
     bankName: "HDFC BANK LTD",
-    logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/HDFC.png",
+    logo: "https://airambulance.s3.ap-south-1.amazonaws.com/BankImages/Bank+Logos/HDFC.png",
     timing: "Bank Time 10.00 am to 3.00 pm*",
     emails: sameEmails,
     accounts: {
@@ -80,14 +80,14 @@ export const BANKS = [
   },
   {
     bankName: "ICICI BANK LTD",
-    logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/ICICI.png",
+    logo: "https://airambulance.s3.ap-south-1.amazonaws.com/BankImages/Bank+Logos/ICICI.png",
     timing: "10.00 am – 4.30 pm*",
     emails: sameEmails,
     accounts: genericThree("ICICI BANK"),
   },
   {
     bankName: "AXIS BANK LTD",
-    logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/Axis.png",
+    logo: "https://airambulance.s3.ap-south-1.amazonaws.com/BankImages/Bank+Logos/Axis.png",
     timing: "Bank Time 10.00 am to 3.30 pm*",
     emails: sameEmails,
     accounts: {
@@ -116,7 +116,7 @@ export const BANKS = [
   },
   {
     bankName: "YES BANK",
-    logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/Yes+Bank.png",
+    logo: "https://airambulance.s3.ap-south-1.amazonaws.com/BankImages/Bank+Logos/Yes+Bank.png",
     timing: "10.00 am – 4.30 pm*",
     emails: sameEmails,
     accounts: genericThree("YES BANK"),
@@ -125,7 +125,7 @@ export const BANKS = [
   /* ───────────── FORMER PSU / ASSOCIATE ───────────── */
   {
     bankName: "STATE BANK TRAVANCORE (SBT)",
-    logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/State+Bank+Of+Travancore.png",
+    logo: "https://airambulance.s3.ap-south-1.amazonaws.com/BankImages/Bank+Logos/State+Bank+Of+Travancore.png",
     timing: "Bank Time 10.00 am to 3.00 pm*",
     emails: sameEmails,
     accounts: {
@@ -154,25 +154,25 @@ export const BANKS = [
   },
 
   /* ───────────── INTERNATIONAL NAMES ───────────── */
-  { bankName: "KOTAK MAHINDRA BANK LTD", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/Kotak.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("KOTAK BANK") },
-  { bankName: "STANDARD CHARTERED", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/Standard+Chartered.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("STANDARD CHARTERED") },
-  { bankName: "SWISS BANK", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/Swiss+Bank.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("SWISS BANK") },
-  { bankName: "BARCLAYS BANK", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/Barclays.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("BARCLAYS BANK") },
-  { bankName: "ABN AMRO BANK", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/ABN+AMRO.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("ABN AMRO BANK") },
-  { bankName: "RBS BANK", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/RBS.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("RBS BANK") },
-  { bankName: "BANK OF AMERICA", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/Bank-Of-America.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("BANK OF AMERICA") },
-  { bankName: "SCOTIA BANK", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/Scotia+Bank.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("SCOTIA BANK") },
-  { bankName: "AMERICAN EXPRESS BANK", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/American+Express.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("AMERICAN EXPRESS BANK") },
-  { bankName: "DCB BANK", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/DCB.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("DCB BANK") },
-  { bankName: "DEUTSCHE BANK", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/Deutsche.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("DEUTSCHE BANK") },
-  { bankName: "UBS BANK", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/UBS.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("UBS BANK") },
-  { bankName: "HSBC BANK LTD", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/HSBC.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("HSBC BANK") },
-  { bankName: "CITI BANK LTD", logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/Citi.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("CITI BANK") },
+  { bankName: "KOTAK MAHINDRA BANK LTD", logo: "https://airambulance.s3.ap-south-1.amazonaws.com/BankImages/Bank+Logos/Kotak.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("KOTAK BANK") },
+  { bankName: "STANDARD CHARTERED", logo: "https://airambulance.s3.ap-south-1.amazonaws.com/BankImages/Bank+Logos/Standard+Chartered.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("STANDARD CHARTERED") },
+  { bankName: "SWISS BANK", logo: "https://airambulance.s3.ap-south-1.amazonaws.com/BankImages/Bank+Logos/Swiss+Bank.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("SWISS BANK") },
+  { bankName: "BARCLAYS BANK", logo: "https://airambulance.s3.ap-south-1.amazonaws.com/BankImages/Bank+Logos/Barclays.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("BARCLAYS BANK") },
+  { bankName: "ABN AMRO BANK", logo: "https://airambulance.s3.ap-south-1.amazonaws.com/BankImages/Bank+Logos/ABN+AMRO.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("ABN AMRO BANK") },
+  { bankName: "RBS BANK", logo: "https://airambulance.s3.ap-south-1.amazonaws.com/BankImages/Bank+Logos/RBS.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("RBS BANK") },
+  { bankName: "BANK OF AMERICA", logo: "https://airambulance.s3.ap-south-1.amazonaws.com/BankImages/Bank+Logos/Bank-Of-America.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("BANK OF AMERICA") },
+  { bankName: "SCOTIA BANK", logo: "https://airambulance.s3.ap-south-1.amazonaws.com/BankImages/Bank+Logos/Scotia+Bank.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("SCOTIA BANK") },
+  { bankName: "AMERICAN EXPRESS BANK", logo: "https://airambulance.s3.ap-south-1.amazonaws.com/BankImages/Bank+Logos/American+Express.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("AMERICAN EXPRESS BANK") },
+  { bankName: "DCB BANK", logo: "https://airambulance.s3.ap-south-1.amazonaws.com/BankImages/Bank+Logos/DCB.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("DCB BANK") },
+  { bankName: "DEUTSCHE BANK", logo: "https://airambulance.s3.ap-south-1.amazonaws.com/BankImages/Bank+Logos/Deutsche.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("DEUTSCHE BANK") },
+  { bankName: "UBS BANK", logo: "https://airambulance.s3.ap-south-1.amazonaws.com/BankImages/Bank+Logos/UBS.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("UBS BANK") },
+  { bankName: "HSBC BANK LTD", logo: "https://airambulance.s3.ap-south-1.amazonaws.com/BankImages/Bank+Logos/HSBC.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("HSBC BANK") },
+  { bankName: "CITI BANK LTD", logo: "https://airambulance.s3.ap-south-1.amazonaws.com/BankImages/Bank+Logos/Citi.png", timing: "10.00 am – 4.30 pm*", emails: sameEmails, accounts: genericThree("CITI BANK") },
 
   /* ING Vysya (now Kotak) – screenshot had real numbers */
   {
     bankName: "ING VYSYA BANK",
-    logo: "https://s3.ap-south-1.amazonaws.com/aviation.hexerve/Bank+Logos/ING.png",
+    logo: "https://airambulance.s3.ap-south-1.amazonaws.com/BankImages/Bank+Logos/ING.png",
     timing: "10.00 am – 4.30 pm*",
     emails: sameEmails,
     accounts: {
@@ -276,7 +276,7 @@ function PaymentNotice() {
   return (
     <div className="relative overflow-hidden rounded-xl bg-white p-6">
       <Image
-        src="https://s3.ap-south-1.amazonaws.com/aviation.hexerve/bank-card-mobile-phone-online-payment_107791-16646-removebg-preview.png"
+        src="https://airambulance.s3.ap-south-1.amazonaws.com/BankImages/bank-card-mobile-phone-online-payment_107791-16646-removebg-preview.png"
         alt="Digital payment"
         width={220}
         height={220}

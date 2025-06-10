@@ -8,7 +8,7 @@ import {
   addHoursToDate,
 } from "@/utils/helperFunction";
 import FleetTime from "@/app/models/FleetTime";
-import Amenity from "@/app/models/Amenity";
+import Services from "@/app/models/Services";
 
 export async function OPTIONS() {
   return new Response(null, {
@@ -44,13 +44,14 @@ export async function GET(req) {
     if (!from || !to || !departureDate || !travelerCount || !flightTypes) {
       return NextResponse.json(
         { message: "Missing required parameters." },
-        { status: 400 ,
+        {
+          status: 400,
           headers: {
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "*",
             "Access-Control-Allow-Headers": "Content-Type, Authorization",
           },
-         }
+        }
       );
     }
 
@@ -112,7 +113,7 @@ export async function GET(req) {
         {
           status: 404,
           headers: {
-            "Access-Control-Allow-Origin": "*", 
+            "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "*",
             "Access-Control-Allow-Headers": "Content-Type, Authorization",
           },
@@ -126,8 +127,8 @@ export async function GET(req) {
 
     let addOnService;
     if (!isStringifiedObject(from))
-      addOnService = await Amenity.find({
-        airports: { $in: [arrival[0].iata_code] },
+      addOnService = await Services.find({
+        airport: arrival[0].iata_code,
       });
 
     const finalFleet = availableFleets.map((fleet) => {

@@ -1,25 +1,22 @@
 "use client";
 export const Icondiv = ({ flightTypes, setFlightTypes }) => {
-  // A small helper to toggle a flightType in the array
-  // const toggleFlightType = (type) => {
-  //   if (flightTypes.includes(type)) {
-  //     // Remove it
-  //     setFlightTypes(flightTypes.filter((ft) => ft !== type));
-  //   } else {
-  //     // Add it
-  //     setFlightTypes([...flightTypes, type]);
-  //   }
-  // };
-   const toggleFlightType = (type) => {
-      if (flightTypes.includes(type)) {
-        if (flightTypes.length === 1) {
-          return;
-        }
-        setFlightTypes(flightTypes.filter((ft) => ft !== type));
-      } else {
-        setFlightTypes([...flightTypes, type]);
-      }
-    };
+   // this function is for multiple option selection 
+//   const toggleFlightType = (type) => {
+//   if (flightTypes.includes(type)) {
+//     if (flightTypes.length === 1) {
+//       return;
+//     }
+//     setFlightTypes(flightTypes.filter((ft) => ft !== type));
+//   } else {
+//     setFlightTypes([...flightTypes, type]);
+//   }
+// };
+
+
+// this function if for single option selection
+const toggleFlightType = (type) => {
+  setFlightTypes([type]);
+};
 
   // A small helper to generate dynamic CSS classes for an icon's container
   const getIconClasses = (type) => {
