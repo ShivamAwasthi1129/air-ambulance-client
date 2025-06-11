@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import html2canvas from "html2canvas";
+import ImageSlider from "./imageSlider";
 // React-Toastify
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -449,95 +450,7 @@ export default function FlightCard({
   // ------------------------------------------------
   // Image Slider (interior/exterior/cockpit)
   // ------------------------------------------------
-  const ImageSlider = ({ aircraftGallery, onExperience }) => {
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const images = [
-      aircraftGallery?.exterior ? Object.values(aircraftGallery.exterior)[0] : null,
-      aircraftGallery?.interior ? Object.values(aircraftGallery.interior)[0] : null,
-      aircraftGallery?.cockpit ? Object.values(aircraftGallery.cockpit)[0] : null,
-    ].filter(Boolean);
 
-    useEffect(() => {
-      if (images.length > 1) {
-        const interval = setInterval(() => {
-          setCurrentIndex((prev) =>
-            prev === images.length - 1 ? 0 : prev + 1
-          );
-        }, 4000);
-        return () => clearInterval(interval);
-      }
-    }, [images]);
-
-    const handlePrev = (e) => {
-      e.stopPropagation();
-      setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
-    };
-    const handleNext = (e) => {
-      e.stopPropagation();
-      setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
-    };
-
-    if (!images.length) {
-      return (
-        <div className="w-full h-64 bg-gray-200 flex items-center justify-center">
-          <span className="text-gray-500">No image available</span>
-        </div>
-      );
-    }
-
-    return (
-      <div
-        className="relative w-full h-[250px] md:h-[300px] overflow-hidden rounded-3xl "
-        onClick={onExperience}
-      >
-        {/* Slider images */}
-        <div
-          className="flex transition-all duration-700 h-full"
-          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-        >
-          {images.map((src, idx) => (
-            <img
-              key={idx}
-              src={src}
-              alt={`Aircraft ${idx}`}
-              className="w-full h-full object-cover flex-shrink-0"
-            />
-          ))}
-        </div>
-
-        {/* See Flight Experience overlay */}
-        <span
-          className="absolute bottom-4 left-4 bg-black/50 text-white text-sm md:text-base 
-                     px-3 py-1 rounded cursor-pointer"
-        >
-          See More Photos
-        </span>
-
-        {images.length > 1 && (
-          <>
-            {/* Left arrow */}
-            <button
-              onClick={handlePrev}
-              className="absolute left-2 top-1/2 -translate-y-1/2 
-                         bg-white/70 text-black p-1 rounded-full z-10 
-                         hover:bg-white shadow"
-            >
-              <FaArrowLeft />
-            </button>
-            {/* Right arrow */}
-            <button
-              onClick={handleNext}
-              className="absolute right-2 top-1/2 -translate-y-1/2 
-                         bg-white/70 text-black p-1 rounded-full z-10 
-                         hover:bg-white shadow"
-            >
-              <FaArrowRight />
-            </button>
-          </>
-        )}
-      </div>
-    );
-  };
 
   // ------------------------------------------------
   // Amenity Carousel: Infinite wrap-around
@@ -610,8 +523,8 @@ export default function FlightCard({
 
           const isCoordinate = (str) => /^-?\d+\.\d+,-?\d+\.\d+$/.test(str.trim().split("-(")[0]);
           const [fromPart, toPart] = (label || "").split(" ➜ ");
-          console.log("fromPart:", fromPart);
-          console.log("toPart:", toPart);
+          // console.log("fromPart:", fromPart);
+          // console.log("toPart:", toPart);
 
           let fromTopLabel, fromBottomLabel, toTopLabel, toBottomLabel;
 
@@ -953,8 +866,8 @@ export default function FlightCard({
                             >
                               {/* the icon / image */}
                               <img
-                                src={svc.img_path}
-                                alt={svc.name}
+                                src={svc.images[0]}
+                                alt={svc.business_name}
                                 className="w-10 h-10 object-contain"
                               />
 
@@ -964,7 +877,7 @@ export default function FlightCard({
                        absolute bottom-full mb-1 px-2 py-1 rounded
                        bg-black text-white text-xs whitespace-nowrap"
                               >
-                                {svc.name}
+                                {svc.business_name}
                               </div>
                             </div>
                           ))}

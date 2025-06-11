@@ -695,7 +695,7 @@ function buildRapidoUrls(seg) {
         <div className="w-full bg-white flex flex-col items-center p-4 border border-blue-100 rounded-xl">
           {routeLabels.map((label) => {
             const flights = groupedFlights[label] || []; 
-            console.log("label : ",label);
+            // console.log("label : ",label);
             return (
               <div key={label} className="mb-10 w-full">
                 <h3 className="text-lg font-bold flex items-center">{label}</h3>
