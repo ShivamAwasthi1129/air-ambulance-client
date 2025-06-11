@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 const serviceSchema = new mongoose.Schema({
   _id: { type: mongoose.Schema.Types.ObjectId, required: true },
   service_type_id: { type: mongoose.Schema.Types.ObjectId, ref: 'ServiceTypes' },
@@ -16,5 +17,5 @@ const serviceSchema = new mongoose.Schema({
     country: { type: String, required: true },
   },
 }, { collection: 'Services' });
-const Service = mongoose.model('Services', serviceSchema);
+const Service = mongoose.models.Services || mongoose.model('Services', serviceSchema);
 export default Service;

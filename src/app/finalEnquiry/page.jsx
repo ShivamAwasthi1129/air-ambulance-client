@@ -1,12 +1,9 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { IoIosAirplane } from "react-icons/io";
-import { BsExclamationTriangle } from "react-icons/bs";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import FlightCard from "../components/FleetCard";
 import { Banner } from "../components/Banner";
 import { Bottom } from "../components/Bottom";
 import PaymentModal from "../components/PaymentModal";
