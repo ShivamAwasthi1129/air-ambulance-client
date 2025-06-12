@@ -2,15 +2,20 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/config/mongo";
 import UserQuery from "@/app/models/UserQuery";
 import sendMail from "@/config/nodeMailer";
+import { generateUniqueString } from "@/utils/helperFunction";
 
 export const POST = async (req) => {
   try {
     await connectToDatabase();
 
-    const { segments, userInfo, tripType , flightType } = await req.json();
+    let { segments, userInfo, tripType , flightType } = await req.json();
     const { name, email, phone, ip, city, region, country, loc, postal, timezone } = userInfo;
 
+    const _id = generateUniqueString();
+    segments = segments.map((sg, i) => ({ _id: `${_id}-${i + 1}`, ...sg }));
+    
     const newUserQuery = new UserQuery({
+      _id,
       userInfo: {
         email,
         name,
