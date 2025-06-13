@@ -23,6 +23,7 @@ const toggleFlightType = (type) => {
     return flightTypes.includes(type)
       ? "bg-blue-600 text-white"
       : "text-gray-700 hover:bg-gray-300";
+      
   };
 
   return (
