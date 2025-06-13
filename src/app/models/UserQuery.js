@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 const SegmentSchema = new mongoose.Schema({
+  _id: { type: String, required: true },
   from: { type: String },
   fromAddress: { type: String },
   to: { type: String },
@@ -38,6 +39,7 @@ const ExistingUserLoginSchema = new mongoose.Schema({
 });
 
 const UserQuerySchema = new mongoose.Schema({
+  _id: { type: String, required: true },
   userInfo: UserInfoSchema,
   tripType: { type: String, required: true },
   ExistingUserInfo: ExistingUserLoginSchema,
