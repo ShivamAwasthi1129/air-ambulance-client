@@ -43,17 +43,14 @@ export const GET = async (req, { params }) => {
 export const PUT = async (req, { params }) => {
   try {
     const email = (await params).email;
-    const { name, password } = await req.json();
+    const body = await req.json();
     await connectToDatabase();
     await User.updateOne(
       {
         email,
       },
       {
-        $set: {
-          name,
-          password,
-        },
+        $set: body,
       }
     );
     return NextResponse.json({"message": "User updated"});
