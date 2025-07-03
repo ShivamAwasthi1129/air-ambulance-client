@@ -1,5 +1,5 @@
-import User from "@/app/models/User";
-import { connectToDatabase } from "@/config/mongo";
+import User from "../../../models/User";
+import { connectToDatabase } from "../../../../config/mongo";
 import { NextResponse } from "next/server";
 
 const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -30,6 +30,7 @@ export const GET = async (req, { params }) => {
           email: 1,
           phone: 1,
           password: 1,
+          fcmToken: 1
         },
       },
     ]);
