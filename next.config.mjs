@@ -5,6 +5,7 @@ const nextConfig = {
       "cdn.pixabay.com",
       "s3.ap-south-1.amazonaws.com",
       "img.freepik.com",
+      "airambulance.s3.ap-south-1.amazonaws.com"
     ],
   },
 
