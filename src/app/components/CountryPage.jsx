@@ -15,6 +15,7 @@ import HeroAviationSection from './CountryPageComponents/HeroAviationSection';
 const CountryPage = () => {
   const [apiData, setApiData] = useState(null);
   const [loading, setLoading] = useState(true);
+  
 
   useEffect(() => {
     fetch('https://ow91reoh80.execute-api.ap-south-1.amazonaws.com/air/home')
