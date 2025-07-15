@@ -50,7 +50,7 @@ export async function POST(req) {
     const encodedPayload = encodeURIComponent(encryptedPayload);
 
     // CCAvenue payment URL
-    const paymentUrl = `https://test.ccavenue.com/transaction/transaction.do?command=initiateTransaction&encRequest=${encodedPayload}&access_code=${accessCode}`;
+    const paymentUrl = `https://secure.ccavenue.com/transaction/transaction.do?command=initiateTransaction&encRequest=${encodedPayload}&access_code=${accessCode}`;
 
     return NextResponse.json({ paymentUrl });
   } catch (error) {

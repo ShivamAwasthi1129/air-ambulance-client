@@ -4,6 +4,7 @@ import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { AiOutlineCheckCircle } from "react-icons/ai";
 import NavBar from "../components/Navbar";
+import { Bottom } from "../components/Bottom";
 
 // Simple Skeleton Loader
 const SkeletonLoader = () => {
@@ -317,6 +318,7 @@ function PaymentSuccessContent() {
           </div>
         ) : null /* No fallback UI if there's no error & no bookingData */}
       </div>
+      <Bottom />
     </div>
   );
 }

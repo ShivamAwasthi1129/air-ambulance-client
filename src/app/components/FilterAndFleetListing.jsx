@@ -27,6 +27,12 @@ const FilterAndFleetListing = ({ refreshKey }) => {
             minPrice: 0,
             maxPrice: 0,
             priceRange: 0,
+            minFlightTime: 0,
+            maxFlightTime: 0,
+            flightTimeRange: 0,
+            minMaxSpeed: 0,
+            maxMaxSpeed: 0,
+            maxSpeedRange: 0,
             loading: true,
             noData: false,
             addOnServices: [],
@@ -54,105 +60,105 @@ const FilterAndFleetListing = ({ refreshKey }) => {
     // lat/lng object
     return encodeURIComponent(JSON.stringify(place));
   }
-/**
- * Build every Rapido request (and its label) for ONE segment.
- * • Airport → Airport  → keep user-chosen flightTypes.
- * • Any route touching coords → force flightType=Helicopter.
- * • Coordinate part of label =  "lat,lng-(address)"  if address exists,
- *   otherwise just "lat,lng".
- */
-function buildRapidoUrls(seg) {
-  /* helpers */
-  const stripCode = (s) => s.replace(/\s*\(.*?\)\s*/, "").trim();
-  const toRapidoParam = (p) =>
-    typeof p === "string"
-      ? encodeURIComponent(stripCode(p))
-      : encodeURIComponent(JSON.stringify(p));
+  /**
+   * Build every Rapido request (and its label) for ONE segment.
+   * • Airport → Airport  → keep user-chosen flightTypes.
+   * • Any route touching coords → force flightType=Helicopter.
+   * • Coordinate part of label =  "lat,lng-(address)"  if address exists,
+   *   otherwise just "lat,lng".
+   */
+  function buildRapidoUrls(seg) {
+    /* helpers */
+    const stripCode = (s) => s.replace(/\s*\(.*?\)\s*/, "").trim();
+    const toRapidoParam = (p) =>
+      typeof p === "string"
+        ? encodeURIComponent(stripCode(p))
+        : encodeURIComponent(JSON.stringify(p));
 
-  const coordOnly = (loc) =>
-    `${loc.lat.toFixed(2)},${loc.lng.toFixed(2)}`;
+    const coordOnly = (loc) =>
+      `${loc.lat.toFixed(2)},${loc.lng.toFixed(2)}`;
 
-  // 11.93,79.81-(Some Address)
-  const fmtPoint = (loc, addr) =>
-    addr ? `${coordOnly(loc)}-(${addr})` : coordOnly(loc);
+    // 11.93,79.81-(Some Address)
+    const fmtPoint = (loc, addr) =>
+      addr ? `${coordOnly(loc)}-(${addr})` : coordOnly(loc);
 
-  /* shared query tail */
-  const common =
-    `departureDate=${seg.departureDate}T${seg.departureTime}:00Z` +
-    `&travelerCount=${seg.passengers}`;
+    /* shared query tail */
+    const common =
+      `departureDate=${seg.departureDate}T${seg.departureTime}:00Z` +
+      `&travelerCount=${seg.passengers}`;
 
-  /* assemble one {url,label} object */
-  const make = ({ fromArg, toArg, label, heliOnly }) => {
-    const fltParam = heliOnly
-      ? "&flightType=Helicopter"
-      : seg.flightTypes?.length
-      ? `&flightType=${encodeURIComponent(seg.flightTypes.join(","))}`
-      : "";
+    /* assemble one {url,label} object */
+    const make = ({ fromArg, toArg, label, heliOnly }) => {
+      const fltParam = heliOnly
+        ? "&flightType=Helicopter"
+        : seg.flightTypes?.length
+          ? `&flightType=${encodeURIComponent(seg.flightTypes.join(","))}`
+          : "";
 
-    return {
-      url: `/api/rapido?from=${fromArg}&to=${toArg}&${common}${fltParam}`,
-      label,
+      return {
+        url: `/api/rapido?from=${fromArg}&to=${toArg}&${common}${fltParam}`,
+        label,
+      };
     };
-  };
 
-  const list = [];
+    const list = [];
 
-  /* 1️⃣ Airport ➜ Airport */
-  if (seg.from && seg.to) {
-    list.push(
-      make({
-        fromArg: toRapidoParam(seg.from),
-        toArg: toRapidoParam(seg.to),
-        label: `${stripCode(seg.from)} ➜ ${stripCode(seg.to)}`,
-        heliOnly: false,
-      })
-    );
+    /* 1️⃣ Airport ➜ Airport */
+    if (seg.from && seg.to) {
+      list.push(
+        make({
+          fromArg: toRapidoParam(seg.from),
+          toArg: toRapidoParam(seg.to),
+          label: `${stripCode(seg.from)} ➜ ${stripCode(seg.to)}`,
+          heliOnly: false,
+        })
+      );
+    }
+
+    /* 2️⃣ Coord ➜ Coord */
+    if (seg.fromLoc && seg.toLoc) {
+      list.push(
+        make({
+          fromArg: toRapidoParam(seg.fromLoc),
+          toArg: toRapidoParam(seg.toLoc),
+          label: `${fmtPoint(seg.fromLoc, seg.fromAddress)} ➜ ${fmtPoint(
+            seg.toLoc,
+            seg.toAddress
+          )}`,
+          heliOnly: true,
+        })
+      );
+    }
+
+    /* 3️⃣ Airport ➜ Coord */
+    // if (seg.from && seg.toLoc) {
+    //   list.push(
+    //     make({
+    //       fromArg: toRapidoParam(seg.from),
+    //       toArg: toRapidoParam(seg.toLoc),
+    //       label: `${stripCode(seg.from)} ➜ ${fmtPoint(
+    //         seg.toLoc,
+    //         seg.toAddress
+    //       )}`,
+    //       heliOnly: true,
+    //     })
+    //   );
+    // }
+
+    /* 4️⃣ (optional) Coord ➜ Airport — uncomment if needed */
+    // if (seg.fromLoc && seg.to) {
+    //   list.push(
+    //     make({
+    //       fromArg: toRapidoParam(seg.fromLoc),
+    //       toArg: toRapidoParam(seg.to),
+    //       label: `${fmtPoint(seg.fromLoc, seg.fromAddress)} ➜ ${stripCode(seg.to)}`,
+    //       heliOnly: true,
+    //     })
+    //   );
+    // }
+
+    return list;
   }
-
-  /* 2️⃣ Coord ➜ Coord */
-  if (seg.fromLoc && seg.toLoc) {
-    list.push(
-      make({
-        fromArg: toRapidoParam(seg.fromLoc),
-        toArg: toRapidoParam(seg.toLoc),
-        label: `${fmtPoint(seg.fromLoc, seg.fromAddress)} ➜ ${fmtPoint(
-          seg.toLoc,
-          seg.toAddress
-        )}`,
-        heliOnly: true,
-      })
-    );
-  }
-
-  /* 3️⃣ Airport ➜ Coord */
-  // if (seg.from && seg.toLoc) {
-  //   list.push(
-  //     make({
-  //       fromArg: toRapidoParam(seg.from),
-  //       toArg: toRapidoParam(seg.toLoc),
-  //       label: `${stripCode(seg.from)} ➜ ${fmtPoint(
-  //         seg.toLoc,
-  //         seg.toAddress
-  //       )}`,
-  //       heliOnly: true,
-  //     })
-  //   );
-  // }
-
-  /* 4️⃣ (optional) Coord ➜ Airport — uncomment if needed */
-  // if (seg.fromLoc && seg.to) {
-  //   list.push(
-  //     make({
-  //       fromArg: toRapidoParam(seg.fromLoc),
-  //       toArg: toRapidoParam(seg.to),
-  //       label: `${fmtPoint(seg.fromLoc, seg.fromAddress)} ➜ ${stripCode(seg.to)}`,
-  //       heliOnly: true,
-  //     })
-  //   );
-  // }
-
-  return list;
-}
 
 
   // Fetch data for each segment
@@ -186,6 +192,16 @@ function buildRapidoUrls(seg) {
 
       const prices = fleets.map((f) => f._numericPrice);
       const [minP, maxP] = [Math.min(...prices), Math.max(...prices)];
+      const flightTimes = fleets.map((f) => {
+        const timeStr = f.flightTime || "0h 0m";
+        const hours = parseInt(timeStr.match(/(\d+)h/)?.[1] || "0");
+        const minutes = parseInt(timeStr.match(/(\d+)m/)?.[1] || "0");
+        return hours * 60 + minutes; // Convert to total minutes
+      });
+      const [minFT, maxFT] = flightTimes.length ? [Math.min(...flightTimes), Math.max(...flightTimes)] : [0, 0];
+
+      const maxSpeeds = fleets.map((f) => parseInt(f.fleetDetails?.maxSpeed || "0"));
+      const [minMS, maxMS] = maxSpeeds.length ? [Math.min(...maxSpeeds), Math.max(...maxSpeeds)] : [0, 0];
 
       setSegmentStates((prev) => {
         const copy = [...prev];
@@ -196,6 +212,12 @@ function buildRapidoUrls(seg) {
           minPrice: minP,
           maxPrice: maxP,
           priceRange: maxP,
+          minFlightTime: minFT,
+          maxFlightTime: maxFT,
+          flightTimeRange: maxFT,
+          minMaxSpeed: minMS,
+          maxMaxSpeed: maxMS,
+          maxSpeedRange: maxMS,
           addOnServices,
           loading: false,
           noData: false,
@@ -231,10 +253,21 @@ function buildRapidoUrls(seg) {
       const updatedStates = [...prev];
       const currentSegment = updatedStates[segmentIndex];
       const { fleetData } = currentSegment;
-      const { selectedTypes, selectedAmenities, priceRange } = newStates;
+      const { selectedTypes, selectedAmenities, priceRange, flightTimeRange, maxSpeedRange } = newStates;
+
 
       const newFiltered = fleetData.filter((flight) => {
         const withinPrice = flight._numericPrice <= priceRange;
+
+        const flightTimeStr = flight?.flightTime || "0h 0m";
+        const hours = parseInt(flightTimeStr.match(/(\d+)h/)?.[1] || "0");
+        const minutes = parseInt(flightTimeStr.match(/(\d+)m/)?.[1] || "0");
+        const totalMinutes = hours * 60 + minutes;
+        const withinFlightTime = totalMinutes <= flightTimeRange;
+
+        // Add max speed filter:
+        const flightMaxSpeed = parseInt(flight.fleetDetails?.maxSpeed || "0");
+        const withinMaxSpeed = flightMaxSpeed <= maxSpeedRange;
         const matchesType =
           selectedTypes.length === 0 ||
           selectedTypes.includes(flight.fleetDetails?.flightType || "");
@@ -245,7 +278,7 @@ function buildRapidoUrls(seg) {
             return val !== "not_available";
           });
 
-        return withinPrice && matchesType && hasAmenities;
+        return withinPrice && withinFlightTime && withinMaxSpeed && matchesType && hasAmenities;
       });
 
       updatedStates[segmentIndex] = {
@@ -267,6 +300,8 @@ function buildRapidoUrls(seg) {
         selectedTypes: searchData.segments[segmentIndex].flightTypes || [],
         selectedAmenities: [],
         priceRange: segState.maxPrice,
+        flightTimeRange: segState.maxFlightTime,
+        maxSpeedRange: segState.maxMaxSpeed,
         filteredData: segState.fleetData,
       };
       return updated;
@@ -288,7 +323,7 @@ function buildRapidoUrls(seg) {
       seatingCapacity: flight?.fleetDetails?.seatCapacity,
       price: flight?.totalPrice,
       time: flight?.flightTime,
-      label:flight._sourceLabel,
+      label: flight._sourceLabel,
       // optional: store images, etc.
     };
 
@@ -316,6 +351,12 @@ function buildRapidoUrls(seg) {
     minPrice = 0,
     maxPrice = 0,
     priceRange = 0,
+    minFlightTime = 0,
+    maxFlightTime = 0,
+    flightTimeRange = 0,
+    minMaxSpeed = 0,
+    maxMaxSpeed = 0,
+    maxSpeedRange = 0,
     fleetData = [],
     filteredData = [],
     loading = false,
@@ -399,12 +440,29 @@ function buildRapidoUrls(seg) {
       priceRange: Number(val),
     });
   };
+  const onFlightTimeChange = (val) => {
+    handleFilterChange(segmentIndex, {
+      selectedTypes,
+      selectedAmenities,
+      priceRange,
+      flightTimeRange: Number(val),
+      maxSpeedRange,
+    });
+  };
 
-  // If no searchData => prompt user to do a search
+  const onMaxSpeedChange = (val) => {
+    handleFilterChange(segmentIndex, {
+      selectedTypes,
+      selectedAmenities,
+      priceRange,
+      flightTimeRange,
+      maxSpeedRange: Number(val),
+    });
+  };
+
   if (!searchData) {
     return (
       <div className="p-4 space-y-6 w-full max-w-[100rem] h-[30rem] flex flex-col justify-center items-center">
-        {/* Could display "Please start a search" or a placeholder */}
       </div>
     );
   }
@@ -664,6 +722,57 @@ function buildRapidoUrls(seg) {
               </div>
             )}
           </div>
+          {/* Flight Time Range */}
+          <div className="mb-6">
+            <p className="font-semibold text-gray-700 mb-3">
+              Flight Time Range:{" "}
+              <span className="text-blue-600 font-bold">
+                {Math.floor(minFlightTime / 60)}h {minFlightTime % 60}m
+              </span>
+              {" - "}
+              <span className="text-blue-600 font-bold">
+                {Math.floor(flightTimeRange / 60)}h {flightTimeRange % 60}m
+              </span>
+            </p>
+            <input
+              type="range"
+              min={minFlightTime}
+              max={maxFlightTime}
+              value={flightTimeRange}
+              onChange={(e) => onFlightTimeChange(e.target.value)}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer
+       focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+              style={{
+                background: `linear-gradient(to right, #3b82f6 ${((flightTimeRange - minFlightTime) / (maxFlightTime - minFlightTime)) * 100}%, #e5e7eb ${((flightTimeRange - minFlightTime) / (maxFlightTime - minFlightTime)) * 100}%)`,
+              }}
+            />
+          </div>
+
+          {/* Max Speed Range */}
+          <div className="mb-6">
+            <p className="font-semibold text-gray-700 mb-3">
+              Max Speed Range:{" "}
+              <span className="text-blue-600 font-bold">
+                {minMaxSpeed} knots
+              </span>
+              {" - "}
+              <span className="text-blue-600 font-bold">
+                {maxSpeedRange} knots
+              </span>
+            </p>
+            <input
+              type="range"
+              min={minMaxSpeed}
+              max={maxMaxSpeed}
+              value={maxSpeedRange}
+              onChange={(e) => onMaxSpeedChange(e.target.value)}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer
+       focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+              style={{
+                background: `linear-gradient(to right, #3b82f6 ${((maxSpeedRange - minMaxSpeed) / (maxMaxSpeed - minMaxSpeed)) * 100}%, #e5e7eb ${((maxSpeedRange - minMaxSpeed) / (maxMaxSpeed - minMaxSpeed)) * 100}%)`,
+              }}
+            />
+          </div>
 
           {/* Amenities */}
           <div>
@@ -694,7 +803,7 @@ function buildRapidoUrls(seg) {
         {/* Fleet Listing Section */}
         <div className="w-full bg-white flex flex-col items-center p-4 border border-blue-100 rounded-xl">
           {routeLabels.map((label) => {
-            const flights = groupedFlights[label] || []; 
+            const flights = groupedFlights[label] || [];
             // console.log("label : ",label);
             return (
               <div key={label} className="mb-10 w-full">
@@ -733,7 +842,6 @@ function buildRapidoUrls(seg) {
             );
           })}
         </div>
-
       </div>
     </div>
   );

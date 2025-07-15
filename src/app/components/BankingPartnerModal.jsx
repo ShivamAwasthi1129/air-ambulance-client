@@ -276,7 +276,7 @@ function PaymentNotice() {
   return (
     <div className="relative overflow-hidden rounded-xl bg-white p-6">
       <Image
-        src="https://airambulance.s3.ap-south-1.amazonaws.com/BankImages/bank-card-mobile-phone-online-payment_107791-16646-removebg-preview.png"
+        src="https://airambulance.s3.ap-south-1.amazonaws.com/AircraftGallery/3d-hand-making-cashless-payment-from-smartphone.jpg"
         alt="Digital payment"
         width={220}
         height={220}
