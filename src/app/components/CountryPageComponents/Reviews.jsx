@@ -1,44 +1,42 @@
 import { useState } from "react";
 import { FaArrowLeft, FaArrowRight, FaStar, FaQuoteLeft } from "react-icons/fa";
 
-const reviews = [
-  {
-    name: "Luca Rossi",
-    rating: 4.0,
-    image: "https://randomuser.me/api/portraits/men/32.jpg",
-    review:
-      "Thank you very much to Charter Flights Aviation for making my air journey so smooth and comfortable. I took their private jet for my wedding in Chennai. Their whole team was quite humble and generous as they managed each and everything so nicely, It was a very special moment for my family and me, and taking their services made my day even more grateful.",
-    serviceRatings: {
-      Service: 5,
-      "Value for money": 5,
-      "Flight quality": 5,
-      Comfortness: 5,
-      Availability: 5,
-      "Activation Time": 5,
-      Payments: 5,
-      "Qualified Staff": 5,
-    },
-  },
-  {
-    name: "Emily Carter",
-    rating: 4.5,
-    image: "https://randomuser.me/api/portraits/women/44.jpg",
-    review:
-      "Fantastic service! From booking to landing, everything was perfect. Will definitely book again for my next business trip.",
-    serviceRatings: {
-      Service: 5,
-      "Value for money": 4,
-      "Flight quality": 4,
-      Comfortness: 5,
-      Availability: 4,
-      "Activation Time": 5,
-      Payments: 4,
-      "Qualified Staff": 5,
-    },
-  },
-];
 
-export default function ReviewSection() {
+export default function ReviewSection({ data }) {
+  const reviews =
+    data && Array.isArray(data) && data[0]?.reviews && data[0].reviews.length > 0
+      ? data[0].reviews.map((r) => ({
+        name: r.name,
+        rating: r.services && r.services.length > 0
+          ? r.services.reduce((sum, s) => sum + (s.rating || 0), 0) / r.services.length
+          : 5,
+        image: r.image,
+        review: r.article,
+        serviceRatings: r.services
+          ? Object.fromEntries(r.services.map((s) => [s.name, Math.round(s.rating)]))
+          : {},
+      }))
+      : [
+        // fallback static reviews if API data is missing
+        {
+          name: "Luca Rossi",
+          rating: 4.0,
+          image: "https://randomuser.me/api/portraits/men/32.jpg",
+          review:
+            "Thank you very much to Charter Flights Aviation for making my air journey so smooth and comfortable...",
+          serviceRatings: {
+            Service: 5,
+            "Value for money": 5,
+            "Flight quality": 5,
+            Comfortness: 5,
+            Availability: 5,
+            "Activation Time": 5,
+            Payments: 5,
+            "Qualified Staff": 5,
+          },
+        },
+      ];
+
   const [current, setCurrent] = useState(0);
 
   const next = () => setCurrent((prev) => (prev + 1) % reviews.length);
@@ -48,10 +46,10 @@ export default function ReviewSection() {
     return (
       <div className="flex gap-0.5 text-amber-400">
         {Array.from({ length: 5 }).map((_, i) => (
-          <FaStar 
-            key={i} 
-            size={14} 
-            className={i < count ? 'text-amber-400' : 'text-gray-300'} 
+          <FaStar
+            key={i}
+            size={14}
+            className={i < count ? 'text-amber-400' : 'text-gray-300'}
           />
         ))}
       </div>
@@ -61,14 +59,14 @@ export default function ReviewSection() {
   const renderMainStars = (rating) => {
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 !== 0;
-    
+
     return (
       <div className="flex gap-1 text-amber-400 justify-center mb-2">
         {Array.from({ length: 5 }).map((_, i) => (
-          <FaStar 
-            key={i} 
-            size={18} 
-            className={i < fullStars ? 'text-amber-400' : 'text-gray-300'} 
+          <FaStar
+            key={i}
+            size={18}
+            className={i < fullStars ? 'text-amber-400' : 'text-gray-300'}
           />
         ))}
       </div>
@@ -116,7 +114,7 @@ export default function ReviewSection() {
           {/* Review Card */}
           <div className="bg-white rounded-2xl shadow-2xl border border-white/20 backdrop-blur-sm 
                         p-4 md:p-6 mx-4 md:mx-0 transform transition-all duration-500 hover:shadow-3xl">
-            
+
             {/* Quote Icon */}
             <div className="flex justify-center mb-4">
               <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-2 rounded-full">
@@ -135,13 +133,13 @@ export default function ReviewSection() {
                 />
                 <div className="absolute -bottom-1 -right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-white"></div>
               </div>
-              
+
               <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-2">
                 {reviews[current].name}
               </h3>
-              
+
               {renderMainStars(reviews[current].rating)}
-              
+
               <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 {reviews[current].rating.toFixed(1)}/5.0
               </span>
@@ -165,7 +163,7 @@ export default function ReviewSection() {
               <h4 className="text-base md:text-lg font-bold text-center text-gray-800 mb-4">
                 Service Ratings
               </h4>
-              
+
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
                 {Object.entries(reviews[current].serviceRatings).map(([key, value], index) => (
                   <div key={index} className="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow duration-300">
@@ -188,11 +186,10 @@ export default function ReviewSection() {
               <button
                 key={index}
                 onClick={() => setCurrent(index)}
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  index === current 
-                    ? 'bg-blue-600 w-6' 
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${index === current
+                    ? 'bg-blue-600 w-6'
                     : 'bg-gray-300 hover:bg-gray-400'
-                }`}
+                  }`}
               />
             ))}
           </div>

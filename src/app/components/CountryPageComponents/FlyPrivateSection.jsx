@@ -1,26 +1,34 @@
-export default function FlyPrivateSection() {
+export default function FlyPrivateSection({data}) {
+  const mainArticle = data && Array.isArray(data) && data[0]?.mainArticle ? data[0].mainArticle : {};
+  
   const title = (
     <>
-      <p className="flex justify-center">   <span className="text-blue-600 font-bold">Fly Private in Dubai</span>{"  "}
+      <p className="flex justify-center">   
+        <span className="text-blue-600 font-bold">{mainArticle.heading || "Fly Private in Dubai"}</span>{"  "}
         – Jets, Routes & Airports Covered</p>
     </>
   );
 
-  const imageSrc =
+const imageSrc =
+    // mainArticle.image ||
     "https://images.pexels.com/photos/3787839/pexels-photo-3787839.jpeg";
 
-  const paragraphs = [
-    "Charter Flight AirAviation specializes in luxury private and business jet charters to and from Dubai, UAE. We offer access to a curated fleet of private aircraft at highly competitive rates—designed to match your needs and exceed your expectations.",
-    "We also offer empty-leg flights and cost-efficient turboprop charters. With five airports within 50 miles of Dubai—like DXB, SHJ, and RKT—we make private air travel seamless and flexible.",
-    "At Charter Flight AirAviation, we’re committed to delivering a world-class charter experience backed by 24/7 personalized support."
-  ];
+  const paragraphs = mainArticle.paragraphs && mainArticle.paragraphs.length > 0
+    ? mainArticle.paragraphs
+    : [
+        "Charter Flight AirAviation specializes in luxury private and business jet charters to and from Dubai, UAE. We offer access to a curated fleet of private aircraft at highly competitive rates—designed to match your needs and exceed your expectations.",
+        "We also offer empty-leg flights and cost-efficient turboprop charters. With five airports within 50 miles of Dubai—like DXB, SHJ, and RKT—we make private air travel seamless and flexible.",
+        "At Charter Flight AirAviation, we’re committed to delivering a world-class charter experience backed by 24/7 personalized support."
+      ];
 
-  const keyPoints = [
-    "Midsize Jets: Hawker 800XP, Learjet 60XR",
-    "Large Jets: Challenger 604, Legacy 600, Falcon 900DX",
-    "Long-Range: Global Express XRS",
-    "VIP Airliners: Embraer Lineage 1000"
-  ];
+  const keyPoints = mainArticle.highlights && mainArticle.highlights.length > 0
+    ? mainArticle.highlights
+    : [
+        "Midsize Jets: Hawker 800XP, Learjet 60XR",
+        "Large Jets: Challenger 604, Legacy 600, Falcon 900DX",
+        "Long-Range: Global Express XRS",
+        "VIP Airliners: Embraer Lineage 1000"
+      ];
 
   return (
     <section className="px-5 py-12 md:px-16 bg-white text-gray-800">
@@ -31,12 +39,10 @@ export default function FlyPrivateSection() {
 
       {/* Content layout */}
       <div className="flex flex-col lg:flex-row gap-8 items-start">
-
-
         {/* Left section */}
         <div className="w-full lg:w-1/2 space-y-5 text-[18px] leading-relaxed">
           {/* First paragraph */}
-          <p>{paragraphs[0]}</p>
+          <p>{mainArticle.mainParagraph || paragraphs[0]}</p>
 
           {/* Key points section */}
           <div>
@@ -50,9 +56,10 @@ export default function FlyPrivateSection() {
             </ul>
           </div>
 
-          {/* Remaining paragraphs */}
-          <p>{paragraphs[1]}</p>
-          <p>{paragraphs[2]}</p>
+            {/* Remaining paragraphs */}
+          {paragraphs.slice(0).map((para, idx) => (
+            <p key={idx}>{para}</p>
+          ))}
         </div>
         {/* right section */}
         <div className="w-full lg:w-1/2">
