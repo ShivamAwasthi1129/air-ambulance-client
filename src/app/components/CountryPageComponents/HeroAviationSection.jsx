@@ -8,7 +8,7 @@ export default function HeroAviationSection({ data }) {
   const keyValues = heroData?.keyValues || [];
 
   return (
-    <section className="bg-white px-5 py-10 md:px-16 text-gray-800 mt-64">
+    <section className="bg-white px-5 py-10 md:px-16 text-gray-800 mt-36">
       <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-10">
         {/* Left: Text Content */}
         <div className="md:col-span-2">
