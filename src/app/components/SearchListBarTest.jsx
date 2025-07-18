@@ -710,7 +710,12 @@ export const SearchBar = () => {
                         {num + 1}
                       </option>
                     ))}
-                    <option value="33+">33+</option>
+                    <option value="33">33+</option>
+                    <option value="45">45+</option>
+                    <option value="80">80+</option>
+                    <option value="100">100+</option>
+                    <option value="200">200+</option>
+                    <option value="300">300+</option>
                   </select>
                 </div>
               </div>
