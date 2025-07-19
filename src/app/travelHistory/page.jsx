@@ -16,8 +16,8 @@ const DESIGNATIONS = ["Dr.", "Prof.", "Minister", "MLA", "President", "VIP", "No
 const DOCUMENT_TYPES = ["Passport", "Driving License", "Resident Card", "Other"];
 const GENDERS = ["Male", "Female", "Other"];
 const NATIONALITIES = ["Indian", "American", "British", "Canadian", "Australian", "German", "French", "Other"];
-const MEAL_PREFERENCES = ["Veg", "Non-Veg", "Vegan", "Jain", "Diabetic", "None"];
-const SEAT_PREFERENCES = ["Window", "Aisle", "Middle", "No Preference"];
+const MEAL_PREFERENCES = ["Veg", "Non-Veg", "Vegan", "Hindu", "Koshe", "Muslim", "Jain", "Diabetic", "None"];
+const SEAT_PREFERENCES = ["Window", "Aisle", "Middle", "Bed", "Sofa", "Recliner", "No Preference"];
 
 const TravelHistory = () => {
   const [bookings, setBookings] = useState([]);
@@ -217,7 +217,7 @@ const TravelHistory = () => {
     }));
   };
   const getFilledPassengers = (formData) => {
-  const filledPassengers = [];
+    const filledPassengers = [];
     formData.journey_legs.forEach((leg, legIndex) => {
       leg.passengers.forEach((passenger, passengerIndex) => {
         if (passenger.full_name && passenger.full_name.trim()) {
@@ -870,75 +870,117 @@ const TravelHistory = () => {
               <p className="text-white text-lg">Loading your bookings...</p>
             </div>
           ) : bookings && bookings.length > 0 ? (
-            bookings.map((booking, index) => (
-              <div
-                key={booking._id}
-                className="bg-white bg-opacity-95 rounded-xl shadow-2xl p-6 mb-8 backdrop-blur-sm hover:shadow-3xl transition-all duration-300"
-              >
-                <div className="flex items-start md:items-center justify-between gap-4 border-b border-gray-200 pb-4 mb-6">
-                  <div className="flex items-center gap-3">
-                    <AiOutlineCheckCircle className="text-green-500 flex-shrink-0" size={36} />
-                    <div>
-                      <h2 className="text-2xl font-bold text-gray-800">
-                        Booking #{index + 1}
-                      </h2>
-                      <p className="text-sm text-gray-600 font-medium">
-                        {booking.flight_type} &mdash;{" "}
-                        <span className="text-blue-600">{booking.trip_type?.toUpperCase()}</span>
-                      </p>
+            bookings
+              .slice()
+              .sort((a, b) => {
+                const dateA = new Date(a.createdAt || a.updatedAt || 0);
+                const dateB = new Date(b.createdAt || b.updatedAt || 0);
+                return dateB - dateA;
+              })
+              .map((booking, index) => (
+                <div
+                  key={booking._id}
+                  className="bg-white bg-opacity-95 rounded-xl shadow-2xl p-6 mb-8 backdrop-blur-sm hover:shadow-3xl transition-all duration-300"
+                >
+                  <div className="flex items-start md:items-center justify-between gap-4 border-b border-gray-200 pb-4 mb-6">
+                    <div className="flex items-center gap-3">
+                      <AiOutlineCheckCircle className="text-green-500 flex-shrink-0" size={36} />
+                      <div>
+                        <h2 className="text-2xl font-bold text-gray-800">
+                          Booking #{index + 1}
+                        </h2>
+                        <p className="text-sm text-gray-600 font-medium">
+                          {booking.flight_type} &mdash;{" "}
+                          <span className="text-blue-600">{booking.trip_type?.toUpperCase()}</span>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-gray-700">
+                          Amount Paid ({booking.currency})
+                        </p>
+                        <p className="text-2xl text-blue-600 font-bold">
+                          {booking.amount_paid}
+                        </p>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${booking.status === 'confirmed'
+                        ? 'bg-green-100 text-green-800'
+                        : booking.status === 'pending'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
+                        }`}>
+                        {booking.status?.toUpperCase()}
+                      </span>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <div className="text-right">
-                      <p className="text-sm font-semibold text-gray-700">
-                        Amount Paid ({booking.currency})
-                      </p>
-                      <p className="text-2xl text-blue-600 font-bold">
-                        {booking.amount_paid}
-                      </p>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${booking.status === 'confirmed'
-                      ? 'bg-green-100 text-green-800'
-                      : booking.status === 'pending'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-red-100 text-red-800'
-                      }`}>
-                      {booking.status?.toUpperCase()}
-                    </span>
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                      <AiOutlineUser className="text-blue-600" />
-                      Passenger Details
-                    </h3>
-                    <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-sm text-gray-600">Name</p>
-                          <p className="font-medium text-gray-800">
-                            {booking.user_info?.name || 'N/A'}
-                          </p>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <AiOutlineUser className="text-blue-600" />
+                        Passenger Details
+                      </h3>
+                      <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm text-gray-600">Name</p>
+                            <p className="font-medium text-gray-800">
+                              {booking.user_info?.name || 'N/A'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Email</p>
+                            <p className="font-medium text-gray-800">
+                              {booking.user_info?.email || 'N/A'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Phone</p>
+                            <p className="font-medium text-gray-800">
+                              {booking.user_info?.phone || 'N/A'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Passengers</p>
+                            <p className="font-medium text-gray-800">
+                              {booking.segments?.[0]?.passengers || 'N/A'}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Email</p>
-                          <p className="font-medium text-gray-800">
-                            {booking.user_info?.email || 'N/A'}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Phone</p>
-                          <p className="font-medium text-gray-800">
-                            {booking.user_info?.phone || 'N/A'}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Passengers</p>
-                          <p className="font-medium text-gray-800">
-                            {booking.segments?.[0]?.passengers || 'N/A'}
-                          </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-gray-800">
+                        Booking Information
+                      </h3>
+                      <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm text-gray-600">Booking ID</p>
+                            <p className="font-medium text-gray-800 text-xs">
+                              {booking._id}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Created</p>
+                            <p className="font-medium text-gray-800">
+                              {formatDateTime(booking.createdAt)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Updated</p>
+                            <p className="font-medium text-gray-800">
+                              {formatDateTime(booking.updatedAt)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600">Booking Status</p>
+                            <p className="font-medium text-gray-800">
+                              {booking.status || 'N/A'}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -946,181 +988,146 @@ const TravelHistory = () => {
 
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-800">
-                      Booking Information
+                      Flight Segments
                     </h3>
-                    <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-sm text-gray-600">Booking ID</p>
-                          <p className="font-medium text-gray-800 text-xs">
-                            {booking._id}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Created</p>
-                          <p className="font-medium text-gray-800">
-                            {formatDateTime(booking.created_at)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Updated</p>
-                          <p className="font-medium text-gray-800">
-                            {formatDateTime(booking.updated_at)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Payment Status</p>
-                          <p className="font-medium text-gray-800">
-                            {booking.payment_status || 'N/A'}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                    {booking.segments && booking.segments.length > 0 ? (
+                      <div className="space-y-3">
+                        {booking.segments.map((segment, segmentIndex) => (
+                          <div
+                            key={segmentIndex}
+                            className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200"
+                          >
+                            <div className="flex items-center justify-between mb-3">
+                              <h4 className="font-semibold text-gray-800">
+                                Segment {segmentIndex + 1}
+                              </h4>
+                              <span className="text-sm text-gray-600">
+                                {segment.passengers} passenger{segment.passengers > 1 ? 's' : ''}
+                              </span>
+                            </div>
 
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    Flight Segments
-                  </h3>
-                  {booking.segments && booking.segments.length > 0 ? (
-                    <div className="space-y-3">
-                      {booking.segments.map((segment, segmentIndex) => (
-                        <div
-                          key={segmentIndex}
-                          className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200"
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <h4 className="font-semibold text-gray-800">
-                              Segment {segmentIndex + 1}
-                            </h4>
-                            <span className="text-sm text-gray-600">
-                              {segment.passengers} passenger{segment.passengers > 1 ? 's' : ''}
-                            </span>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div>
-                              <p className="text-sm text-gray-600 mb-1">From</p>
-                              <p className="font-medium text-gray-800">
-                                {segment.from === "custom"
-                                  ? segment.fromAddress
-                                  : `${segment.fromCity} (${segment.fromIATA})`}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-600 mb-1">To</p>
-                              <p className="font-medium text-gray-800">
-                                {segment.to === "custom"
-                                  ? segment.toAddress
-                                  : `${segment.toCity} (${segment.toIATA})`}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-600 mb-1">Departure</p>
-                              <p className="font-medium text-gray-800">
-                                {segment.departureDate
-                                  ? new Date(segment.departureDate).toLocaleDateString()
-                                  : 'N/A'}
-                              </p>
-                            </div>
-                            {segment.returnDate && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                               <div>
-                                <p className="text-sm text-gray-600 mb-1">Return</p>
+                                <p className="text-sm text-gray-600 mb-1">From</p>
                                 <p className="font-medium text-gray-800">
-                                  {new Date(segment.returnDate).toLocaleDateString()}
+                                  {segment.from === "custom"
+                                    ? segment.fromAddress
+                                    : `${segment.fromCity} (${segment.fromIATA})`}
                                 </p>
                               </div>
-                            )}
-                            <div>
-                              <p className="text-sm text-gray-600 mb-1">Class</p>
-                              <p className="font-medium text-gray-800">
-                                {segment.class || 'N/A'}
-                              </p>
+                              <div>
+                                <p className="text-sm text-gray-600 mb-1">To</p>
+                                <p className="font-medium text-gray-800">
+                                  {segment.to === "custom"
+                                    ? segment.toAddress
+                                    : `${segment.toCity} (${segment.toIATA})`}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-gray-600 mb-1">Departure</p>
+                                <p className="font-medium text-gray-800">
+                                  {segment.departureDate
+                                    ? new Date(segment.departureDate).toLocaleDateString()
+                                    : 'N/A'}
+                                </p>
+                              </div>
+                              {segment.returnDate && (
+                                <div>
+                                  <p className="text-sm text-gray-600 mb-1">Return</p>
+                                  <p className="font-medium text-gray-800">
+                                    {new Date(segment.returnDate).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              )}
+                              {/* <div>
+                                <p className="text-sm text-gray-600 mb-1">Class</p>
+                                <p className="font-medium text-gray-800">
+                                  {segment.class || 'N/A'}
+                                </p>
+                              </div> */}
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-600">No flight segments available.</p>
-                  )}
-                </div>
-
-                {/* Passenger Information Form */}
-                {showPassengerForm[booking._id] && renderPassengerForm(booking)}
-
-                {/* Modification Request Section */}
-                {modificationRequests[booking._id]?.isOpen && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mt-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-yellow-800">
-                        Request Modification
-                      </h3>
-                      <button
-                        onClick={() => toggleModificationRequest(booking._id)}
-                        className="text-yellow-600 hover:text-yellow-800 transition-colors"
-                      >
-                        <AiOutlineClose size={20} />
-                      </button>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Please describe the changes you would like to make:
-                        </label>
-                        <textarea
-                          value={modificationRequests[booking._id]?.message || ''}
-                          onChange={(e) => updateModificationMessage(booking._id, e.target.value)}
-                          placeholder="Describe your modification request in detail..."
-                          className="w-full h-32 p-3 border border-yellow-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 resize-none"
-                        />
+                        ))}
                       </div>
+                    ) : (
+                      <p className="text-gray-600">No flight segments available.</p>
+                    )}
+                  </div>
 
-                      <div className="flex justify-end">
+                  {/* Passenger Information Form */}
+                  {showPassengerForm[booking._id] && renderPassengerForm(booking)}
+
+                  {/* Modification Request Section */}
+                  {modificationRequests[booking._id]?.isOpen && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mt-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-yellow-800">
+                          Request Modification
+                        </h3>
                         <button
-                          onClick={() => sendModificationRequest(booking)}
-                          disabled={emailLoading[booking._id]}
-                          className="flex items-center gap-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-yellow-400 text-white px-6 py-2 rounded-lg transition-colors duration-200 font-medium"
+                          onClick={() => toggleModificationRequest(booking._id)}
+                          className="text-yellow-600 hover:text-yellow-800 transition-colors"
                         >
-                          {emailLoading[booking._id] ? (
-                            <>
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                              Sending...
-                            </>
-                          ) : (
-                            <>
-                              <AiOutlineSend size={16} />
-                              Send Request
-                            </>
-                          )}
+                          <AiOutlineClose size={20} />
                         </button>
                       </div>
+
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Please describe the changes you would like to make:
+                          </label>
+                          <textarea
+                            value={modificationRequests[booking._id]?.message || ''}
+                            onChange={(e) => updateModificationMessage(booking._id, e.target.value)}
+                            placeholder="Describe your modification request in detail..."
+                            className="w-full h-32 p-3 border border-yellow-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 resize-none"
+                          />
+                        </div>
+
+                        <div className="flex justify-end">
+                          <button
+                            onClick={() => sendModificationRequest(booking)}
+                            disabled={emailLoading[booking._id]}
+                            className="flex items-center gap-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-yellow-400 text-white px-6 py-2 rounded-lg transition-colors duration-200 font-medium"
+                          >
+                            {emailLoading[booking._id] ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                Sending...
+                              </>
+                            ) : (
+                              <>
+                                <AiOutlineSend size={16} />
+                                Send Request
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
                     </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-wrap gap-3 mt-6 pt-6 border-t border-gray-200">
+                    <button
+                      onClick={() => togglePassengerForm(booking)}
+                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 font-medium"
+                    >
+                      <AiOutlineUser size={16} />
+                      {showPassengerForm[booking._id] ? 'Hide' : 'Add'} Passenger Details
+                    </button>
+
+                    <button
+                      onClick={() => toggleModificationRequest(booking._id)}
+                      className="flex items-center gap-2 bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 font-medium"
+                    >
+                      <AiOutlineEdit size={16} />
+                      Request Modification
+                    </button>
                   </div>
-                )}
-
-                {/* Action Buttons */}
-                <div className="flex flex-wrap gap-3 mt-6 pt-6 border-t border-gray-200">
-                  <button
-                    onClick={() => togglePassengerForm(booking)}
-                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 font-medium"
-                  >
-                    <AiOutlineUser size={16} />
-                    {showPassengerForm[booking._id] ? 'Hide' : 'Add'} Passenger Details
-                  </button>
-
-                  <button
-                    onClick={() => toggleModificationRequest(booking._id)}
-                    className="flex items-center gap-2 bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 font-medium"
-                  >
-                    <AiOutlineEdit size={16} />
-                    Request Modification
-                  </button>
                 </div>
-              </div>
-            ))
+              ))
           ) : (
             <div className="text-center py-12">
               <div className="bg-white bg-opacity-95 rounded-xl shadow-2xl p-8 backdrop-blur-sm">

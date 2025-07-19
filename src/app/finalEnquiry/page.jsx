@@ -717,7 +717,7 @@ const FinalEnquiryPage = () => {
                 onClick={() => setOpen(true)}
                 className="rounded-lg bg-sky-600 px-6 py-3 font-semibold text-white"
               >
-                Show Banking Details
+                Offline Payment
               </button>
               <button
                 className="border border-orange-400 text-orange-500 px-4 py-2 rounded-md hover:bg-orange-100 transition-colors text-center"
