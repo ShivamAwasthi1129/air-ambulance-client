@@ -1064,27 +1064,6 @@ export const SearchBar = () => {
         onClose={() => setMapModal({ open: false, segIdx: null, field: null })}
         onSave={(coords, address) => handleSaveCoords(coords, address, mapModal.segIdx, mapModal.field)}
       />
-      {/* React-Toastify container */}
-      < ToastContainer
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        style={{
-          position: "fixed",
-          top: "32%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          zIndex: 100,
-        }
-        }
-
-      />
-
     </>
   );
 };
