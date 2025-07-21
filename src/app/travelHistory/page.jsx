@@ -264,6 +264,7 @@ const TravelHistory = () => {
     });
 
     return filledPassengers;
+    
   };
   const copyPassengerData = (bookingId, targetLegIndex, targetPassengerIndex, sourcePassenger) => {
   const fieldsToUpdate = [
