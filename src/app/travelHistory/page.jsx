@@ -83,6 +83,24 @@ const TravelHistory = () => {
     if (!dateString) return "";
     return new Date(dateString).toLocaleString();
   };
+  const calculateActualAge = (dob) => {
+    if (!dob) return "";
+    const birthDate = new Date(dob);
+    const now = new Date();
+    let years = now.getFullYear() - birthDate.getFullYear();
+    let months = now.getMonth() - birthDate.getMonth();
+    let days = now.getDate() - birthDate.getDate();
+
+    if (days < 0) {
+      months -= 1;
+      days += new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+    }
+    if (months < 0) {
+      years -= 1;
+      months += 12;
+    }
+    return `${years} years, ${months} months, ${days} days`;
+  };
 
   const initializePassengerForm = (booking) => {
     const user = JSON.parse(sessionStorage.getItem("loginData"));
@@ -106,9 +124,14 @@ const TravelHistory = () => {
         departure_datetime: segment.departureDate ? new Date(segment.departureDate).toISOString() : null,
         arrival_datetime: null, // You might need to calculate this
         passengers: Array.from({ length: segment.passengers }, () => ({
+          title: "",
           full_name: "",
           gender: "",
           date_of_birth: "",
+          actual_age: "",
+          visa_issued_by: "",
+          visa_waiver_vvip: "",
+          diplomatic: "",
           nationality: "",
           contact_number: "",
           email: "",
@@ -160,7 +183,15 @@ const TravelHistory = () => {
             ? {
               ...leg,
               passengers: leg.passengers.map((passenger, pIndex) =>
-                pIndex === passengerIndex ? { ...passenger, [field]: value } : passenger
+                pIndex === passengerIndex
+                  ? {
+                    ...passenger,
+                    [field]: value,
+                    ...(field === "date_of_birth" && {
+                      actual_age: calculateActualAge(value)
+                    })
+                  }
+                  : passenger
               )
             }
             : leg
@@ -235,12 +266,11 @@ const TravelHistory = () => {
     return filledPassengers;
   };
   const copyPassengerData = (bookingId, targetLegIndex, targetPassengerIndex, sourcePassenger) => {
-    const fieldsToUpdate = [
-      'full_name', 'gender', 'date_of_birth', 'nationality', 'contact_number',
-      'email', 'document_type', 'document_number', 'document_expiry',
-      'visa_number', 'visa_expiry', 'meal_preference', 'seat_preference',
-      'special_assistance'
-    ];
+  const fieldsToUpdate = [
+  'title', 'full_name', 'gender', 'date_of_birth', 'actual_age', 'nationality', 'contact_number',
+  'email', 'document_type', 'document_number', 'document_expiry', 'visa_issued_by', 'visa_waiver_vvip', 'diplomatic', 'visa_number', 'visa_expiry', 'meal_preference', 'seat_preference',
+  'special_assistance'
+];
 
     fieldsToUpdate.forEach(field => {
       updatePassengerField(bookingId, targetLegIndex, targetPassengerIndex, field, sourcePassenger[field]);
@@ -455,6 +485,21 @@ const TravelHistory = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 ">
                       <div className="relative">
                         <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
+                          title
+                        </label>
+                        <select
+                          value={passenger.title}
+                          onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'title', e.target.value)}
+                          className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                        >
+                          <option value="">Select Title</option>
+                          {TITLES.map(title => (
+                            <option key={title} value={title}>{title}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="relative">
+                        <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
                           full_name
                         </label>
                         <input
@@ -541,6 +586,18 @@ const TravelHistory = () => {
                           className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
                         />
                       </div>
+                      {/* Actual Age */}
+                      <div className="relative">
+                        <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
+                          Actual Age
+                        </label>
+                        <input
+                          type="text"
+                          value={calculateActualAge(passenger.date_of_birth)}
+                          readOnly
+                          className="p-2 border border-gray-300 rounded-md bg-gray-100 w-full"
+                        />
+                      </div>
 
                       <div className="relative">
                         <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
@@ -582,6 +639,51 @@ const TravelHistory = () => {
                           onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'email', e.target.value)}
                           className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
                         />
+                      </div>
+                      {/* Visa Issued By */}
+                      <div className="relative">
+                        <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
+                          visa_issued_by
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Visa Issued By"
+                          value={passenger.visa_issued_by}
+                          onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'visa_issued_by', e.target.value)}
+                          className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                        />
+                      </div>
+
+                      {/* Visa Waiver (VVIP) */}
+                      <div className="relative">
+                        <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
+                          visa_waiver_vvip
+                        </label>
+                        <select
+                          value={passenger.visa_waiver_vvip}
+                          onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'visa_waiver_vvip', e.target.value)}
+                          className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                        >
+                          <option value="">Select</option>
+                          <option value="Yes">Yes</option>
+                          <option value="No">No</option>
+                        </select>
+                      </div>
+
+                      {/* Diplomatic */}
+                      <div className="relative">
+                        <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
+                          diplomatic
+                        </label>
+                        <select
+                          value={passenger.diplomatic}
+                          onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'diplomatic', e.target.value)}
+                          className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                        >
+                          <option value="">Select</option>
+                          <option value="Yes">Yes</option>
+                          <option value="No">No</option>
+                        </select>
                       </div>
 
                       <div className="relative">
