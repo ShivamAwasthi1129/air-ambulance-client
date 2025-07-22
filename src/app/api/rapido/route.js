@@ -152,11 +152,21 @@ export async function GET(req) {
       };
     });
 
-    return NextResponse.json({
-      message: "Available fleets retrieved successfully.",
-      finalFleet,
-      addOnService,
-    });
+    return NextResponse.json(
+      {
+        message: "Available fleets retrieved successfully.",
+        finalFleet,
+        addOnService,
+      },
+      {
+        status: 200,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "*",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        },
+      }
+    );
   } catch (error) {
     console.error("Error retrieving fleets:", error);
     return NextResponse.json(

@@ -10,36 +10,10 @@ import PaymentModal from "../components/PaymentModal";
 import NavBar from "../components/Navbar";
 import BankingPartnersModal from "../components/BankingPartnerModal";
 import SelectedFleetCard from "../components/SelectedFleetCard";
-
-// Remove parentheses from airport name
-function cleanAirportName(str) {
-  return str.replace(/\s*\(.*?\)\s*/, "").trim();
-}
 // Helper: format to US dollars, e.g. `$ 650,000`
 function formatUSD(amount) {
   return `$ ${amount.toLocaleString("en-US")}`;
 }
-
-/**
- * Unified helper – handles both string airport names and {lat,lng} objects
- */
-function toRapidoParam(place) {
-  if (typeof place === "string") {
-    // remove text inside (…) and extra spaces
-    const cleaned = place.replace(/\s*\(.*?\)\s*/, "").trim();
-    return encodeURIComponent(cleaned);
-  }
-  // lat/lng object
-  return encodeURIComponent(JSON.stringify(place));
-}
-
-/**
- * Build every Rapido request (and its label) for ONE segment.
- * • Airport → Airport  → keep user-chosen flightTypes.
- * • Any route touching coords → force flightType=Helicopter.
- * • Coordinate part of label =  "lat,lng-(address)"  if address exists,
- *   otherwise just "lat,lng".
- */
 function buildRapidoUrls(seg) {
   /* helpers */
   const stripCode = (s) => s.replace(/\s*\(.*?\)\s*/, "").trim();
@@ -132,23 +106,19 @@ function buildRapidoUrls(seg) {
 
   return list;
 }
-
 const FinalEnquiryPage = () => {
   const [searchData, setSearchData] = useState(null);
   const [fetchedSegmentsData, setFetchedSegmentsData] = useState([]);
   const [userData, setUserData] = useState({});
   const [loading, setLoading] = useState(false);
-
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isWhatsAppSending, setIsWhatsAppSending] = useState(false);
   const [isEmailSending, setIsEmailSending] = useState(false);
-  const [open, setOpen] = useState(false); //for offline payment page modal
-
+  const [open, setOpen] = useState(false);
   useEffect(() => {
     const storedData = sessionStorage.getItem("searchData");
     if (storedData) {
       const parsedSearchData = JSON.parse(storedData);
-  
       // Iterate through each segment and update fields if fromLoc and toLoc are filled
       const updatedSegments = parsedSearchData.segments.map((segment) => {
         if (segment.fromLoc && segment.toLoc) {
@@ -610,27 +580,12 @@ const FinalEnquiryPage = () => {
           <div className="flex flex-col md:flex-row justify-center gap-2 p-4">
             {searchData.segments.map((segment, segmentIndex) => {
               const selectedFleet = segment.selectedFleet;
-              if (!selectedFleet) return null; // Skip if no fleet is selected
-
+              if (!selectedFleet) return null;
               return (
                 <div
                   key={segmentIndex}
-                // className="w-full bg-white flex flex-col items-start px-4 border border-blue-100 rounded-xl"
-
                 >
-                  {/* Display the label */}
-                  {/* <h3 className="text-lg font-bold flex items-center mt-4">
-                   {selectedFleet.label}
-                  </h3> * /}
-
-                  {/* Pass the label to the FleetCard */}
-                  {/* <FlightCard
-                    filteredData={[selectedFleet]}
-                    readOnly
-                    label={selectedFleet.label} 
-                  /> */}
                   <SelectedFleetCard
-                    // fleet={segment.selectedFleet}
                     tripNumber={`Trip ${segmentIndex + 1}`}
                     label={selectedFleet.label}
                   />
@@ -639,7 +594,6 @@ const FinalEnquiryPage = () => {
             })}
           </div>
         </div>
-
         {/* RIGHT COLUMN: JetSteals + Cost Details + Buttons */}
         <div className="xl: w-[28%] hidden md:block">
           <div className="bg-white border-2 border-dashed border-gray-400 rounded-lg p-4 shadow-sm">
@@ -699,19 +653,6 @@ const FinalEnquiryPage = () => {
                 <div className="text-xs font-normal">via Email</div>
               </button>
             </div>
-            {/* <button
-              onClick={() => setOpen(true)}
-              className="rounded-lg bg-sky-600 px-6 py-3 font-semibold text-black"
-            >
-              Show Banking Details
-            </button> */}
-            {/* Download PDF Button */}
-            {/* <button
-              className="border border-orange-400 text-orange-500 px-4 py-2 rounded-md hover:bg-orange-100 transition-colors w-full text-center"
-              onClick={generatePDF}
-            >
-              Download Proforma Invoice
-            </button> */}
             <div className="flex justify-between items-center space-x-4">
               <button
                 onClick={() => setOpen(true)}

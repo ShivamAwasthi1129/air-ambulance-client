@@ -6,7 +6,7 @@ export const POST = async (req) => {
     const data = await req.formData();
     const file = data.get("profile");
     const byteData = await file.arrayBuffer();
-    const Bucket = "aviation.hexerve";
+    const Bucket = "airambulance";
     const Body = Buffer.from(byteData);
     const lastDot = file.name.lastIndexOf(".");
     const file_name = file.name.slice(0,lastDot);
