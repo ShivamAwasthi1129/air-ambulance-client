@@ -9,11 +9,18 @@ import Link from "next/link";
 
 export const Bottom = () => {
   const [countries, setCountries] = useState([]);
-  const [selectedCountry, setSelectedCountry] = useState("Worldwide");
+  const [selectedCountry, setSelectedCountry] = useState(() => sessionStorage.getItem("country_name") || "Worldwide");
   const [footerLinks, setFooterLinks] = useState([]);
   const [footerImage, setFooterImage] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const selectRef = useRef(null);
+  useEffect(() => {
+  const updateCountry = () => {
+    setSelectedCountry(sessionStorage.getItem("country_name") || "Worldwide");
+  };
+  window.addEventListener("countryNameChanged", updateCountry);
+  return () => window.removeEventListener("countryNameChanged", updateCountry);
+}, []);
 
   // Fetch country list on mount
   useEffect(() => {

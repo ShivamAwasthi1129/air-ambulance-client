@@ -36,7 +36,12 @@ const NavBar = () => {
   useEffect(() => {
     fetch("https://admin.airambulanceaviation.co.in/api/contact?limit=255")
       .then((r) => r.json())
-      .then((json) => setCountries(json.data))
+      .then((json) => {
+        setCountries(json.data);
+        if (!sessionStorage.getItem("country_name")) {
+          sessionStorage.setItem("country_name", "worldwide");
+        }
+      })
       .catch(console.error);
   }, []);
   // fetch phoneNumbers whenever selection changes (and isn’t “worldwide”)
@@ -520,12 +525,14 @@ const NavBar = () => {
 
           {/* Contact and Dropdown Section */}
           <div className="flex items-center space-x-6">
-
-
             {/* Country Dropdown */}
             <select
               value={selectedCountry}
-              onChange={(e) => setSelectedCountry(e.target.value)}
+              onChange={(e) => {
+                setSelectedCountry(e.target.value);
+                sessionStorage.setItem("country_name", e.target.value); 
+                window.dispatchEvent(new Event("countryNameChanged"));
+              }}
               className="rounded-lg px-3 py-2 text-sm border-2 border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-blue-300 transition-all duration-300"
             >
               <option value="worldwide">Worldwide</option>
@@ -699,8 +706,8 @@ const NavBar = () => {
                     setOtpDigits(['', '', '', '', '', '']);
                   }}
                   className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-200 ${isOtpMode
-                      ? "bg-white text-blue-600 shadow-sm"
-                      : "text-gray-600 hover:text-gray-800"
+                    ? "bg-white text-blue-600 shadow-sm"
+                    : "text-gray-600 hover:text-gray-800"
                     }`}
                 >
                   OTP Login
@@ -711,8 +718,8 @@ const NavBar = () => {
                     setOtpSendStatus("idle");
                   }}
                   className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-200 ${!isOtpMode
-                      ? "bg-white text-blue-600 shadow-sm"
-                      : "text-gray-600 hover:text-gray-800"
+                    ? "bg-white text-blue-600 shadow-sm"
+                    : "text-gray-600 hover:text-gray-800"
                     }`}
                 >
                   Password Login
@@ -772,8 +779,8 @@ const NavBar = () => {
                     <button
                       onClick={handleSendOtp}
                       className={`w-full py-3 rounded-lg font-medium mb-4 flex items-center justify-center transition-all duration-200 ${otpSendStatus === "sending" || otpSendStatus === "sent"
-                          ? "bg-gray-400 cursor-not-allowed"
-                          : "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-md hover:shadow-lg"
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-md hover:shadow-lg"
                         }`}
                       disabled={otpSendStatus === "sending" || otpSendStatus === "sent"}
                     >

@@ -601,22 +601,23 @@ export default function FlightCard({
                     <div className="text-left flex flex-col justify-center items-center mt-6">
                       <p className="text-sky-400 font-bold text-xl">Approx Time</p>
                       <div className="flex items-center justify-center">
-                        <p className="text-2xl font-bold text-gray-800 mr-2">
-                          {depTime}
+                        <p className="text-2xl font-bold text-gray-800 ">
+                          {depTime} 
                         </p>
+                        <span className="text-xs pl-1">ETD</span>
                         <div className="text-center text-gray-500">
                           <p className="text-xl font-bold text-gray-800">
-                            - -{" "}
+                            --{" "}
                             <IoIosAirplane
                               size={28}
                               className="inline-block text-gray-700"
-                            />{" "}
-                            - -
+                            />--{" "}
+                            
                           </p>
                         </div>
-                        <p className="text-2xl font-bold text-gray-800 ml-2">
-                          {arrTime}
-                        </p>
+                        <p className="text-2xl font-bold text-gray-800 ">
+                          {arrTime}  
+                        </p><span className="text-xs pl-1">ETA</span>
                       </div>
                     </div>
                   </div>

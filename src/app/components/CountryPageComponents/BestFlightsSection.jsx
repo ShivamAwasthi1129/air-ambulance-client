@@ -1,5 +1,8 @@
 export default function BestFlightSection({ data }) {
   // Use cards from API data, fallback to static if not available
+  const countryName = typeof window !== "undefined"
+    ? sessionStorage.getItem("country_name") || "WorldWide"
+    : "WorldWide";
   const cards =
     data && Array.isArray(data) && data[0]?.cards && data[0].cards.length > 0
       ? data[0].cards
@@ -16,10 +19,10 @@ export default function BestFlightSection({ data }) {
   return (
     <section className="px-4 py-10 md:px-16 bg-white">
       <h2 className="text-2xl md:text-3xl font-bold text-blue-600 text-center">
-        Best Charter flights and Air Charter Service in Chennai
+        Best Charter flights and Air Charter Service in {countryName}
       </h2>
       <p className="text-gray-700 text-center mt-2 mb-8">
-        Charter flights aviation add on special services in Dubai
+        Charter flights aviation add on special services in {countryName}
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -753,11 +753,11 @@ const FilterAndFleetListing = ({ refreshKey }) => {
             <p className="font-semibold text-gray-700 mb-3">
               Max Speed Range:{" "}
               <span className="text-blue-600 font-bold">
-                {minMaxSpeed} knots
+                {minMaxSpeed} km
               </span>
               {" - "}
               <span className="text-blue-600 font-bold">
-                {maxSpeedRange} knots
+                {maxSpeedRange} km
               </span>
             </p>
             <input
