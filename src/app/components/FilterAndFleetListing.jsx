@@ -535,7 +535,8 @@ const FilterAndFleetListing = ({ refreshKey }) => {
             {/* ONE-WAY */}
             {!isMultiCity && (
               <div>
-                <h3 className="text-lg font-bold text-blue-600 mb-2">Oneway Trip</h3>
+                <div className="flex items-center"><h3 className="text-lg font-bold text-blue-600 mb-2">Oneway Trip</h3><span className="ml-2 font-bold">SR.No: 635865</span></div>
+              
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-gray-700 mb-2 flex items-center">
                     {searchData.segments[0]?.from} -----
