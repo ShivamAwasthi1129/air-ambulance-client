@@ -10,15 +10,7 @@ const Home = () => {
   const [apiData, setApiData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [countryName, setCountryName] = useState("WorldWide");
-  // if (window.performance && window.performance.getEntriesByType) {
-  //   const navEntries = window.performance.getEntriesByType("navigation");
-  //   if (navEntries.length > 0 && navEntries[0].type === "reload") {
-  //     sessionStorage.removeItem("country_name");
-  //   }
-  // }
-
   useEffect(() => {
-    // Set default country name on first load if not present
     if (!sessionStorage.getItem("country_name")) {
       sessionStorage.setItem("country_name", "WorldWide");
     }

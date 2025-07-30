@@ -27,6 +27,12 @@ const NavBar = () => {
   const dropdownRef = useRef(null);
   const [countries, setCountries] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState("worldwide");
+
+  // Set selectedCountry from sessionStorage on mount to sync dropdown with URL country
+  useEffect(() => {
+    const storedCountry = sessionStorage.getItem("country_name") || "worldwide";
+    setSelectedCountry(storedCountry);
+  }, []);
   const [countryPhones, setCountryPhones] = useState([]);
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -526,15 +532,19 @@ const NavBar = () => {
           {/* Contact and Dropdown Section */}
           <div className="flex items-center space-x-6">
             {/* Country Dropdown */}
-            <select
-              value={selectedCountry}
-              onChange={(e) => {
-                setSelectedCountry(e.target.value);
-                sessionStorage.setItem("country_name", e.target.value); 
-                window.dispatchEvent(new Event("countryNameChanged"));
-              }}
-              className="rounded-lg px-3 py-2 text-sm border-2 border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-blue-300 transition-all duration-300"
-            >
+<select
+  value={selectedCountry}
+  onChange={(e) => {
+    const country = e.target.value;
+    setSelectedCountry(country);
+    sessionStorage.setItem("country_name", country);
+    window.dispatchEvent(new Event("countryNameChanged"));
+    if (country !== "worldwide") {
+      window.open(`/${country.toLowerCase()}`, "_blank");
+    }
+  }}
+  className="rounded-lg px-3 py-2 text-sm border-2 border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-blue-300 transition-all duration-300"
+>
               <option value="worldwide">Worldwide</option>
               {countries.map((c) => (
                 <option key={c._id} value={c.country}>
