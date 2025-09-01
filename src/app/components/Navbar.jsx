@@ -633,7 +633,7 @@ const NavBar = () => {
               {[
                 { name: 'HOME', route: '/' },
                 { name: 'ABOUT', route: '/aboutUs' },
-                { name: 'AIRCRAFTS', route: '/' },
+                // { name: 'AIRCRAFTS', route: '/' },
                 { name: 'GET IN TOUCH', route: '/getInTouch' },
                 { name: 'TERMS & CONDITIONS', route: '/termsAndCondition' },
               ].map((item, index) => (

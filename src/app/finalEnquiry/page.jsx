@@ -5,9 +5,7 @@ import "jspdf-autotable";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Banner } from "../components/Banner";
-// import { Bottom } from "../components/Bottom";
 import PaymentModal from "../components/PaymentModal";
-// import NavBar from "../components/Navbar";
 import BankingPartnersModal from "../components/BankingPartnerModal";
 import SelectedFleetCard from "../components/SelectedFleetCard";
 // Helper: format to US dollars, e.g. `$ 650,000`
