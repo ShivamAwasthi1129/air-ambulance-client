@@ -66,7 +66,7 @@ const GetInTouch = () => {
       `;
 
       const payload = {
-        to: "shivam@hexerve.com",
+        to: `${formData.email}`,
         subject: `Request from Website - ${formData.name}`,
         html: emailBody
       };
@@ -102,9 +102,7 @@ const GetInTouch = () => {
           {toast.message}
         </div>
       )}
-
       {/* Get in Touch Section */}
-        
       <div className="container mx-auto px-4 py-12 lg:py-20">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
           {/* Left Side - Contact Info */}
@@ -114,7 +112,11 @@ const GetInTouch = () => {
                 Get in Touch
               </h1>
               <p className="text-gray-600 text-lg leading-relaxed">
-                Charter flights aviation having wide range of air services such as private jet,Busiess jet,Charter flights, Air charter, Air cargo,Air ambulance, helicopter and many more. These services you can avail at the best cost compare to any of the other companies. More over we have wide range of access across the world even we are good to land with out airstrips, We have well experienced team they can fulfill your needs and they can handle any emergency situations.
+                Charter flights aviation having wide range of air services such as private jet,Busiess jet,Charter flights, 
+                Air charter, Air cargo,Air ambulance, helicopter and many more. These services you can avail at the best cost
+                 compare to any of the other companies. More over we have wide range of access across the world even we are good 
+                 to land with out airstrips, We have well experienced team they can fulfill your needs and they can handle any emergency 
+                 situations.
               </p>
             </div>
 
