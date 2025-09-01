@@ -1414,9 +1414,9 @@ if (existingData) {
       }}
     >
       <div className="absolute inset-0 bg-black/40 z-10" />
-      <div className="absolute w-full top-0 left-0 z-40">
+      {/* <div className="absolute w-full top-0 left-0 z-40">
         <NavBar />
-      </div>
+      </div> */}
 
       <div className="relative z-30 min-h-screen overflow-auto pt-28 pb-8 px-4">
         <div className="max-w-4xl mx-auto">

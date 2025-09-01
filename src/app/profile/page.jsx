@@ -167,7 +167,7 @@ export default function ProfilePage() {
           zIndex: 20,
         }}
       >
-        <NavBar />
+        {/* <NavBar /> */}
       </div>
 
       {/* Main content */}
