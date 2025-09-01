@@ -83,10 +83,10 @@ function PaymentSuccessContent() {
           zIndex: 20,
         }}
       >
-        <NavBar />
+        {/* <NavBar /> */}
       </div>
       {/* Main Content Container */}
-      <div className="relative z-10 pt-28 pb-10 max-w-6xl mx-auto px-4 ">
+      <div className="relative z-10 pt-6 pb-10 max-w-6xl mx-auto px-4 ">
         {loading ? (
           // Show skeleton loader while fetching
           <div className="bg-white p-6 rounded-md shadow-xl">
@@ -99,7 +99,7 @@ function PaymentSuccessContent() {
           </div>
         ) : bookingData ? (
           // Show booking info if available
-          <div className="bg-white p-6 md:p-8 rounded-md shadow-xl mt-20">
+          <div className="bg-white p-6 md:p-8 rounded-md shadow-xl mt-12">
             {/* Header / Confirmation Row */}
             <div className="flex items-center space-x-4">
               <AiOutlineCheckCircle
@@ -318,7 +318,7 @@ function PaymentSuccessContent() {
           </div>
         ) : null /* No fallback UI if there's no error & no bookingData */}
       </div>
-      <Bottom />
+      {/* <Bottom /> */}
     </div>
   );
 }

@@ -43,7 +43,7 @@ const Home = () => {
   const heroData = apiData[0].hero;
   return (
     <div className="flex flex-col min-h-screen">
-      <NavBar />
+      {/* <NavBar /> */}
       {/* Dynamic Background Image */}
       <img
         src={heroData.image}
@@ -96,7 +96,7 @@ const Home = () => {
       </div>
       <CountryPage apiData={apiData} />
       <footer className="relative bottom-0 mt-24">
-        <Bottom />
+        {/* <Bottom /> */}
       </footer>
     </div>
   );

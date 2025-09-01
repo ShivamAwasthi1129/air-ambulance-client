@@ -504,11 +504,11 @@ const NavBar = () => {
     window.location.reload();
   };
   return (
-    <div className="z-20">
+    <div className="z-50 relative w-full top-0">
 
 
       {/* Rotating Message Stripe */}
-      <div className="bg-[#0883bb] text-white text-sm overflow-hidden whitespace-nowrap z-10">
+      <div className="bg-[#0883bb] text-white text-sm overflow-hidden whitespace-nowrap">
         <div className="hidden md:flex bg-customBlue py-1 overflow-hidden">
           <div className="animate-marquee">
             <p className="inline-block text-white text-sm md:text-base font-normal">
@@ -532,19 +532,19 @@ const NavBar = () => {
           {/* Contact and Dropdown Section */}
           <div className="flex items-center space-x-6">
             {/* Country Dropdown */}
-<select
-  value={selectedCountry}
-  onChange={(e) => {
-    const country = e.target.value;
-    setSelectedCountry(country);
-    sessionStorage.setItem("country_name", country);
-    window.dispatchEvent(new Event("countryNameChanged"));
-    if (country !== "worldwide") {
-      window.open(`/${country.toLowerCase()}`, "_blank");
-    }
-  }}
-  className="rounded-lg px-3 py-2 text-sm border-2 border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-blue-300 transition-all duration-300"
->
+            <select
+              value={selectedCountry}
+              onChange={(e) => {
+                const country = e.target.value;
+                setSelectedCountry(country);
+                sessionStorage.setItem("country_name", country);
+                window.dispatchEvent(new Event("countryNameChanged"));
+                if (country !== "worldwide") {
+                  window.open(`/${country.toLowerCase()}`, "_blank");
+                }
+              }}
+              className="rounded-lg px-3 py-2 text-sm border-2 border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-blue-300 transition-all duration-300"
+            >
               <option value="worldwide">Worldwide</option>
               {countries.map((c) => (
                 <option key={c._id} value={c.country}>
@@ -632,9 +632,9 @@ const NavBar = () => {
             <div className="flex justify-center items-center space-x-10">
               {[
                 { name: 'HOME', route: '/' },
-                { name: 'ABOUT', route: '/' },
+                { name: 'ABOUT', route: '/aboutUs' },
                 { name: 'AIRCRAFTS', route: '/' },
-                { name: 'GET IN TOUCH', route: '/' },
+                { name: 'GET IN TOUCH', route: '/getInTouch' },
                 { name: 'TERMS & CONDITIONS', route: '/termsAndCondition' },
               ].map((item, index) => (
                 <React.Fragment key={item.name}>
