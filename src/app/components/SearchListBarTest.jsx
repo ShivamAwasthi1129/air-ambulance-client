@@ -10,13 +10,16 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Icondiv } from "./Icondiv";
 import GoogleMapModal from "./GoogleMapModal";
-// import FaMapLocationDot from "@mui/icons-material/Map";
+import PhoneInput from "react-phone-number-input";
+import "react-phone-number-input/style.css";
 import { FaMapLocationDot } from "react-icons/fa6";
+import LoginModal from './LoginModal';
 export const SearchBar = () => {
   // === State ===
   const [tripType, setTripType] = useState("oneway");
   const [showMultiCityDetails, setShowMultiCityDetails] = useState(false);
   const [isMultiCityCollapsed, setIsMultiCityCollapsed] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [dateSelected, setDateSelected] = useState(false);
   const [mapModal, setMapModal] = useState({ open: false, segIdx: null, field: null, });
   const segmentHasHeli = (seg) =>
@@ -55,7 +58,7 @@ export const SearchBar = () => {
   // Personal info fields
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [countryCode, setCountryCode] = useState("+91");
+  // const [countryCode, setCountryCode] = useState("+91");
   const [email, setEmail] = useState("");
   const [agreedToPolicy, setAgreedToPolicy] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
@@ -166,11 +169,12 @@ export const SearchBar = () => {
         return;
       }
       try {
-        const response = await fetch(`/api/basesearch?query=${searchQuery}`);
+        const response = await fetch(`https://ow91reoh80.execute-api.ap-south-1.amazonaws.com/air/station?query=${searchQuery}`);
         const data = await response.json();
-        setAirports(data);
+        setAirports(data.airports || []);
       } catch (error) {
         console.error("Error fetching airport data:", error);
+        setAirports([]);
       }
     }
     fetchAirports();
@@ -375,9 +379,7 @@ export const SearchBar = () => {
         setIsLoading(false);
         return;
       }
-
-      // Append country code to phone
-      const fullPhoneNumber = `${countryCode}${currentPhone}`;
+      const fullPhoneNumber = `${currentPhone}`;
 
       // Merge user info
       const mergedUserInfo = {
@@ -421,6 +423,7 @@ export const SearchBar = () => {
               " Check your email for credentials"
             );
             setIsLoading(false);
+            setIsLoginModalOpen(true);
             return;
           }
           // Show OTP modal
@@ -975,7 +978,7 @@ export const SearchBar = () => {
                 </div>
 
                 {/* Phone Number + Country Code */}
-                <div className="flex-1 min-w-[160px] relative">
+                {/* <div className="flex-1 min-w-[160px] relative">
                   <select
                     value={countryCode}
                     onChange={(e) => setCountryCode(e.target.value)}
@@ -994,6 +997,16 @@ export const SearchBar = () => {
                     placeholder="Phone Number*"
                     className="block w-full p-2 border rounded focus:outline-none
                                pl-20 bg-pink-50/50"
+                  />
+                </div> */}
+
+                <div className="flex-1 min-w-[160px]">
+                  <PhoneInput
+                    value={phone}
+                    onChange={setPhone}
+                    placeholder="Phone Number*"
+                    className="block w-full p-2 border rounded focus:outline-none bg-pink-50/50"
+                    defaultCountry="IN"
                   />
                 </div>
 
@@ -1058,6 +1071,17 @@ export const SearchBar = () => {
         </div>
         {/* (6) Conditionally render the flight listing (if verified) */}
         {!isLoading && isVerified && <FilterAndFleetListing key={refreshKey} />}
+        <LoginModal
+          isOpen={isLoginModalOpen}
+          onClose={() => setIsLoginModalOpen(false)}
+          onLoginSuccess={() => {
+            setIsLoginModalOpen(false);
+            setIsVerified(true);
+            setRefreshKey(prev => prev + 1);
+            window.dispatchEvent(new Event("updateNavbar"));
+          }}
+          initialEmail={email}
+        />
       </div >
       < GoogleMapModal
         open={mapModal.open}

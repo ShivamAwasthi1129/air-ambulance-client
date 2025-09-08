@@ -107,95 +107,95 @@ const TravelHistory = () => {
     const user = JSON.parse(sessionStorage.getItem("loginData"));
     const existingData = passengerData[booking._id];
 
-if (existingData) {
-  // Normalize document_types to arrays in existingData journey_legs passengers
-  const normalizedJourneyLegs = (existingData.journey_legs || []).map(leg => ({
-    ...leg,
-    passengers: (leg.passengers || []).map(passenger => ({
-      ...passenger,
-      document_types: Array.isArray(passenger.document_types) ? passenger.document_types : []
-    }))
-  }));
+    if (existingData) {
+      // Normalize document_types to arrays in existingData journey_legs passengers
+      const normalizedJourneyLegs = (existingData.journey_legs || []).map(leg => ({
+        ...leg,
+        passengers: (leg.passengers || []).map(passenger => ({
+          ...passenger,
+          document_types: Array.isArray(passenger.document_types) ? passenger.document_types : []
+        }))
+      }));
 
-  setPassengerFormData(prev => ({
-    ...prev,
-    [booking._id]: {
-      user_email: user.email,
-      booking_for: existingData.booking_for || "self",
-      journey_legs: normalizedJourneyLegs,
-      notes: existingData.notes || ""
-    }
-  }));
-} else {
-  // Initialize with booking segments
-  const journeyLegs = booking.segments.map(segment => ({
-    from: segment.from === "custom" ? segment.fromAddress : segment.fromCity,
-    to: segment.to === "custom" ? segment.toAddress : segment.toCity,
-    departure_datetime: segment.departureDate ? new Date(segment.departureDate).toISOString() : null,
-    arrival_datetime: null, // You might need to calculate this
-    passengers: Array.from({ length: segment.passengers }, () => ({
-      title: "",
-      designation: "",
-      full_name: "",
-      gender: "",
-      date_of_birth: "",
-      actual_age: "",
-      nationality: "",
-      contact_number: "",
-      email: "",
-      residential_address: {
-        address: "",
-        city: "",
-        country: ""
-      },
-      document_types: [], // Array to store multiple document types
-      passport_details: {
-        passport_number: "",
-        passport_expiry: "",
-        visa_required: false,
-        visa_number: "",
-        visa_expiry: "",
-        on_arrival: "",
-        visa_country_name: ""
-      },
-      driving_license_details: {
-        license_number: "",
-        expiry_date: ""
-      },
-      resident_card_details: {
-        card_number: "",
-        expiry_date: ""
-      },
-      special_document: false,
-      special_document_details: {
-        document_name: "",
-        document_number: "",
-        document_expiry: ""
-      },
-      visa_waiver_program: false,
-      visa_waiver_details: {
-        document_name: "",
-        document_number: "",
-        expiry_date: ""
-      },
-      meal_preferences: [], // Array for multiple selections
-      seat_preference: "",
-      special_assistance: "None",
-      is_lead_passenger: false
-    })),
-    pets: []
-  }));
+      setPassengerFormData(prev => ({
+        ...prev,
+        [booking._id]: {
+          user_email: user.email,
+          booking_for: existingData.booking_for || "self",
+          journey_legs: normalizedJourneyLegs,
+          notes: existingData.notes || ""
+        }
+      }));
+    } else {
+      // Initialize with booking segments
+      const journeyLegs = booking.segments.map(segment => ({
+        from: segment.from === "custom" ? segment.fromAddress : segment.fromCity,
+        to: segment.to === "custom" ? segment.toAddress : segment.toCity,
+        departure_datetime: segment.departureDate ? new Date(segment.departureDate).toISOString() : null,
+        arrival_datetime: null, // You might need to calculate this
+        passengers: Array.from({ length: segment.passengers }, () => ({
+          title: "",
+          designation: "",
+          full_name: "",
+          gender: "",
+          date_of_birth: "",
+          actual_age: "",
+          nationality: "",
+          contact_number: "",
+          email: "",
+          residential_address: {
+            address: "",
+            city: "",
+            country: ""
+          },
+          document_types: [], // Array to store multiple document types
+          passport_details: {
+            passport_number: "",
+            passport_expiry: "",
+            visa_required: false,
+            visa_number: "",
+            visa_expiry: "",
+            on_arrival: "",
+            visa_country_name: ""
+          },
+          driving_license_details: {
+            license_number: "",
+            expiry_date: ""
+          },
+          resident_card_details: {
+            card_number: "",
+            expiry_date: ""
+          },
+          special_document: false,
+          special_document_details: {
+            document_name: "",
+            document_number: "",
+            document_expiry: ""
+          },
+          visa_waiver_program: false,
+          visa_waiver_details: {
+            document_name: "",
+            document_number: "",
+            expiry_date: ""
+          },
+          meal_preferences: [], // Array for multiple selections
+          seat_preference: "",
+          special_assistance: "None",
+          is_lead_passenger: false
+        })),
+        pets: []
+      }));
 
-  setPassengerFormData(prev => ({
-    ...prev,
-    [booking._id]: {
-      user_email: user.email,
-      booking_for: "self",
-      journey_legs: journeyLegs,
-      notes: ""
+      setPassengerFormData(prev => ({
+        ...prev,
+        [booking._id]: {
+          user_email: user.email,
+          booking_for: "self",
+          journey_legs: journeyLegs,
+          notes: ""
+        }
+      }));
     }
-  }));
-}
   };
 
   const togglePassengerForm = (booking) => {
@@ -623,21 +623,32 @@ if (existingData) {
                             </select>
                           </div>
 
-                          {/* Designation field (NEW) */}
+                          {/* Designation field (select or custom input) */}
                           <div className="relative">
                             <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 font-medium">
                               Designation
                             </label>
                             <select
-                              value={passenger.designation}
+                              value={DESIGNATIONS.includes(passenger.designation) ? passenger.designation : ""}
                               onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'designation', e.target.value)}
-                              className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                              className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full mb-2"
                             >
                               <option value="">Select Designation</option>
                               {DESIGNATIONS.map(designation => (
                                 <option key={designation} value={designation}>{designation}</option>
                               ))}
+                              <option value="custom">Other (Type below)</option>
                             </select>
+                            {/* Show input if custom or "Other" selected */}
+                            {(passenger.designation === "custom" || !DESIGNATIONS.includes(passenger.designation)) && (
+                              <input
+                                type="text"
+                                placeholder="Enter custom designation"
+                                value={!DESIGNATIONS.includes(passenger.designation) ? passenger.designation : ""}
+                                onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'designation', e.target.value)}
+                                className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full mt-1"
+                              />
+                            )}
                           </div>
 
                           {/* Full name field */}
