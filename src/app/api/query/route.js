@@ -120,7 +120,7 @@ export const POST = async (req) => {
 
     await sendMail("hexerve@gmail.com", `New Flight Inquiry - ${name}`, html);
 
-    return NextResponse.json({ message: "User query submitted successfully" });
+    return NextResponse.json({ message: "User query submitted successfully", id: _id });
   } catch (error) {
     console.error("Error creating record:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
