@@ -8,8 +8,16 @@ import { BsExclamationTriangle } from "react-icons/bs";
 const FilterAndFleetListing = ({ refreshKey }) => {
   const [searchData, setSearchData] = useState(null);
   const [segmentStates, setSegmentStates] = useState([]);
+  const [queryId, setQueryId] = useState("N/A");
   const [currentTripIndex, setCurrentTripIndex] = useState(0);
   const [selectedFleets, setSelectedFleets] = useState([]);
+
+  useEffect(() => {
+    const storedQueryId = sessionStorage.getItem("queryId");
+    if (storedQueryId) {
+      setQueryId(storedQueryId);
+    }
+  }, [refreshKey]); // Will run when refreshKey changes (i.e., when search is clicked)
   useEffect(() => {
     try {
       const sessionData = JSON.parse(sessionStorage.getItem("searchData"));
@@ -535,8 +543,8 @@ const FilterAndFleetListing = ({ refreshKey }) => {
             {/* ONE-WAY */}
             {!isMultiCity && (
               <div>
-                <div className="flex items-center"><h3 className="text-lg font-bold text-blue-600 mb-2">Oneway Trip</h3><span className="ml-2 font-bold">SR.No: 635865</span></div>
-              
+                <div className="flex items-center"><h3 className="text-lg font-bold text-blue-600 mb-2">Oneway Trip</h3><span className="ml-2 font-bold">SR.No: {queryId}</span></div>
+
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-gray-700 mb-2 flex items-center">
                     {searchData.segments[0]?.from} -----
@@ -585,6 +593,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
               <div>
                 <h3 className="text-lg font-bold text-blue-600 mb-2">
                   Multicity Trip - Step {currentTripIndex + 1} of {tripCount}
+                  <span className="ml-2 font-bold">SR.No: {queryId}</span>
                 </h3>
                 <p className="text-sm text-gray-700 mb-2 flex items-center">
                   {searchData.segments[currentTripIndex]?.from} -----

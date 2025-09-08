@@ -20,6 +20,7 @@ export const SearchBar = () => {
   const [showMultiCityDetails, setShowMultiCityDetails] = useState(false);
   const [isMultiCityCollapsed, setIsMultiCityCollapsed] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
   const [dateSelected, setDateSelected] = useState(false);
   const [mapModal, setMapModal] = useState({ open: false, segIdx: null, field: null, });
   const segmentHasHeli = (seg) =>
@@ -446,16 +447,23 @@ export const SearchBar = () => {
       setUserInfo(mergedUserInfo);
       setRefreshKey((prev) => prev + 1);
 
-      // Optionally POST to /api/query for flight listing
+      // POST to /api/query for flight listing
       const finalDataFromSession = sessionStorage.getItem("searchData");
       console.log("final payload : ", finalDataFromSession);
       if (finalDataFromSession) {
         const finalDataToSend = JSON.parse(finalDataFromSession);
-        await fetch("/api/query", {
+        const queryResponse = await fetch("/api/query", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(finalDataToSend),
         });
+
+        if (queryResponse.ok) {
+          const queryData = await queryResponse.json();
+          if (queryData.id) {
+            sessionStorage.setItem("queryId", queryData.id);
+          }
+        }
       }
 
       // If multi-city, collapse after searching
