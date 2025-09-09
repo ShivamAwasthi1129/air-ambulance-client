@@ -5,6 +5,7 @@ import { SearchBar } from "./components/SearchListBarTest";
 import { Bottom } from "./components/Bottom";
 import { useTypewriter, Cursor } from "react-simple-typewriter";
 import CountryPage from "./components/CountryPage";
+import SkeletonLoader from "./components/SkeletalLoader";
 
 const Home = () => {
   const [apiData, setApiData] = useState(null);
@@ -38,7 +39,7 @@ const Home = () => {
       })
       .catch(() => setLoading(false));
   }, [countryName]);
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div><SkeletonLoader /></div>;
   if (!apiData || !apiData[0]) return <div>Failed to load data.</div>;
   const heroData = apiData[0].hero;
   return (
