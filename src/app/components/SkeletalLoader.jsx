@@ -121,7 +121,6 @@ const SkeletonLoader = () => {
           </div>
         </div>
       </div>
-
       {/* Decorative elements */}
       <div className="absolute top-20 right-10 opacity-20 animate-pulse hidden lg:block">
         <div className="w-32 h-20 bg-white rounded-lg"></div>

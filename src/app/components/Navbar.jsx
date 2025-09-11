@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { FaEye, FaEyeSlash, FaSpinner, FaCheckCircle, FaWhatsapp, FaPhoneAlt } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaSpinner, FaCheckCircle, FaWhatsapp, FaPhoneAlt, FaBars, FaTimes } from "react-icons/fa";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import LoginModal from "./LoginModal";
@@ -38,6 +38,7 @@ const NavBar = () => {
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
   const [isVerifying, setIsVerifying] = useState(false);
   const [userExists, setUserExists] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // fetch full list on mount
   useEffect(() => {
@@ -520,7 +521,7 @@ const NavBar = () => {
       </div>
       {/* Main Navigation */}
       <nav className=" bg-gradient-to-r from-[#f0f4f8] via-[#e6f2ff] to-[#fff0e6] shadow-lg z-20 ">
-        <div className="container mx-auto p-2 flex items-center justify-around">
+        <div className="container mx-auto p-2 flex items-center justify-between sm:w-[80%] lgw-full">
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <img
@@ -531,7 +532,7 @@ const NavBar = () => {
           </Link>
 
           {/* Contact and Dropdown Section */}
-          <div className="flex items-center space-x-6">
+          <div className="hidden md:flex items-center space-x-6">
             {/* Country Dropdown */}
             <select
               value={selectedCountry}
@@ -580,7 +581,7 @@ const NavBar = () => {
 
           </div>
           {/* User Login/Profile Dropdown */}
-          <div className="relative" ref={dropdownRef}>
+          <div className="relative hidden md:block" ref={dropdownRef}>
             {user ? (
               <>
                 <div
@@ -626,9 +627,17 @@ const NavBar = () => {
               </button>
             )}
           </div>
+          {/* Mobile hamburger */}
+          <button
+            aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+            className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-800 hover:text-blue-600 hover:bg-white/60 focus:outline-none"
+            onClick={() => setIsMobileMenuOpen((o) => !o)}
+          >
+            {isMobileMenuOpen ? <FaTimes size={22} /> : <FaBars size={22} />}
+          </button>
         </div>
         {/* Navigation Links */}
-        <div className="border-t-4 border-[#0883bb] bg-gradient-to-r from-[#f0f8ff] via-[#e6f2ff] to-[#f0f0f0] text-gray-800 py-3 shadow-md">
+        <div className="hidden md:block border-t-4 border-[#0883bb] bg-gradient-to-r from-[#f0f8ff] via-[#e6f2ff] to-[#f0f0f0] text-gray-800 py-3 shadow-md">
           <div className="container mx-auto px-4">
             <div className="flex justify-center items-center space-x-10">
               {[
@@ -675,6 +684,114 @@ const NavBar = () => {
           </div>
         </div>
       </nav>
+
+      {/* Mobile slide-out menu */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          <div className="absolute right-0 top-0 h-full w-80 max-w-[85%] bg-white shadow-2xl p-5 overflow-y-auto">
+            {/* User Section */}
+            <div className="mb-6">
+              {user ? (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-200 to-blue-400 rounded-full flex items-center justify-center shadow-md">
+                      <span className="text-white font-bold text-lg">{user.email?.charAt(0).toUpperCase()}</span>
+                    </div>
+                    <span className="text-gray-800 font-semibold text-base">{user.email}</span>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="text-sm font-medium text-red-600"
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    setIsLoginModalOpen(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full px-4 py-2 rounded-xl text-white font-bold bg-gradient-to-r from-blue-500 to-purple-600"
+                >
+                  Login
+                </button>
+              )}
+            </div>
+
+            {/* Country selector */}
+            <div className="mb-5">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+              <select
+                value={selectedCountry}
+                onChange={(e) => {
+                  const country = e.target.value;
+                  setSelectedCountry(country);
+                  sessionStorage.setItem("country_name", country);
+                  window.dispatchEvent(new Event("countryNameChanged"));
+                  if (country !== "worldwide") {
+                    window.open(`/${country.toLowerCase()}`, "_blank");
+                  }
+                }}
+                className="w-full rounded-lg px-3 py-2 text-sm border-2 border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+              >
+                <option value="worldwide">Worldwide</option>
+                {countries.map((c) => (
+                  <option key={c._id} value={c.country}>
+                    {c.country
+                      .split("-")
+                      .map((w) => w[0].toUpperCase() + w.slice(1))
+                      .join(" ")}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Contact numbers */}
+            <div className="mb-6 space-y-3">
+              {countryPhones.map((num, idx) => (
+                <a
+                  key={`${num}-${idx}`}
+                  href={idx === 0 ? `tel:${num}` : `https://wa.me/${num.replace(/^\+/, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center text-gray-800"
+                >
+                  {idx === 0 ? (
+                    <FaPhoneAlt className="mr-3 text-gray-600" />
+                  ) : (
+                    <FaWhatsapp className="mr-3 text-green-600" />
+                  )}
+                  <span className="font-medium">{num}</span>
+                </a>
+              ))}
+            </div>
+
+            {/* Nav links */}
+            <div className="space-y-2">
+              {[
+                { name: 'HOME', route: '/' },
+                { name: 'ABOUT', route: '/aboutUs' },
+                { name: 'GET IN TOUCH', route: '/getInTouch' },
+                { name: 'TERMS & CONDITIONS', route: '/termsAndCondition' },
+              ].map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.route}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block w-full px-3 py-3 rounded-lg text-gray-800 font-semibold hover:bg-gray-100"
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Login Modal */}
       <LoginModal
