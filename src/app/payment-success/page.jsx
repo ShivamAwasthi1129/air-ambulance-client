@@ -72,6 +72,25 @@ function PaymentSuccessContent() {
     return new Date(dateStr).toDateString();
   };
 
+  // Currency formatters (scoped to this page only)
+  const formatUSD = (value) => {
+    const num = Number(value);
+    if (!isFinite(num)) return "0";
+    return new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(num);
+  };
+
+  const formatINR = (value) => {
+    const num = Number(value);
+    if (!isFinite(num)) return "0";
+    return new Intl.NumberFormat("en-IN", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(num);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-r from-green-400 to-blue-500 relative">
       {/* Background + Navbar */}
@@ -219,13 +238,14 @@ function PaymentSuccessContent() {
                   <div className="flex justify-between py-1 text-sm border-b border-gray-200">
                     <span>Amount Paid</span>
                     <span>
-                      {bookingData.currency} {bookingData.amount_paid}
+                      {/* {bookingData.currency} {bookingData.amount_paid} */}
+                      USD {formatUSD(bookingData.amount_paid)}
                     </span>
                   </div>
                   <div className="flex justify-between py-1 text-sm border-b border-gray-200">
                     <span>Total Amount</span>
                     <span>
-                      {bookingData.currency} {Math.trunc(bookingData.total_amount)}
+                      INR {formatINR(Math.trunc(bookingData.total_amount))}
                     </span>
                   </div>
                   <div className="flex justify-between py-1 text-sm">
