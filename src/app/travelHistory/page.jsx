@@ -14,7 +14,7 @@ import {
 const TITLES = ["Mr.", "Miss", "Ms.", "Mrs.", "Mx.", "Master", "Baby", "Child", "Senior Citizen"];
 const DESIGNATIONS = ["Dr.", "Prof.", "Minister", "MLA", "President", "VIP", "None"];
 const MEAL_PREFERENCES = ["Veg", "Non-Veg", "Vegan", "Hindu", "Kosher", "Muslim", "Jain", "Diabetic", "None"];
-const DOCUMENT_TYPES = ["Passport", "Driving License", "Resident Card"];
+const DOCUMENT_TYPES = ["Passport", "Driving License", "Resident Card", "Other Documents"];
 const COUNTRIES = ["India", "USA", "UK", "Canada", "Australia", "Germany", "France", "UAE", "Singapore", "Other"];
 const GENDERS = ["Male", "Female", "Other"];
 const NATIONALITIES = ["Indian", "American", "British", "Canadian", "Australian", "German", "French", "Other"];
@@ -165,6 +165,12 @@ const TravelHistory = () => {
           resident_card_details: {
             card_number: "",
             expiry_date: ""
+          },
+          other_document_details: {
+            document_name: "",
+            document_number: "",
+            date_of_issue: "",
+            validity_date: ""
           },
           special_document: false,
           special_document_details: {
@@ -1109,6 +1115,60 @@ const TravelHistory = () => {
                             </div>
                           </div>
                         )}
+
+                        {passenger.document_types?.includes('Other Documents') && (
+                          <div className="bg-yellow-50 p-4 rounded-lg mb-4">
+                            <h6 className="font-medium text-yellow-800 mb-3 block">Other Document Details</h6>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div className="relative">
+                                <label className="absolute -top-2 left-3 bg-yellow-50 px-1 text-xs text-gray-500 font-medium">
+                                  Name of Document
+                                </label>
+                                <input
+                                  type="text"
+                                  placeholder="Name of Document"
+                                  value={passenger.other_document_details?.document_name || ''}
+                                  onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'other_document_details', 'document_name', e.target.value)}
+                                  className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 w-full"
+                                />
+                              </div>
+                              <div className="relative">
+                                <label className="absolute -top-2 left-3 bg-yellow-50 px-1 text-xs text-gray-500 font-medium">
+                                  Document Number
+                                </label>
+                                <input
+                                  type="text"
+                                  placeholder="Document Number"
+                                  value={passenger.other_document_details?.document_number || ''}
+                                  onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'other_document_details', 'document_number', e.target.value)}
+                                  className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 w-full"
+                                />
+                              </div>
+                              <div className="relative">
+                                <label className="absolute -top-2 left-3 bg-yellow-50 px-1 text-xs text-gray-500 font-medium">
+                                  Date of Issue
+                                </label>
+                                <input
+                                  type="date"
+                                  value={passenger.other_document_details?.date_of_issue || ''}
+                                  onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'other_document_details', 'date_of_issue', e.target.value)}
+                                  className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 w-full"
+                                />
+                              </div>
+                              <div className="relative">
+                                <label className="absolute -top-2 left-3 bg-yellow-50 px-1 text-xs text-gray-500 font-medium">
+                                  Validity Date
+                                </label>
+                                <input
+                                  type="date"
+                                  value={passenger.other_document_details?.validity_date || ''}
+                                  onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'other_document_details', 'validity_date', e.target.value)}
+                                  className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 w-full"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Contact Information Section */}
@@ -1455,7 +1515,8 @@ const TravelHistory = () => {
                     <div className="flex flex-col items-end gap-2">
                       <div className="text-right">
                         <p className="text-sm font-semibold text-gray-700">
-                          Amount Paid ({booking.currency})
+                          {/* Amount Paid ({booking.currency}) */}
+                          Amount Paid (USD)
                         </p>
                         <p className="text-2xl text-blue-600 font-bold">
                           {booking.amount_paid}
@@ -1516,7 +1577,7 @@ const TravelHistory = () => {
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <p className="text-sm text-gray-600">Booking ID</p>
-                            <p className="font-medium text-gray-800 text-xs">
+                            <p className="font-medium text-gray-800 text-sm">
                               {booking._id}
                             </p>
                           </div>

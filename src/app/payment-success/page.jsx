@@ -326,14 +326,14 @@ function PaymentSuccessContent() {
                 For any changes to your itinerary, please get in touch with our
                 support team.
               </p>
-              <div className="mt-4 flex justify-center space-x-4">
+              {/* <div className="mt-4 flex justify-center space-x-4">
                 <button className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded-full transition">
                   Download Invoice
                 </button>
                 <button className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded-full transition">
                   Share Itinerary
                 </button>
-              </div>
+              </div> */}
             </div>
           </div>
         ) : null /* No fallback UI if there's no error & no bookingData */}
