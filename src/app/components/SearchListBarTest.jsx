@@ -22,6 +22,7 @@ export const SearchBar = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const [dateSelected, setDateSelected] = useState(false);
+  const [multiCityDateSelected, setMultiCityDateSelected] = useState({});
   const [mapModal, setMapModal] = useState({ open: false, segIdx: null, field: null, });
   const segmentHasHeli = (seg) =>
     (seg.flightTypes || []).some((t) => t.toLowerCase() === "helicopter");
@@ -904,10 +905,17 @@ export const SearchBar = () => {
                             <input
                               type="datetime-local"
                               value={`${segment.departureDate}T${segment.departureTime || "08:00"}`}
+                              onFocus={() => setMultiCityDateSelected(prev => ({ ...prev, [index]: false }))}
                               onChange={(e) => {
                                 const [date, time] = e.target.value.split("T");
-                                handleSegmentChange(index, "departureDate", date);
-                                handleSegmentChange(index, "departureTime", time);
+                                if (!multiCityDateSelected[index]) {
+                                  handleSegmentChange(index, "departureDate", date);
+                                  setMultiCityDateSelected(prev => ({ ...prev, [index]: true }));
+                                } else {
+                                  handleSegmentChange(index, "departureTime", time);
+                                  e.target.blur();
+                                  setMultiCityDateSelected(prev => ({ ...prev, [index]: false }));
+                                }
                               }}
                               min={`${new Date().toISOString().split("T")[0]}T00:00`}
                               className="block w-full p-2 border rounded focus:outline-none"
