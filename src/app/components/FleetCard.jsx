@@ -558,11 +558,13 @@ export default function FlightCard({
                          bg-white shadow-md rounded-3xl overflow-hidden "
             >
               {/* LEFT - Image Area */}
-              <div className="relative w-full md:w-[27%] p-2">
-                <ImageSlider
-                  aircraftGallery={flight.aircraftGallery}
-                  onExperience={(e) => handleExperienceClick(flightId, e)}
-                />
+              <div className="relative w-full md:w-[27%] p-2 md:self-stretch flex">
+                <div className="w-full h-full min-h-[300px] overflow-hidden rounded-2xl flex">
+                  <ImageSlider
+                    aircraftGallery={flight.aircraftGallery}
+                    onExperience={(e) => handleExperienceClick(flightId, e)}
+                  />
+                </div>
               </div>
 
               {/* MIDDLE - Vertical timeline / line (design only on larger screens) */}
@@ -589,7 +591,7 @@ export default function FlightCard({
                       className="w-16 h-16 object-contain"
                     />
                     <div className="flex flex-col items-center">
-                      <h2 className="text-xl font-bold text-gray-800">
+                      <h2 className="text-xl font-bold text-gray-800 text-center">
                         {flight.fleetDetails.selectedModel || "Gulfstream G700"}
                       </h2>
                       {/* <p className="text-md my-1">JET X 2(Twin Engine) Private Jet</p> */}
@@ -600,24 +602,23 @@ export default function FlightCard({
                     </div>
                     <div className="text-left flex flex-col justify-center items-center mt-6">
                       <p className="text-sky-400 font-bold text-xl">Approx Time</p>
-                      <div className="flex items-center justify-center">
-                        <p className="text-2xl font-bold text-gray-800 ">
-                          {depTime} 
-                        </p>
-                        <span className="text-xs pl-1">ETD</span>
-                        <div className="text-center text-gray-500">
-                          <p className="text-xl font-bold text-gray-800">
-                            --{" "}
-                            <IoIosAirplane
-                              size={28}
-                              className="inline-block text-gray-700"
-                            />--{" "}
-                            
-                          </p>
+                      <div className="flex items-center justify-center gap-4 whitespace-nowrap">
+                        {/* Departure */}
+                        <div className="flex flex-col items-center leading-tight">
+                          <span className="text-2xl font-bold text-gray-800">{depTime}</span>
+                          <span className="text-[12px] text-gray-600 mt-0.5">ETD</span>
                         </div>
-                        <p className="text-2xl font-bold text-gray-800 ">
-                          {arrTime}  
-                        </p><span className="text-xs pl-1">ETA</span>
+                        {/* Divider */}
+                        <div className="flex items-center justify-center text-gray-700">
+                          <span className="text-xl font-bold text-gray-800 mr-1">--</span>
+                          <IoIosAirplane size={24} className="text-gray-700 mt-2" />
+                          <span className="text-xl font-bold text-gray-800 ml-1">--</span>
+                        </div>
+                        {/* Arrival */}
+                        <div className="flex flex-col items-center leading-tight">
+                          <span className="text-2xl font-bold text-gray-800">{arrTime}</span>
+                          <span className="text-[12px] text-gray-600 mt-0.5">ETA</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -888,7 +889,7 @@ export default function FlightCard({
 
                     {/* SHARE and SELECT-FOR-SHARING row */}
 
-                    <div className="flex items-center justify-between w-full  mt-4">
+                    <div className="flex items-center justify-between w-full ">
                       <p className="text-xs text-gray-600 text-center ml-2">
                         *Note: All Parameters are subject to change time to time.
                       </p>

@@ -64,7 +64,7 @@ const ImageSlider = ({ aircraftGallery, onExperience }) => {
 
   return (
     <div
-      className="relative w-full h-[250px] md:h-[300px] overflow-hidden rounded-3xl"
+      className="relative w-full h-full min-h-[250px] overflow-hidden rounded-3xl"
       onClick={onExperience}
     >
       {/* Slider images */}

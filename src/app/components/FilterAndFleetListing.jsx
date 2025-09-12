@@ -653,7 +653,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
               initial={{ y: -10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.5 }}
-              className="text-2xl font-bold text-gray-800"
+              className="text-xl font-bold text-gray-800"
             >
               <p>Filter Options</p>
               {isMultiCity && ` Trip ${currentTripIndex + 1}`}

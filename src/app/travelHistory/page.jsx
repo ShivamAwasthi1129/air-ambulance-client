@@ -623,32 +623,18 @@ const TravelHistory = () => {
                             </select>
                           </div>
 
-                          {/* Designation field (select or custom input) */}
+                          {/* Designation field (simple input) */}
                           <div className="relative">
                             <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 font-medium">
                               Designation
                             </label>
-                            <select
-                              value={DESIGNATIONS.includes(passenger.designation) ? passenger.designation : ""}
+                            <input
+                              type="text"
+                              placeholder="Designation"
+                              value={passenger.designation}
                               onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'designation', e.target.value)}
-                              className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full mb-2"
-                            >
-                              <option value="">Select Designation</option>
-                              {DESIGNATIONS.map(designation => (
-                                <option key={designation} value={designation}>{designation}</option>
-                              ))}
-                              <option value="custom">Other (Type below)</option>
-                            </select>
-                            {/* Show input if custom or "Other" selected */}
-                            {(passenger.designation === "custom" || !DESIGNATIONS.includes(passenger.designation)) && (
-                              <input
-                                type="text"
-                                placeholder="Enter custom designation"
-                                value={!DESIGNATIONS.includes(passenger.designation) ? passenger.designation : ""}
-                                onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'designation', e.target.value)}
-                                className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full mt-1"
-                              />
-                            )}
+                              className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                            />
                           </div>
 
                           {/* Full name field */}
