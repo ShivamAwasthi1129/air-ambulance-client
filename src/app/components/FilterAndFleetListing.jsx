@@ -68,13 +68,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
     // lat/lng object
     return encodeURIComponent(JSON.stringify(place));
   }
-  /**
-   * Build every Rapido request (and its label) for ONE segment.
-   * • Airport → Airport  → keep user-chosen flightTypes.
-   * • Any route touching coords → force flightType=Helicopter.
-   * • Coordinate part of label =  "lat,lng-(address)"  if address exists,
-   *   otherwise just "lat,lng".
-   */
+
   function buildRapidoUrls(seg) {
     /* helpers */
     const stripCode = (s) => s.replace(/\s*\(.*?\)\s*/, "").trim();
@@ -652,7 +646,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
-          className="w-[25%] p-6 bg-white px-10 mr-4 border border-blue-100 rounded-xl"
+          className="w-[20%] p-6 bg-white px-10 mr-4 border border-blue-100 rounded-xl"
         >
           <div className="flex items-center justify-between mb-6 border-b pb-2">
             <motion.h2
@@ -699,19 +693,36 @@ const FilterAndFleetListing = ({ refreshKey }) => {
               })}
             </div>
           </div>
+          {/* Flight Time Range */}
+          <div className="mb-6">
+            <div className="mb-2 leading-tight">
+              <span className="block text-gray-700 font-semibold text-sm">Flight Time Range</span>
+              <span className="block text-blue-600 font-semibold text-sm break-words">
+                {Math.floor(minFlightTime / 60)}h {minFlightTime % 60}m - {Math.floor(flightTimeRange / 60)}h {flightTimeRange % 60}m
+              </span>
+            </div>
+            <input
+              type="range"
+              min={minFlightTime}
+              max={maxFlightTime}
+              value={flightTimeRange}
+              onChange={(e) => onFlightTimeChange(e.target.value)}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer
+       focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+              style={{
+                background: `linear-gradient(to right, #3b82f6 ${((flightTimeRange - minFlightTime) / (maxFlightTime - minFlightTime)) * 100}%, #e5e7eb ${((flightTimeRange - minFlightTime) / (maxFlightTime - minFlightTime)) * 100}%)`,
+              }}
+            />
+          </div>
 
           {/* Price Range */}
           <div className="mb-6">
-            <p className="font-semibold text-gray-700 mb-3">
-              Price Range:{" "}
-              <span className="text-blue-600 font-bold">
-                ${minPrice.toLocaleString()}
+            <div className="mb-2 leading-tight">
+              <span className="block text-gray-700 font-semibold text-sm">Price Range</span>
+              <span className="block text-blue-600 font-semibold text-sm break-words">
+                ${minPrice.toLocaleString()} - ${priceRange.toLocaleString()}
               </span>
-              {" - "}
-              <span className="text-blue-600 font-bold">
-                ${priceRange.toLocaleString()}
-              </span>
-            </p>
+            </div>
             <input
               type="range"
               min={minPrice}
@@ -732,44 +743,16 @@ const FilterAndFleetListing = ({ refreshKey }) => {
               </div>
             )}
           </div>
-          {/* Flight Time Range */}
-          <div className="mb-6">
-            <p className="font-semibold text-gray-700 mb-3">
-              Flight Time Range:{" "}
-              <span className="text-blue-600 font-bold">
-                {Math.floor(minFlightTime / 60)}h {minFlightTime % 60}m
-              </span>
-              {" - "}
-              <span className="text-blue-600 font-bold">
-                {Math.floor(flightTimeRange / 60)}h {flightTimeRange % 60}m
-              </span>
-            </p>
-            <input
-              type="range"
-              min={minFlightTime}
-              max={maxFlightTime}
-              value={flightTimeRange}
-              onChange={(e) => onFlightTimeChange(e.target.value)}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer
-       focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
-              style={{
-                background: `linear-gradient(to right, #3b82f6 ${((flightTimeRange - minFlightTime) / (maxFlightTime - minFlightTime)) * 100}%, #e5e7eb ${((flightTimeRange - minFlightTime) / (maxFlightTime - minFlightTime)) * 100}%)`,
-              }}
-            />
-          </div>
+
 
           {/* Max Speed Range */}
           <div className="mb-6">
-            <p className="font-semibold text-gray-700 mb-3">
-              Max Speed Range:{" "}
-              <span className="text-blue-600 font-bold">
-                {minMaxSpeed} km
+            <div className="mb-2 leading-tight">
+              <span className="block text-gray-700 font-semibold text-sm">Max Speed Range</span>
+              <span className="block text-blue-600 font-semibold text-sm break-words">
+                {minMaxSpeed} km - {maxSpeedRange} km
               </span>
-              {" - "}
-              <span className="text-blue-600 font-bold">
-                {maxSpeedRange} km
-              </span>
-            </p>
+            </div>
             <input
               type="range"
               min={minMaxSpeed}
