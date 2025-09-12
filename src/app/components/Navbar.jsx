@@ -695,40 +695,40 @@ const NavBar = () => {
           <div className="absolute right-0 top-0 h-full w-80 max-w-[85%] bg-white shadow-2xl p-5 overflow-y-auto">
             {/* User Section */}
             <div className="mb-6">
-          {user ? (
-  <div>
-    <div className="flex items-center space-x-3 mb-4">
-      <div className="w-10 h-10 bg-gradient-to-br from-blue-200 to-blue-400 rounded-full flex items-center justify-center shadow-md">
-        <span className="text-white font-bold text-lg">{user.email?.charAt(0).toUpperCase()}</span>
-      </div>
-      <span className="text-gray-800 font-semibold text-base">{user.email}</span>
-    </div>
-    
-    {/* User menu options */}
-    <div className="space-y-2 mb-4">
-      <Link 
-        href="/profile"
-        onClick={() => setIsMobileMenuOpen(false)}
-        className="block w-full px-3 py-2 rounded-lg text-gray-800 font-medium hover:bg-blue-50"
-      >
-        User Profile
-      </Link>
-      <Link 
-        href="/travelHistory"
-        onClick={() => setIsMobileMenuOpen(false)}
-        className="block w-full px-3 py-2 rounded-lg text-gray-800 font-medium hover:bg-green-50"
-      >
-        Travel History
-      </Link>
-      <button
-        onClick={handleLogout}
-        className="block w-full text-left px-3 py-2 rounded-lg text-red-600 font-medium hover:bg-red-50"
-      >
-        Logout
-      </button>
-    </div>
-  </div>
-) : (
+              {user ? (
+                <div>
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-200 to-blue-400 rounded-full flex items-center justify-center shadow-md">
+                      <span className="text-white font-bold text-lg">{user.email?.charAt(0).toUpperCase()}</span>
+                    </div>
+                    <span className="text-gray-800 font-semibold text-base">{user.email}</span>
+                  </div>
+
+                  {/* User menu options */}
+                  <div className="space-y-2 mb-4">
+                    <Link
+                      href="/profile"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block w-full px-3 py-2 rounded-lg text-gray-800 font-medium hover:bg-blue-50"
+                    >
+                      User Profile
+                    </Link>
+                    <Link
+                      href="/travelHistory"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block w-full px-3 py-2 rounded-lg text-gray-800 font-medium hover:bg-green-50"
+                    >
+                      Travel History
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-3 py-2 rounded-lg text-red-600 font-medium hover:bg-red-50"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              ) : (
                 <button
                   onClick={() => {
                     setIsLoginModalOpen(true);
