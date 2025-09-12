@@ -336,7 +336,7 @@ export default function FlightCard({
         return;
       }
       const s3Link = result.secureUrl;
-      toast.success("Image uploaded successfully!");
+      // toast.success("Image uploaded successfully!");
 
       // 2) Send to your backend
       let name = userSession?.name || parsedData?.userInfo?.name || "User";
@@ -351,7 +351,7 @@ export default function FlightCard({
         setWhatsAppSendState("idle");
         return;
       }
-      toast.success("Data sent to fleet-enquiry API!");
+      toast.success("Image Sent Successfully!");
       setWhatsAppSendState("sent");
 
       // Clean up
@@ -391,7 +391,7 @@ export default function FlightCard({
         return;
       }
       const s3Link = result.secureUrl;
-      toast.success("Image uploaded successfully!");
+      // toast.success("Image uploaded successfully!");
 
       // 2) Send to your email API
       const feviamailResponse = await fetch("/api/feviamail", {
@@ -577,7 +577,7 @@ export default function FlightCard({
                 <div className="w-16 h-16 bg-[#d5e3f4] rounded-full translate-y-8" />
               </div>
               {/* RIGHT - Details */}
-              <div className="w-full md:w-[72%] relative flex ">
+              <div className="w-full md:w-[72%] relative flex lg:flex-row flex-col">
                 {/* Top row: Fleet Info + Price + Select button */}
                 <div className="flex w-full md:w-[22rem] flex-col justify-center items-center md:justify-evenly md:items-center ">
                   {/* Fleet info */}
@@ -625,7 +625,7 @@ export default function FlightCard({
                 </div>
                 {/* Middle / Bottom content */}
                 <div className="flex justify-between md:justify-around w-full items-center flex-col bg-stone-50 p-3 md:p-0 overflow-x-hidden">
-                  <div className="flex w-full flex-col md:flex-row items-center justify-between md:justify-around gap-4">
+                  <div className="flex w-full flex-col md:flex-row items-center justify-between md:justify-around gap-4 pl-2">
                     <div className="order-2 md:order-1 w-full">
                       {/* Seats, Luggage, Speed row */}
                       <div className="flex items-center space-x-3 md:space-x-5 mt-2 md:mt-4">
