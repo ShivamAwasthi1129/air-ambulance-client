@@ -559,7 +559,7 @@ export default function FlightCard({
             >
               {/* LEFT - Image Area */}
               <div className="relative w-full md:w-[27%] p-2 md:self-stretch flex">
-                <div className="w-full h-full min-h-[300px] overflow-hidden rounded-2xl flex">
+                <div className="w-full h-44 md:h-full md:min-h-[300px] overflow-hidden rounded-2xl flex">
                   <ImageSlider
                     aircraftGallery={flight.aircraftGallery}
                     onExperience={(e) => handleExperienceClick(flightId, e)}
@@ -579,7 +579,7 @@ export default function FlightCard({
               {/* RIGHT - Details */}
               <div className="w-full md:w-[72%] relative flex ">
                 {/* Top row: Fleet Info + Price + Select button */}
-                <div className="flex w-[22rem] flex-col sm:justify-evenly sm:items-center ">
+                <div className="flex w-full md:w-[22rem] flex-col justify-center items-center md:justify-evenly md:items-center ">
                   {/* Fleet info */}
                   <div className="flex flex-col items-center justify-center">
                     <img
@@ -591,7 +591,7 @@ export default function FlightCard({
                       className="w-16 h-16 object-contain"
                     />
                     <div className="flex flex-col items-center">
-                      <h2 className="text-xl font-bold text-gray-800 text-center">
+                      <h2 className="text-lg md:text-xl font-bold text-gray-800 text-center">
                         {flight.fleetDetails.selectedModel || "Gulfstream G700"}
                       </h2>
                       {/* <p className="text-md my-1">JET X 2(Twin Engine) Private Jet</p> */}
@@ -601,11 +601,11 @@ export default function FlightCard({
                       </p>
                     </div>
                     <div className="text-left flex flex-col justify-center items-center mt-6">
-                      <p className="text-sky-400 font-bold text-xl">Approx Time</p>
-                      <div className="flex items-center justify-center gap-4 whitespace-nowrap">
+                      <p className="text-sky-400 font-bold text-base md:text-xl">Approx Time</p>
+                      <div className="flex items-center justify-center gap-3 whitespace-normal md:whitespace-nowrap">
                         {/* Departure */}
                         <div className="flex flex-col items-center leading-tight">
-                          <span className="text-2xl font-bold text-gray-800">{depTime}</span>
+                          <span className="text-xl md:text-2xl font-bold text-gray-800">{depTime}</span>
                           <span className="text-[12px] text-gray-600 mt-0.5">ETD</span>
                         </div>
                         {/* Divider */}
@@ -616,7 +616,7 @@ export default function FlightCard({
                         </div>
                         {/* Arrival */}
                         <div className="flex flex-col items-center leading-tight">
-                          <span className="text-2xl font-bold text-gray-800">{arrTime}</span>
+                          <span className="text-xl md:text-2xl font-bold text-gray-800">{arrTime}</span>
                           <span className="text-[12px] text-gray-600 mt-0.5">ETA</span>
                         </div>
                       </div>
@@ -624,11 +624,11 @@ export default function FlightCard({
                   </div>
                 </div>
                 {/* Middle / Bottom content */}
-                <div className="flex justify-around w-full items-center flex-col bg-stone-50">
-                  <div className="flex w-full items-center justify-around">
-                    <div className="">
+                <div className="flex justify-between md:justify-around w-full items-center flex-col bg-stone-50 p-3 md:p-0 overflow-x-hidden">
+                  <div className="flex w-full flex-col md:flex-row items-center justify-between md:justify-around gap-4">
+                    <div className="order-2 md:order-1 w-full">
                       {/* Seats, Luggage, Speed row */}
-                      <div className="flex items-center space-x-5 mt-4">
+                      <div className="flex items-center space-x-3 md:space-x-5 mt-2 md:mt-4">
                         <div className="flex items-center text-gray-600">
                           <MdAirlineSeatReclineExtra className="mr-1" size={24} />
                           <span className="font-bold text-md">
@@ -651,7 +651,7 @@ export default function FlightCard({
                       {/* Times row (Large times + flight duration) */}
 
                       {/* Flight Details */}
-                      <div className="flex flex-col items-start justify-between my-2 mb-0">
+                       <div className="flex flex-col items-start justify-between my-2 mb-0">
                         <div className="text-right flex justify-center items-center my-2 font-bold">
                           {/* ORIGIN */}
                           <div className="flex flex-col items-start text-sm text-gray-500 mr-4">
@@ -663,7 +663,7 @@ export default function FlightCard({
                             </p>
                             {fromBottomLabel && (
                               <p
-                                className={`${isCoordinate(fromTopLabel) ? "text-md" : "text-xl"} text-gray-900 font-normal cursor-pointer `}
+                                 className={`${isCoordinate(fromTopLabel) ? "text-md" : "text-xl"} text-gray-900 font-normal cursor-pointer `}
                                 title={fromBottomLabel} // Tooltip for full content
                               >
                                 {isCoordinate(fromTopLabel)
@@ -680,7 +680,7 @@ export default function FlightCard({
                           </div>
 
                           {/* DESTINATION */}
-                          <div className="flex flex-col items-start text-sm text-gray-500 ml-2">
+                         <div className="flex flex-col items-start text-sm text-gray-500 ml-2">
                             <p
                               className={`font-bold text-black ${isCoordinate(toTopLabel) ? "text-md" : "text-xl"
                                 }`}
@@ -689,7 +689,7 @@ export default function FlightCard({
                             </p>
                             {toBottomLabel && (
                               <p
-                                className={`${isCoordinate(toTopLabel) ? "text-md" : "text-xl"} text-gray-900 font-normal cursor-pointer`}
+                                  className={`${isCoordinate(toTopLabel) ? "text-md" : "text-xl"} text-gray-900 font-normal cursor-pointer`}
                                 title={toBottomLabel} // Tooltip for full content
                               >
                                 {isCoordinate(toTopLabel)
@@ -700,11 +700,11 @@ export default function FlightCard({
                           </div>
                         </div>
                       </div>
-                      <p className="text-sky-600">Refuel on Fly - 3.30hr | Cabin Height - {flight.fleetDetails.cabinHeight} ft</p>
+                      <p className="text-sky-600 text-sm md:text-base">Refuel on Fly - 3.30hr | Cabin Height - {flight.fleetDetails.cabinHeight} ft</p>
                       {/* <p className="text-sky-600">Refuel on Fly - 3.30hr | Cabin Height - 6ft</p> */}
                     </div>
                     {/* Price & Select */}
-                    <div className="mt-3 sm:mt-0 text-right flex flex-col items-end ml-2">
+                    <div className="order-1 md:order-2 mt-3 sm:mt-0 text-center md:text-right flex flex-col items-center md:items-end ml-0 md:ml-2 w-full md:w-auto bg-white rounded-xl p-3 shadow-sm md:bg-transparent md:shadow-none">
                       <p className="text-xs text-gray-400">Approx~</p>
                       <p className="text-xl font-bold text-gray-800">
                         USD {flightPriceUSD.toLocaleString()}
@@ -785,7 +785,7 @@ export default function FlightCard({
                   <div className="">
                     {/* Amenities row (carousel) */}
                     <div className="flex flex-col items-center flex-wrap ">
-                      <p className="font-medium ">In-Flight Amenities</p>
+                      <p className="font-medium text-sm md:text-base">In-Flight Amenities</p>
                       {length === 0 ? (
                         <div className="text-sm text-gray-500">
                           No amenities listed.
@@ -800,10 +800,7 @@ export default function FlightCard({
                             <FaArrowLeft />
                           </button>
                           {/* Carousel window */}
-                          <div
-                            className="h-[8rem] flex items-center overflow-hidden"
-                            style={{ width: "350px" }}
-                          >
+                          <div className="h-[8rem] flex items-center overflow-hidden w-full max-w-[18rem] sm:max-w-[26rem]">
                             {/* Amenity row */}
                             <div
                               className="flex transition-transform duration-300 ease-out"
@@ -853,7 +850,7 @@ export default function FlightCard({
                     </div>
                     {/* —— Add-on Facilities row —— */}
                     <div className="text-center mt-4">
-                      <p className="font-medium">Add-on Facilities</p>
+                      <p className="font-medium text-sm md:text-base">Add-on Facilities</p>
 
                       {addOnServices.length === 0 ? (
                         <p className="font-extralight italic text-xs">
@@ -889,7 +886,7 @@ export default function FlightCard({
 
                     {/* SHARE and SELECT-FOR-SHARING row */}
 
-                    <div className="flex items-center justify-between w-full ">
+                    <div className="flex flex-col md:flex-row items-center justify-between w-full gap-2 md:gap-0 ">
                       <p className="text-xs text-gray-600 text-center ml-2">
                         *Note: All Parameters are subject to change time to time.
                       </p>

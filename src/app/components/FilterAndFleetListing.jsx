@@ -505,9 +505,9 @@ const FilterAndFleetListing = ({ refreshKey }) => {
         <h1 className="text-2xl font-bold text-center text-white">
           ✈️ Select Your Dream Fleet ✈️
         </h1>
-        <div className="flex mt-2">
+        <div className="flex flex-col md:flex-row mt-2 gap-4 md:gap-0">
           {/* Selected Fleets */}
-          <div className="bg-white p-5 border border-blue-100 rounded-lg shadow-sm w-[35%]">
+          <div className="bg-white p-5 border border-blue-100 rounded-lg shadow-sm w-full md:w-[35%]">
             <h2 className="text-xl font-bold mb-4 text-gray-800">Selected Fleets</h2>
             {selectedFleets.map((fleet, idx) =>
               fleet ? (
@@ -533,7 +533,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
           </div>
 
           {/* Summary / Buttons */}
-          <div className="bg-white p-5 border border-blue-100 rounded-lg shadow-sm w-full ml-4">
+          <div className="bg-white p-5 border border-blue-100 rounded-lg shadow-sm w-full md:ml-4">
             {/* ONE-WAY */}
             {!isMultiCity && (
               <div>
@@ -640,13 +640,13 @@ const FilterAndFleetListing = ({ refreshKey }) => {
       </div>
 
       {/* Bottom Section: Filters + Fleet Listing (for current trip/segment) */}
-      <div className="flex w-full ">
+      <div className="flex flex-col md:flex-row w-full gap-4">
         {/* Filter Section */}
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
-          className="w-[20%] p-6 bg-white px-10 mr-4 border border-blue-100 rounded-xl"
+          className="w-full md:w-[20%] p-6 bg-white md:px-10 md:mr-4 mb-4 md:mb-0 border border-blue-100 rounded-xl"
         >
           <div className="flex items-center justify-between mb-6 border-b pb-2">
             <motion.h2
