@@ -55,9 +55,46 @@ useEffect(() => {
     onClose();
   };
 
+  // Auto-fetch user data only when modal opens with prefilled identifier (not while typing)
+  useEffect(() => {
+    if (!isOpen) return;
+    if (initialEmail && identifier === initialEmail && !infoFetched) {
+      handleFetchUserData();
+    }
+  }, [isOpen, initialEmail, identifier, infoFetched]);
+
+  // Auto-send OTP once user is confirmed to exist
+  useEffect(() => {
+    if (!isOpen) return;
+    if (userExists && otpSendStatus === "idle") {
+      handleSendOtp();
+    }
+  }, [isOpen, userExists, otpSendStatus]);
+
+  // Reset OTP send state and existence flags when identifier changes
+  useEffect(() => {
+    if (!isOpen) return;
+    setOtpSendStatus("idle");
+    setInfoFetched(false);
+    setUserExists(false);
+  }, [identifier, isOpen]);
+
   // ----------------------------------------------------------------
   // Fetch user data (email/phone) from your backend
   // ----------------------------------------------------------------
+  const isValidIdentifier = (value) => {
+    if (!value) return false;
+    const trimmed = value.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    const digits = trimmed.replace(/[^0-9]/g, "");
+    return emailRegex.test(trimmed) || (digits.length >= 7 && digits.length <= 15);
+  };
+
+  const handleBlurFetchIfValid = () => {
+    if (isValidIdentifier(identifier)) {
+      handleFetchUserData();
+    }
+  };
   const handleFetchUserData = async () => {
     if (!identifier) {
       // If cleared, reset
@@ -65,6 +102,7 @@ useEffect(() => {
       setPhoneNumber("");
       setFetchedName("");
       setUserExists(false);
+      setOtpSendStatus("idle");
       return;
     }
 
@@ -107,6 +145,7 @@ useEffect(() => {
       setEmail("");
       setFetchedName("");
       setUserExists(false);
+      setOtpSendStatus("idle");
       toast.error("User doesn't exist. Please use search bar.");
     }
   };
@@ -449,7 +488,7 @@ useEffect(() => {
               placeholder="Enter phone or email"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              onBlur={handleFetchUserData}
+              onBlur={handleBlurFetchIfValid}
               className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors duration-200"
             />
           </div>

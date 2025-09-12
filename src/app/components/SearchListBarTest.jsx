@@ -34,7 +34,7 @@ export const SearchBar = () => {
       // to: "Indira Gandhi International Airport (DEL)",
       to: "Indira Gandhi International Airport",
       departureDate: new Date().toISOString().split("T")[0],
-      departureTime: "12:00",
+      departureTime: "08:00",
       passengers: 1,
       flightTypes: ["Private Jet"],
     },
@@ -209,7 +209,7 @@ export const SearchBar = () => {
           to: "Indira Gandhi International Airport",
           // to: "Indira Gandhi International Airport (DEL)",
           departureDate: new Date().toISOString().split("T")[0],
-          departureTime: "12:00",
+          departureTime: "08:00",
           passengers: 1,
           flightTypes: ["Private Jet"],
         },
@@ -224,7 +224,7 @@ export const SearchBar = () => {
           to: "Indira Gandhi International Airport",
           // to: "Indira Gandhi International Airport (DEL)",
           departureDate: new Date().toISOString().split("T")[0],
-          departureTime: "12:00",
+          departureTime: "08:00",
           passengers: 1,
           flightTypes: ["Private Jet"],
         },
@@ -296,7 +296,7 @@ export const SearchBar = () => {
           from: lastSegment.to || "",
           to: "",
           departureDate: nextDayISO,
-          departureTime: "12:00",
+          departureTime: "08:00",
           passengers: 1,
           flightTypes: [],
         },
@@ -684,7 +684,7 @@ export const SearchBar = () => {
                   </label>
                   <input
                     type="datetime-local"
-                    value={`${segments[0].departureDate}T${segments[0].departureTime || "12:00"}`}
+                    value={`${segments[0].departureDate}T${segments[0].departureTime || "08:00"}`}
                     onFocus={() => setDateSelected(false)}
                     onChange={(e) => {
                       const [date, time] = e.target.value.split("T");
@@ -903,7 +903,7 @@ export const SearchBar = () => {
                             </label>
                             <input
                               type="datetime-local"
-                              value={`${segment.departureDate}T${segment.departureTime || "12:00"}`}
+                              value={`${segment.departureDate}T${segment.departureTime || "08:00"}`}
                               onChange={(e) => {
                                 const [date, time] = e.target.value.split("T");
                                 handleSegmentChange(index, "departureDate", date);
@@ -1015,6 +1015,8 @@ export const SearchBar = () => {
                     placeholder="Phone Number*"
                     className="block w-full p-2 border rounded focus:outline-none bg-pink-50/50"
                     defaultCountry="IN"
+                    international
+                    countryCallingCodeEditable={false}
                   />
                 </div>
 
