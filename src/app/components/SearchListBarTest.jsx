@@ -20,6 +20,10 @@ export const SearchBar = () => {
   const [showMultiCityDetails, setShowMultiCityDetails] = useState(false);
   const [isMultiCityCollapsed, setIsMultiCityCollapsed] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isLoadingNearbyAirports, setIsLoadingNearbyAirports] = useState(false);
+  const [nearbyAirports, setNearbyAirports] = useState([]);
+  const [userLocation, setUserLocation] = useState(null);
+  const [hasSearched, setHasSearched] = useState(false); // Add this new state
 
   const [dateSelected, setDateSelected] = useState(false);
   const [multiCityDateSelected, setMultiCityDateSelected] = useState({});
@@ -74,6 +78,59 @@ export const SearchBar = () => {
   const toastTriggeredRef = useRef(false);
   // === Effects ===
   // (A) Load from session or set defaults
+
+  const fetchUserLocation = async () => {
+    try {
+      const response = await fetch('https://ipinfo.io/json');
+      const data = await response.json();
+      if (data.loc) {
+        const [lat, lng] = data.loc.split(',');
+        return { lat: parseFloat(lat), lng: parseFloat(lng) };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching user location:', error);
+      return null;
+    }
+  };
+
+  // (F) Fetch IP info and location on mount
+  useEffect(() => {
+    async function fetchIPAndLocation() {
+      try {
+        const res = await fetch("https://ipinfo.io/json");
+        const data = await res.json();
+        setUserInfo(data);
+
+        // Extract location for nearby airports
+        if (data.loc) {
+          const [lat, lng] = data.loc.split(',');
+          setUserLocation({ lat: parseFloat(lat), lng: parseFloat(lng) });
+        }
+      } catch (err) {
+        console.error("Failed to fetch IP info:", err);
+        // Try to get location separately if IP info fails
+        const location = await fetchUserLocation();
+        if (location) {
+          setUserLocation(location);
+        }
+      }
+    }
+    fetchIPAndLocation();
+  }, []);
+
+  const fetchNearbyAirports = async (lat, lng) => {
+    try {
+      const response = await fetch(
+        `https://ow91reoh80.execute-api.ap-south-1.amazonaws.com/air/station?lat=${lat}&lng=${lng}`
+      );
+      const data = await response.json();
+      return data.airports || [];
+    } catch (error) {
+      console.error('Error fetching nearby airports:', error);
+      return [];
+    }
+  };
   useEffect(() => {
     const savedSearchData = sessionStorage.getItem("searchData");
     if (savedSearchData) {
@@ -145,6 +202,7 @@ export const SearchBar = () => {
   }, [tripType, isMultiCityCollapsed]);
 
   // (D) Close airport dropdown if user clicks outside
+  // In your existing useEffect for closing dropdown
   useEffect(() => {
     function handleClickOutside(e) {
       if (
@@ -155,6 +213,8 @@ export const SearchBar = () => {
         setShowDropdown(false);
         setFocusedSegmentIndex(null);
         setFocusedField(null);
+        setHasSearched(false); // Add this line
+        setIsLoadingNearbyAirports(false); // Add this line
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -166,21 +226,48 @@ export const SearchBar = () => {
   // (E) Fetch airports when searchQuery changes
   useEffect(() => {
     async function fetchAirports() {
-      if (!searchQuery) {
-        setAirports([]);
-        return;
+      // If there's a search query, use existing logic
+      if (searchQuery && searchQuery.trim()) {
+        setHasSearched(false); // Reset before search
+        try {
+          const response = await fetch(
+            `https://ow91reoh80.execute-api.ap-south-1.amazonaws.com/air/station?query=${searchQuery}`
+          );
+          const data = await response.json();
+          const searchResults = data.airports || [];
+
+          if (searchResults.length === 0 && userLocation) {
+            setIsLoadingNearbyAirports(true);
+            const nearby = await fetchNearbyAirports(userLocation.lat, userLocation.lng);
+            setAirports(nearby);
+            setIsLoadingNearbyAirports(false);
+            setHasSearched(true);
+          } else {
+            setAirports(searchResults);
+            setHasSearched(true);
+          }
+        } catch (error) {
+          console.error("Error fetching airport data:", error);
+          setAirports([]);
+          setHasSearched(true);
+        }
       }
-      try {
-        const response = await fetch(`https://ow91reoh80.execute-api.ap-south-1.amazonaws.com/air/station?query=${searchQuery}`);
-        const data = await response.json();
-        setAirports(data.airports || []);
-      } catch (error) {
-        console.error("Error fetching airport data:", error);
+      // If no search query but dropdown is focused, show nearby airports
+      else if (showDropdown && userLocation) {
+        setIsLoadingNearbyAirports(true);
+        setHasSearched(false);
+        const nearby = await fetchNearbyAirports(userLocation.lat, userLocation.lng);
+        setAirports(nearby);
+        setIsLoadingNearbyAirports(false);
+        setHasSearched(true);
+      }
+      else {
         setAirports([]);
+        setHasSearched(false);
       }
     }
     fetchAirports();
-  }, [searchQuery]);
+  }, [searchQuery, showDropdown, userLocation]);
 
   // (F) Fetch IP info on mount (optional)
   useEffect(() => {
@@ -554,7 +641,8 @@ export const SearchBar = () => {
                       setFocusedSegmentIndex(0);
                       setFocusedField("from");
                       setShowDropdown(true);
-                      setSearchQuery(segments[0].from || "");
+                      const currentValue = segments[0].from || "";
+                      setSearchQuery(currentValue);
                     }}
                     onChange={(e) => {
                       handleSegmentChange(0, "from", e.target.value);
@@ -581,30 +669,39 @@ export const SearchBar = () => {
 
 
                   {/* Dropdown */}
+
                   {showDropdown &&
                     focusedSegmentIndex === 0 &&
-                    focusedField === "from" &&
-                    airports.length > 0 && (
-                      <ul className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
-                        {airports.slice(0, 5).map((airport, i) => (
-                          <li
-                            key={airport.id ?? `airport-from-${i}`}
-                            onClick={() =>
-                              handleSelectAirport(airport, 0, "from")
-                            }
-                            className="p-2 cursor-pointer hover:bg-gray-200 border-b text-sm"
-                          >
-                            <div className="font-semibold">
-                              {airport.city}, {airport.country}
-                            </div>
-                            <div className="text-xs text-gray-600">
-                              {airport.name} • {airport.iata_code || "N/A"} •{" "}
-                              {airport.icao_code || "N/A"}
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                    focusedField === "from" && (
+                      <div className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
+                        {isLoadingNearbyAirports ? (
+                          <div className="p-4 flex items-center justify-center">
+                            <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+                            <span className="text-sm text-gray-600">Trying to search nearby airports...</span>
+                          </div>
+                        ) : airports.length > 0 ? (
+                          airports.slice(0, 5).map((airport, i) => (
+                            <li
+                              key={airport.id ?? `airport-from-${i}`}
+                              onClick={() => handleSelectAirport(airport, 0, "from")}
+                              className="p-2 cursor-pointer hover:bg-gray-200 border-b text-sm"
+                            >
+                              <div className="font-semibold">
+                                {airport.city}, {airport.country}
+                              </div>
+                              <div className="text-xs text-gray-600">
+                                {airport.name} • {airport.iata_code || "N/A"} • {airport.icao_code || "N/A"}
+                              </div>
+                            </li>
+                          ))
+                        ) : hasSearched ? (
+                          <div className="p-4 text-center text-gray-500 text-sm">
+                            No airports found
+                          </div>
+                        ) : null}
+                      </div>
+                    )
+                  }
                 </div>
 
                 {/* Swap Icon */}
@@ -631,7 +728,8 @@ export const SearchBar = () => {
                       setFocusedSegmentIndex(0);
                       setFocusedField("to");
                       setShowDropdown(true);
-                      setSearchQuery(segments[0].to || "");
+                      const currentValue = segments[0].to || "";
+                      setSearchQuery(currentValue);
                     }}
                     onChange={(e) => {
                       handleSegmentChange(0, "to", e.target.value);
@@ -655,28 +753,36 @@ export const SearchBar = () => {
                   )}
                   {showDropdown &&
                     focusedSegmentIndex === 0 &&
-                    focusedField === "to" &&
-                    airports.length > 0 && (
-                      <ul className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
-                        {airports.slice(0, 5).map((airport, i) => (
-                          <li
-                            key={airport.id ?? `airport-to-${i}`}
-                            onClick={() =>
-                              handleSelectAirport(airport, 0, "to")
-                            }
-                            className="p-2 cursor-pointer hover:bg-gray-200 border-b text-sm"
-                          >
-                            <div className="font-semibold">
-                              {airport.city}, {airport.country}
-                            </div>
-                            <div className="text-xs text-gray-600">
-                              {airport.name} • {airport.iata_code || "N/A"} •{" "}
-                              {airport.icao_code || "N/A"}
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                    focusedField === "to" && (
+                      <div className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
+                        {isLoadingNearbyAirports ? (
+                          <div className="p-4 flex items-center justify-center">
+                            <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+                            <span className="text-sm text-gray-600">Trying to search nearby airports...</span>
+                          </div>
+                        ) : airports.length > 0 ? (
+                          airports.slice(0, 5).map((airport, i) => (
+                            <li
+                              key={airport.id ?? `airport-to-${i}`}
+                              onClick={() => handleSelectAirport(airport, 0, "to")}
+                              className="p-2 cursor-pointer hover:bg-gray-200 border-b text-sm"
+                            >
+                              <div className="font-semibold">
+                                {airport.city}, {airport.country}
+                              </div>
+                              <div className="text-xs text-gray-600">
+                                {airport.name} • {airport.iata_code || "N/A"} • {airport.icao_code || "N/A"}
+                              </div>
+                            </li>
+                          ))
+                        ) : hasSearched ? (
+                          <div className="p-4 text-center text-gray-500 text-sm">
+                            No airports found
+                          </div>
+                        ) : null}
+                      </div>
+                    )
+                  }
                 </div>
                 {/* Departure Date & Time */}
                 <div className="w-full sm:w-1/2 md:w-[200px]">
@@ -788,7 +894,8 @@ export const SearchBar = () => {
                                 setFocusedSegmentIndex(index);
                                 setFocusedField("from");
                                 setShowDropdown(true);
-                                setSearchQuery(segment.from || "");
+                                const currentValue = segment.from || "";
+                                setSearchQuery(currentValue);
                               }}
                               onChange={(e) => {
                                 handleSegmentChange(index, "from", e.target.value);
@@ -812,29 +919,36 @@ export const SearchBar = () => {
                             {/* Dropdown */}
                             {showDropdown &&
                               focusedSegmentIndex === index &&
-                              focusedField === "from" &&
-                              airports.length > 0 && (
-                                <ul className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
-                                  {airports.slice(0, 5).map((airport, i) => (
-                                    <li
-                                      key={airport.id ?? `airport-from-${index}-${i}`}
-                                      onClick={() =>
-                                        handleSelectAirport(airport, index, "from")
-                                      }
-                                      className="p-2 cursor-pointer hover:bg-gray-200 border-b text-sm"
-                                    >
-                                      <div className="font-semibold">
-                                        {airport.city}, {airport.country}
-                                      </div>
-                                      <div className="text-xs text-gray-600">
-                                        {airport.name} •{" "}
-                                        {airport.iata_code || "N/A"} •{" "}
-                                        {airport.icao_code || "N/A"}
-                                      </div>
-                                    </li>
-                                  ))}
-                                </ul>
-                              )}
+                              focusedField === "from" && (
+                                <div className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
+                                  {isLoadingNearbyAirports ? (
+                                    <div className="p-4 flex items-center justify-center">
+                                      <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+                                      <span className="text-sm text-gray-600">Trying to search nearby airports...</span>
+                                    </div>
+                                  ) : airports.length > 0 ? (
+                                    airports.slice(0, 5).map((airport, i) => (
+                                      <li
+                                        key={airport.id ?? `airport-from-${index}-${i}`}
+                                        onClick={() => handleSelectAirport(airport, index, "from")}
+                                        className="p-2 cursor-pointer hover:bg-gray-200 border-b text-sm"
+                                      >
+                                        <div className="font-semibold">
+                                          {airport.city}, {airport.country}
+                                        </div>
+                                        <div className="text-xs text-gray-600">
+                                          {airport.name} • {airport.iata_code || "N/A"} • {airport.icao_code || "N/A"}
+                                        </div>
+                                      </li>
+                                    ))
+                                  ) : hasSearched ? (
+                                    <div className="p-4 text-center text-gray-500 text-sm">
+                                      No airports found
+                                    </div>
+                                  ) : null}
+                                </div>
+                              )
+                            }
                           </div>
                           {/* TO */}
                           <div className="flex-1 relative">
@@ -850,7 +964,8 @@ export const SearchBar = () => {
                                 setFocusedSegmentIndex(index);
                                 setFocusedField("to");
                                 setShowDropdown(true);
-                                setSearchQuery(segment.to || "");
+                                const currentValue = segment.to || "";
+                                setSearchQuery(currentValue);
                               }}
                               onChange={(e) => {
                                 handleSegmentChange(index, "to", e.target.value);
@@ -873,29 +988,36 @@ export const SearchBar = () => {
                             )}
                             {showDropdown &&
                               focusedSegmentIndex === index &&
-                              focusedField === "to" &&
-                              airports.length > 0 && (
-                                <ul className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
-                                  {airports.slice(0, 5).map((airport, i) => (
-                                    <li
-                                      key={airport.id ?? `airport-to-${index}-${i}`}
-                                      onClick={() =>
-                                        handleSelectAirport(airport, index, "to")
-                                      }
-                                      className="p-2 cursor-pointer hover:bg-gray-200 border-b text-sm"
-                                    >
-                                      <div className="font-semibold">
-                                        {airport.city}, {airport.country}
-                                      </div>
-                                      <div className="text-xs text-gray-600">
-                                        {airport.name} •{" "}
-                                        {airport.iata_code || "N/A"} •{" "}
-                                        {airport.icao_code || "N/A"}
-                                      </div>
-                                    </li>
-                                  ))}
-                                </ul>
-                              )}
+                              focusedField === "to" && (
+                                <div className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
+                                  {isLoadingNearbyAirports ? (
+                                    <div className="p-4 flex items-center justify-center">
+                                      <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+                                      <span className="text-sm text-gray-600">Trying to search nearby airports...</span>
+                                    </div>
+                                  ) : airports.length > 0 ? (
+                                    airports.slice(0, 5).map((airport, i) => (
+                                      <li
+                                        key={airport.id ?? `airport-to-${index}-${i}`}
+                                        onClick={() => handleSelectAirport(airport, index, "to")}
+                                        className="p-2 cursor-pointer hover:bg-gray-200 border-b text-sm"
+                                      >
+                                        <div className="font-semibold">
+                                          {airport.city}, {airport.country}
+                                        </div>
+                                        <div className="text-xs text-gray-600">
+                                          {airport.name} • {airport.iata_code || "N/A"} • {airport.icao_code || "N/A"}
+                                        </div>
+                                      </li>
+                                    ))
+                                  ) : hasSearched ? (
+                                    <div className="p-4 text-center text-gray-500 text-sm">
+                                      No airports found
+                                    </div>
+                                  ) : null}
+                                </div>
+                              )
+                            }
                           </div>
                           {/* DATE & TIME */}
                           <div className="w-full sm:w-1/2 md:w-[200px]">
