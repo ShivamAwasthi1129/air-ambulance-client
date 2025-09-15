@@ -23,7 +23,7 @@ export async function POST(req) {
 
     await connectToDatabase();
 
-    const result = await OTPTable.findOne({ email, phone });
+    const result = await OTPTable.findOne({ $or: [{ email, phone }] });
 
     if (!result) {
       // Store OTP in MongoDB
@@ -224,92 +224,91 @@ export const GET = async (req) => {
         password: Math.random().toString(36).substring(2, 8),
       };
       await User.create(obj);
+      const html = `<!DOCTYPE html>
+  <html>
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Account Created Successfully</title>
+      <style>
+          body {
+              font-family: Arial, sans-serif;
+              background-color: #f4f4f4;
+              margin: 0;
+              padding: 0;
+          }
+          .container {
+              max-width: 600px;
+              background: #ffffff;
+              margin: 20px auto;
+              padding: 20px;
+              border-radius: 8px;
+              box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+          }
+          h2 {
+              color: #333;
+              text-align: center;
+          }
+          p {
+              font-size: 16px;
+              color: #555;
+          }
+          .info-box {
+              background: #f9f9f9;
+              padding: 10px;
+              border-left: 4px solid #4CAF50;
+              margin: 10px 0;
+          }
+          .footer {
+              text-align: center;
+              margin-top: 20px;
+              font-size: 14px;
+              color: #777;
+          }
+          .button {
+              display: inline-block;
+              padding: 10px 15px;
+              background: #4CAF50;
+              color: #ffffff;
+              text-decoration: none;
+              border-radius: 5px;
+              font-size: 16px;
+              margin-top: 10px;
+          }
+          .button:hover {
+              background: #45a049;
+          }
+      </style>
+  </head>
+  <body>
+      <div class="container">
+          <h2>Welcome to Our Platform, ${obj.name}!</h2>
+          <p>We are excited to inform you that your account has been successfully created.</p>
+          
+          <div class="info-box">
+              <p><strong>Email:</strong> ${obj.email}</p>
+              <p><strong>Phone:</strong> ${obj.phone}</p>
+              <p><strong>Password:</strong> <span style="color: #E53935;"><strong>${obj.password}</strong></span></p>
+          </div>
+  
+          <div style="text-align: center;">
+              <a href="http://localhost:3000" class="button">Login to Your Account</a>
+          </div>
+  
+          <p>If you didn’t request this account, please ignore this email or contact support.</p>
+  
+          <div class="footer">
+              <p>Best Regards,</p>
+              <p><strong>Air Aviation</strong></p>
+              <p><a href="mailto:support@aviation.com">support@aviation.com</a></p>
+          </div>
+      </div>
+  </body>
+  </html>
+  `;
+
+      await sendMail(email, "User Creation", html);
     }
-
-    const html = `<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account Created Successfully</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            max-width: 600px;
-            background: #ffffff;
-            margin: 20px auto;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        h2 {
-            color: #333;
-            text-align: center;
-        }
-        p {
-            font-size: 16px;
-            color: #555;
-        }
-        .info-box {
-            background: #f9f9f9;
-            padding: 10px;
-            border-left: 4px solid #4CAF50;
-            margin: 10px 0;
-        }
-        .footer {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 14px;
-            color: #777;
-        }
-        .button {
-            display: inline-block;
-            padding: 10px 15px;
-            background: #4CAF50;
-            color: #ffffff;
-            text-decoration: none;
-            border-radius: 5px;
-            font-size: 16px;
-            margin-top: 10px;
-        }
-        .button:hover {
-            background: #45a049;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h2>Welcome to Our Platform, ${obj.name}!</h2>
-        <p>We are excited to inform you that your account has been successfully created.</p>
-        
-        <div class="info-box">
-            <p><strong>Email:</strong> ${obj.email}</p>
-            <p><strong>Phone:</strong> ${obj.phone}</p>
-            <p><strong>Password:</strong> <span style="color: #E53935;"><strong>${obj.password}</strong></span></p>
-        </div>
-
-        <div style="text-align: center;">
-            <a href="http://localhost:3000" class="button">Login to Your Account</a>
-        </div>
-
-        <p>If you didn’t request this account, please ignore this email or contact support.</p>
-
-        <div class="footer">
-            <p>Best Regards,</p>
-            <p><strong>Air Aviation</strong></p>
-            <p><a href="mailto:support@aviation.com">support@aviation.com</a></p>
-        </div>
-    </div>
-</body>
-</html>
-`;
-
-    await sendMail(email, "User Creation", html);
 
     return NextResponse.json(
       { message: "OTP verified successfully" },
