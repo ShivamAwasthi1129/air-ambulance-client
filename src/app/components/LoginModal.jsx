@@ -1,12 +1,13 @@
-import React, { useState , useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { FaEye, FaEyeSlash, FaSpinner, FaCheckCircle } from "react-icons/fa";
 import { toast } from "react-toastify";
 
-const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail }) => {
+const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) => {
   // ----------------------------------------------------------------
   // States
   // ----------------------------------------------------------------
- const [identifier, setIdentifier] = useState(initialEmail || "");
+  const [identifier, setIdentifier] = useState(initialEmail || "");
+  const [isVerifyingData, setIsVerifyingData] = useState(false);
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [fetchedName, setFetchedName] = useState("");
@@ -22,20 +23,20 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail }) => {
   const [isVerifying, setIsVerifying] = useState(false);
   const [userExists, setUserExists] = useState(false);
 
-useEffect(() => {
-  if (initialEmail && isOpen) {
-    // Check if initialEmail is actually a phone number or email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-    const isEmail = emailRegex.test(initialEmail);
-    
-    if (isEmail) {
-      setIdentifier(initialEmail);
-    } else {
-      // If it's not an email format, treat it as phone number
-      setIdentifier(initialEmail);
+  useEffect(() => {
+    if (initialEmail && isOpen) {
+      // Check if initialEmail is actually a phone number or email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+      const isEmail = emailRegex.test(initialEmail);
+
+      if (isEmail) {
+        setIdentifier(initialEmail);
+      } else {
+        // If it's not an email format, treat it as phone number
+        setIdentifier(initialEmail);
+      }
     }
-  }
-}, [initialEmail, isOpen]);
+  }, [initialEmail, isOpen]);
 
 
   // ----------------------------------------------------------------
@@ -57,6 +58,7 @@ useEffect(() => {
     setIsVerifying(false);
     setReturnedOtp("");
     setShowPassword(false);
+    setIsVerifyingData(false); // Add this line
   };
 
   const handleClose = () => {
@@ -67,18 +69,19 @@ useEffect(() => {
   // Auto-fetch user data only when modal opens with prefilled identifier (not while typing)
   useEffect(() => {
     if (!isOpen) return;
-    if (initialEmail && identifier === initialEmail && !infoFetched) {
+    // Only auto-fetch if coming from searchbar, not from navbar
+    if (source === "searchbar" && initialEmail && identifier === initialEmail && !infoFetched) {
       handleFetchUserData();
     }
-  }, [isOpen, initialEmail, identifier, infoFetched]);
+  }, [isOpen, initialEmail, identifier, infoFetched, source]);
 
-  // Auto-send OTP once user is confirmed to exist
+  // Auto-send OTP once user is confirmed to exist (only for searchbar source)
   useEffect(() => {
     if (!isOpen) return;
-    if (userExists && otpSendStatus === "idle") {
+    if (source === "searchbar" && userExists && otpSendStatus === "idle") {
       handleSendOtp();
     }
-  }, [isOpen, userExists, otpSendStatus]);
+  }, [isOpen, userExists, otpSendStatus, source]);
 
   // Reset OTP send state and existence flags when identifier changes
   useEffect(() => {
@@ -99,6 +102,16 @@ useEffect(() => {
     return emailRegex.test(trimmed) || (digits.length >= 7 && digits.length <= 15);
   };
 
+  const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    return emailRegex.test(email.trim());
+  };
+
+  const isValidPhone = (phone) => {
+    const digits = phone.replace(/[^0-9]/g, "");
+    return digits.length >= 7 && digits.length <= 15;
+  };
+
   const handleBlurFetchIfValid = () => {
     if (isValidIdentifier(identifier)) {
       handleFetchUserData();
@@ -115,6 +128,7 @@ useEffect(() => {
       return;
     }
 
+    setIsVerifyingData(true); // Add this line
     try {
       const resp = await fetch(
         `/api/user/${encodeURIComponent(identifier)}`,
@@ -146,7 +160,7 @@ useEffect(() => {
         setEmail("");
         setFetchedName("");
         setUserExists(false);
-        toast.error("User doesn't exist. Please use search bar.");
+        toast.error("User doesn't exist. Please use different email or phone");
       }
     } catch (err) {
       console.error("Error fetching user data:", err);
@@ -155,7 +169,9 @@ useEffect(() => {
       setFetchedName("");
       setUserExists(false);
       setOtpSendStatus("idle");
-      toast.error("User doesn't exist. Please use search bar.");
+      toast.error("User doesn't exist. Please use different email or phone");
+    } finally {
+      setIsVerifyingData(false); // Add this line
     }
   };
 
@@ -488,6 +504,7 @@ useEffect(() => {
           </div>
 
           {/* Identifier field */}
+          {/* Identifier field */}
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-medium mb-2">
               Phone or Email
@@ -497,10 +514,34 @@ useEffect(() => {
               placeholder="Enter phone or email"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              onBlur={handleBlurFetchIfValid}
+              onBlur={source === "searchbar" ? handleBlurFetchIfValid : undefined}
               className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors duration-200"
             />
           </div>
+
+          {/* Manual Verify Data button - only show for navbar source */}
+          {/* Manual Verify Data button - only show for navbar source */}
+          {source === "navbar" && identifier && !userExists && !infoFetched && (
+            <div className="mb-4">
+              <button
+                onClick={handleFetchUserData}
+                disabled={(!isValidEmail(identifier) && !isValidPhone(identifier)) || isVerifyingData}
+                className={`w-full py-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center ${((!isValidEmail(identifier) && !isValidPhone(identifier)) || isVerifyingData)
+                    ? "bg-gray-400 cursor-not-allowed text-gray-500"
+                    : "bg-blue-500 hover:bg-blue-600 text-white"
+                  }`}
+              >
+                {isVerifyingData ? (
+                  <>
+                    <FaSpinner className="animate-spin mr-2" />
+                    Verifying Data...
+                  </>
+                ) : (
+                  "Verify Data"
+                )}
+              </button>
+            </div>
+          )}
 
           {/* Fetched email (read-only) */}
           {email && (
@@ -535,31 +576,35 @@ useEffect(() => {
           {/* OTP LOGIN SECTION */}
           {isOtpMode && (
             <>
-              {/* Send OTP button - only show if user exists */}
-              {userExists && (
-                <button
-                  onClick={handleSendOtp}
-                  className={`w-full py-3 rounded-lg font-medium mb-4 flex items-center justify-center transition-all duration-200 ${otpSendStatus === "sending" || otpSendStatus === "sent"
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-md hover:shadow-lg"
-                    }`}
-                  disabled={otpSendStatus === "sending" || otpSendStatus === "sent"}
-                >
-                  {otpSendStatus === "sending" ? (
-                    <>
-                      <FaSpinner className="animate-spin mr-2" />
-                      Sending OTP...
-                    </>
-                  ) : otpSendStatus === "sent" ? (
-                    <>
-                      OTP Sent
-                      <FaCheckCircle className="ml-2 text-green-400" />
-                    </>
-                  ) : (
-                    "Send OTP"
-                  )}
-                </button>
-              )}
+              {/* Send OTP button - show conditions based on source */}
+              {/* Send OTP button - show conditions based on source */}
+              {(
+                (source === "searchbar" && userExists) ||
+                (source === "navbar" && userExists && otpSendStatus === "idle")
+              ) && (
+                  <button
+                    onClick={handleSendOtp}
+                    className={`w-full py-3 rounded-lg font-medium mb-4 flex items-center justify-center transition-all duration-200 ${otpSendStatus === "sending" || otpSendStatus === "sent"
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-md hover:shadow-lg"
+                      }`}
+                    disabled={otpSendStatus === "sending" || otpSendStatus === "sent"}
+                  >
+                    {otpSendStatus === "sending" ? (
+                      <>
+                        <FaSpinner className="animate-spin mr-2" />
+                        Sending OTP...
+                      </>
+                    ) : otpSendStatus === "sent" ? (
+                      <>
+                        OTP Sent
+                        <FaCheckCircle className="ml-2 text-green-400" />
+                      </>
+                    ) : (
+                      "Send OTP"
+                    )}
+                  </button>
+                )}
 
               {/* OTP Input Fields - 6 digit boxes */}
               {otpSendStatus === "sent" && (

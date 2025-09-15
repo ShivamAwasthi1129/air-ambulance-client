@@ -1265,17 +1265,18 @@ export const SearchBar = () => {
           isOpen={isLoginModalOpen}
           onClose={() => {
             setIsLoginModalOpen(false);
-            setLoginModalData({ email: "", phone: "" });
+            setLoginModalEmail(""); // Clear the stored email when closing
           }}
           onLoginSuccess={() => {
             setIsLoginModalOpen(false);
             setIsVerified(true);
-            setShowTroubleSigningIn(false);
-            setLoginModalData({ email: "", phone: "" });
+            setShowTroubleSigningIn(false); // Hide trouble signing in button on successful login
+            setLoginModalEmail(""); // Clear the stored email on successful login
             setRefreshKey(prev => prev + 1);
             window.dispatchEvent(new Event("updateNavbar"));
           }}
-          initialEmail={loginModalData.email || loginModalData.phone || email}
+          initialEmail={loginModalEmail || email} // Use stored email or fallback to current email
+          source="searchbar"  // Add this line
         />
       </div >
       < GoogleMapModal
