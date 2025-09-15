@@ -533,22 +533,18 @@ export const SearchBar = () => {
           }
 
           // Check if it's a duplicate key error
-          if (data.error && data.error.includes("E11000 duplicate key error")) {
-            if (data.error.includes("phone_1 dup key")) {
+       
+            if (data.error.includes("Phone number already exists")) {
               toast.error("This phone number is already linked with another email account.");
               setLoginModalData({ email: "", phone: fullPhoneNumber });
-            } else if (data.error.includes("email_1 dup key")) {
+            } else if (data.error.includes("Email already exists")) {
               toast.error("This email ID is already linked with another phone number.");
               setLoginModalData({ email: currentEmail, phone: "" });
             } else {
               toast.error("Duplicate entry found. Please check your phone number and email.");
               setLoginModalData({ email: currentEmail, phone: fullPhoneNumber });
             }
-          } else {
-            // Handle other types of errors
-            toast.error(data.message || data.error || "Failed to send OTP. Please try again.");
-            setLoginModalData({ email: currentEmail, phone: fullPhoneNumber });
-          }
+          
           return;
         }
       } catch (err) {
@@ -1275,7 +1271,7 @@ export const SearchBar = () => {
             setRefreshKey(prev => prev + 1);
             window.dispatchEvent(new Event("updateNavbar"));
           }}
-          initialEmail={loginModalEmail || email} // Use stored email or fallback to current email
+          initialEmail={loginModalData.email || loginModalData.phone || loginModalEmail || email} // Pass phone if present
           source="searchbar"  // Add this line
         />
       </div >

@@ -527,8 +527,8 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
                 onClick={handleFetchUserData}
                 disabled={(!isValidEmail(identifier) && !isValidPhone(identifier)) || isVerifyingData}
                 className={`w-full py-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center ${((!isValidEmail(identifier) && !isValidPhone(identifier)) || isVerifyingData)
-                    ? "bg-gray-400 cursor-not-allowed text-gray-500"
-                    : "bg-blue-500 hover:bg-blue-600 text-white"
+                  ? "bg-gray-400 cursor-not-allowed text-gray-500"
+                  : "bg-blue-500 hover:bg-blue-600 text-white"
                   }`}
               >
                 {isVerifyingData ? (
@@ -576,17 +576,15 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
           {/* OTP LOGIN SECTION */}
           {isOtpMode && (
             <>
-              {/* Send OTP button - show conditions based on source */}
-              {/* Send OTP button - show conditions based on source */}
               {(
                 (source === "searchbar" && userExists) ||
-                (source === "navbar" && userExists && otpSendStatus === "idle")
+                (source === "navbar" && userExists)
               ) && (
                   <button
                     onClick={handleSendOtp}
                     className={`w-full py-3 rounded-lg font-medium mb-4 flex items-center justify-center transition-all duration-200 ${otpSendStatus === "sending" || otpSendStatus === "sent"
-                        ? "bg-gray-400 cursor-not-allowed"
-                        : "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-md hover:shadow-lg"
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-md hover:shadow-lg"
                       }`}
                     disabled={otpSendStatus === "sending" || otpSendStatus === "sent"}
                   >
@@ -605,7 +603,6 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
                     )}
                   </button>
                 )}
-
               {/* OTP Input Fields - 6 digit boxes */}
               {otpSendStatus === "sent" && (
                 <div className="mb-6">
