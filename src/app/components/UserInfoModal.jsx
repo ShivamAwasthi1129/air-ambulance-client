@@ -38,27 +38,23 @@ export default function UserInfoModal({ show, onClose }) {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   // ========== OTP states ==========
-  // Email
-  const [emailOTP, setEmailOTP] = useState("");
+  const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
   const [emailVerified, setEmailVerified] = useState(false);
   const [emailOTPError, setEmailOTPError] = useState("");
   const [emailOtpTimeLeft, setEmailOtpTimeLeft] = useState(300);
+  const [isResendEnabled, setIsResendEnabled] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const emailTimerRef = useRef(null);
+  const otpInputRefs = useRef([]);
 
-  // Phone
-  const [phoneOTP, setPhoneOTP] = useState("");
-  const [phoneVerified, setPhoneVerified] = useState(false);
-  const [phoneOTPError, setPhoneOTPError] = useState("");
-  const [phoneOtpTimeLeft, setPhoneOtpTimeLeft] = useState(300);
-  const phoneTimerRef = useRef(null);
-
-  // We'll read the actual email/phone from userInfo in sessionStorage
+  // User info from sessionStorage
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
 
-  // ========== On mount, load userInfo.email & userInfo.phoneNumber from sessionStorage ==========
+  // ========== On mount, load userInfo from sessionStorage ==========
   useEffect(() => {
-    if (!show) return; // If modal not showing, skip
+    if (!show) return;
 
     // Load userInfo from sessionStorage
     const saved = sessionStorage.getItem("searchData");
@@ -66,8 +62,9 @@ export default function UserInfoModal({ show, onClose }) {
       try {
         const parsed = JSON.parse(saved);
         if (parsed?.userInfo) {
+          if (parsed.userInfo.name) setName(parsed.userInfo.name);
           if (parsed.userInfo.email) setEmail(parsed.userInfo.email);
-          if (parsed.userInfo.phoneNumber) setPhoneNumber(parsed.userInfo.phoneNumber);
+          if (parsed.userInfo.phone) setPhoneNumber(parsed.userInfo.phone);
         }
       } catch (err) {
         console.error("Error parsing userInfo from sessionStorage:", err);
@@ -79,17 +76,7 @@ export default function UserInfoModal({ show, onClose }) {
       setEmailOtpTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(emailTimerRef.current);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    // Start a 5-minute countdown (300s) for phone OTP
-    phoneTimerRef.current = setInterval(() => {
-      setPhoneOtpTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(phoneTimerRef.current);
+          setIsResendEnabled(true);
           return 0;
         }
         return prev - 1;
@@ -98,7 +85,6 @@ export default function UserInfoModal({ show, onClose }) {
 
     return () => {
       clearInterval(emailTimerRef.current);
-      clearInterval(phoneTimerRef.current);
     };
   }, [show]);
 
@@ -110,65 +96,116 @@ export default function UserInfoModal({ show, onClose }) {
     setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
   };
 
-  // ========== Verify Email OTP (GET) ==========
-  const handleVerifyEmailOTP = async () => {
-    // If no OTP, or length not 6, or timer expired
-    if (!emailOTP || emailOTP.length !== 6 || emailOtpTimeLeft <= 0) {
-      setEmailOTPError("OTP is expired or invalid.");
-      return;
+  // ========== Handle OTP digit input ==========
+  const handleOtpChange = (index, value) => {
+    if (value.length > 1) return; // Only allow single digit
+
+    const newOtpDigits = [...otpDigits];
+    newOtpDigits[index] = value;
+    setOtpDigits(newOtpDigits);
+
+    // Auto-focus next input
+    if (value && index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
     }
 
-    try {
-      // Make GET request to verify
-      const resp = await fetch(
-        `/api/otp?email=${encodeURIComponent(email)}&otp=${encodeURIComponent(emailOTP)}`,
-        { method: "GET" }
-      );
-      const data = await resp.json();
-
-      if (resp.ok && data.message === "OTP verified successfully") {
-        setEmailVerified(true);
-        setEmailOTPError("");
-        // Stop the timer
-        clearInterval(emailTimerRef.current);
-      } else {
-        setEmailOTPError(data.message || "Invalid or expired OTP.");
-      }
-    } catch (err) {
-      console.error(err);
-      setEmailOTPError("Error verifying Email OTP.");
+    // Auto-verify when all 6 digits are entered
+    const isComplete = newOtpDigits.every(digit => digit !== "");
+    if (isComplete && !isVerifying) {
+      handleVerifyOTP(newOtpDigits.join(""));
     }
   };
 
-  // ========== Verify Phone OTP (GET) ==========
-  const handleVerifyPhoneOTP = async () => {
-    // If no OTP, or length not 6, or timer expired
-    if (!phoneOTP || phoneOTP.length !== 6 || phoneOtpTimeLeft <= 0) {
-      setPhoneOTPError("OTP is expired or invalid.");
-      return;
+  // Handle backspace in OTP inputs
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === "Backspace" && !otpDigits[index] && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
     }
+  };
 
+ // ========== Verify OTP (GET) ==========
+const handleVerifyOTP = async (otp = null) => {
+  const otpToVerify = otp || otpDigits.join("");
+  
+  if (!otpToVerify || otpToVerify.length !== 6 || emailOtpTimeLeft <= 0) {
+    setEmailOTPError("OTP is expired or invalid.");
+    return;
+  }
+
+  setIsVerifying(true);
+  setEmailOTPError("");
+
+  try {
+    const resp = await fetch(
+      `/api/otp?email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phoneNumber)}&otp=${encodeURIComponent(otpToVerify)}`,
+      { method: "GET" }
+    );
+    const data = await resp.json();
+
+    if (resp.ok && data.message === "OTP verified successfully") {
+      setEmailVerified(true);
+      setEmailOTPError("");
+      clearInterval(emailTimerRef.current);
+      sessionStorage.setItem("userVerified", "true");
+      window.dispatchEvent(new Event("updateNavbar"));
+      setTimeout(() => {
+        onClose();
+      }, 1500); // Close after 1.5 seconds to show success message briefly
+      
+    } else {
+      setEmailOTPError(data.message || "Invalid or expired OTP.");
+      // Clear OTP on error
+      setOtpDigits(["", "", "", "", "", ""]);
+      otpInputRefs.current[0]?.focus();
+    }
+  } catch (err) {
+    console.error(err);
+    setEmailOTPError("Error verifying OTP.");
+    setOtpDigits(["", "", "", "", "", ""]);
+    otpInputRefs.current[0]?.focus();
+  } finally {
+    setIsVerifying(false);
+  }
+};
+
+  // ========== Resend OTP ==========
+  const handleResendOTP = async () => {
     try {
-      // Make GET request to verify
-      const resp = await fetch(
-        `/api/otp/whatsapp?otp=${encodeURIComponent(phoneOTP)}&phoneNumber=%2B91${encodeURIComponent(
-          phoneNumber
-        )}`,
-        { method: "GET" }
-      );
-      const data = await resp.json();
+      const response = await fetch("/api/otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          phone: phoneNumber,
+          email,
+        }),
+      });
 
-      if (resp.ok && data.message === "OTP verified successfully") {
-        setPhoneVerified(true);
-        setPhoneOTPError("");
-        // Stop the timer
-        clearInterval(phoneTimerRef.current);
-      } else {
-        setPhoneOTPError(data.message || "Invalid or expired OTP.");
+      if (response.ok) {
+        // Reset states
+        setOtpDigits(["", "", "", "", "", ""]);
+        setEmailOTPError("");
+        setEmailOtpTimeLeft(300);
+        setIsResendEnabled(false);
+        
+        // Focus first input
+        otpInputRefs.current[0]?.focus();
+
+        // Restart timer
+        emailTimerRef.current = setInterval(() => {
+          setEmailOtpTimeLeft((prev) => {
+            if (prev <= 1) {
+              clearInterval(emailTimerRef.current);
+              setIsResendEnabled(true);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
       }
     } catch (err) {
-      console.error(err);
-      setPhoneOTPError("Error verifying Phone OTP.");
+      console.error("Error resending OTP:", err);
+      setEmailOTPError("Failed to resend OTP. Please try again.");
     }
   };
 
@@ -179,15 +216,12 @@ export default function UserInfoModal({ show, onClose }) {
     return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
 
-  // If show=false or we've already closed => don't render
+  // If show=false => don't render
   if (!show) return null;
-
-  // We only require EITHER email OR phone verified
-  const canClose = emailVerified || phoneVerified;
 
   // If user clicks "Done," mark userVerified in session
   const handleCloseOrDone = () => {
-    if (canClose) {
+    if (emailVerified) {
       sessionStorage.setItem("userVerified", "true");
       window.dispatchEvent(new Event("updateNavbar"));
     }
@@ -252,104 +286,113 @@ export default function UserInfoModal({ show, onClose }) {
             {/* Close button */}
             <button
               className="ml-auto mb-4 block text-gray-500 hover:text-gray-700 text-2xl leading-none"
-              onClick={onClose} // If user clicks X, we just close
+              onClick={onClose}
             >
               &times;
             </button>
 
             <h2 className="text-2xl font-bold mb-6">OTP Verification</h2>
 
-            {/* Email OTP */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Enter the OTP sent to your Whatsapp / Mobile No. or Email
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  maxLength={6}
-                  value={emailOTP}
-                  onChange={(e) => setEmailOTP(e.target.value)}
-                  placeholder="6-digit OTP"
-                  className="border border-gray-300 rounded px-3 py-2 focus:outline-none w-32"
-                />
-                <button
-                  onClick={handleVerifyEmailOTP}
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded"
-                  disabled={emailVerified}
-                >
-                  Verify
-                </button>
+            {/* User Info Display */}
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">User Information</h3>
+              <div className="space-y-2">
+                <div className="flex items-center">
+                  <span className="text-sm font-medium text-gray-600 w-16">Name:</span>
+                  <span className="text-sm text-gray-800">{name}</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-sm font-medium text-gray-600 w-16">Email:</span>
+                  <span className="text-sm text-gray-800">{email}</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-sm font-medium text-gray-600 w-16">Phone:</span>
+                  <span className="text-sm text-gray-800">{phoneNumber}</span>
+                </div>
               </div>
-              {/* Timer & errors */}
-              {!emailVerified && (
-                <p className="text-sm text-gray-500 mt-1">
-                  Time left: {formatTime(emailOtpTimeLeft)}
-                </p>
-              )}
-              {emailOTPError && (
-                <p className="text-red-500 text-sm mt-1">{emailOTPError}</p>
-              )}
-              {emailVerified && (
-                <p className="text-green-600 text-sm mt-1">
-                  OTP verified successfully!
-                </p>
-              )}
             </div>
 
-            {/* Phone OTP */}
+            {/* OTP Input Section */}
             <div className="mb-6">
-              {/* <label className="block text-sm font-medium text-gray-700 mb-1">
-                Enter the OTP sent to your WhatsApp
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Enter the 6-digit OTP sent to your email or whatsapp
               </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  maxLength={6}
-                  value={phoneOTP}
-                  onChange={(e) => setPhoneOTP(e.target.value)}
-                  placeholder="6-digit OTP"
-                  className="border border-gray-300 rounded px-3 py-2 focus:outline-none w-32"
-                />
+              
+              {/* 6-digit OTP input boxes */}
+              <div className="flex gap-2 mb-4 justify-center">
+                {otpDigits.map((digit, index) => (
+                  <input
+                    key={index}
+                    ref={el => otpInputRefs.current[index] = el}
+                    type="text"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleOtpChange(index, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                    className="w-12 h-12 text-center text-lg font-semibold border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    disabled={emailVerified || isVerifying}
+                  />
+                ))}
+              </div>
+
+              {/* Timer and status */}
+              {!emailVerified && !isResendEnabled && (
+                <p className="text-sm text-gray-500 text-center mb-2">
+                  Time remaining: {formatTime(emailOtpTimeLeft)}
+                </p>
+              )}
+
+              {/* Resend OTP Button */}
+              <div className="text-center mb-4">
                 <button
-                  onClick={handleVerifyPhoneOTP}
-                  className="bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-2 rounded"
-                  disabled={phoneVerified}
+                  onClick={handleResendOTP}
+                  disabled={!isResendEnabled}
+                  className={`text-sm font-medium ${
+                    isResendEnabled
+                      ? "text-blue-600 hover:text-blue-800 cursor-pointer"
+                      : "text-gray-400 cursor-not-allowed"
+                  }`}
                 >
-                  Verify
+                  Resend OTP
                 </button>
-              </div> */}
-              {/* Timer & errors */}
-              {/* {!phoneVerified && (
-                <p className="text-sm text-gray-500 mt-1">
-                  Time left: {formatTime(phoneOtpTimeLeft)}
+              </div>
+
+              {/* Loading indicator */}
+              {isVerifying && (
+                <div className="flex items-center justify-center mb-2">
+                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+                  <span className="text-sm text-gray-600">Verifying...</span>
+                </div>
+              )}
+
+              {/* Error message */}
+              {emailOTPError && (
+                <p className="text-red-500 text-sm text-center mb-2">{emailOTPError}</p>
+              )}
+
+              {/* Success message */}
+              {emailVerified && (
+                <p className="text-green-600 text-sm text-center mb-2">
+                  ✓ OTP verified successfully!
                 </p>
               )}
-              {phoneOTPError && (
-                <p className="text-red-500 text-sm mt-1">{phoneOTPError}</p>
-              )}
-              {phoneVerified && (
-                <p className="text-green-600 text-sm mt-1">
-                  Phone OTP verified successfully!
-                </p>
-              )} */}
             </div>
           </div>
 
           {/* Bottom area: Done/Close button */}
-          <div>
+          {/* <div>
             <button
               onClick={handleCloseOrDone}
-              disabled={!canClose}
+              disabled={!emailVerified}
               className={`w-full px-4 py-2 text-white font-semibold rounded ${
-                canClose
+                emailVerified
                   ? "bg-green-500 hover:bg-green-600"
                   : "bg-gray-300 cursor-not-allowed"
               }`}
             >
-              {canClose ? "Done" : "Verify to Continue"}
+              {emailVerified ? "Done" : "Verify to Continue"}
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
