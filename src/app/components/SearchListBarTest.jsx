@@ -24,10 +24,13 @@ export const SearchBar = () => {
   const [nearbyAirports, setNearbyAirports] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
   const [hasSearched, setHasSearched] = useState(false); // Add this new state
+  const [loginModalEmail, setLoginModalEmail] = useState("");
+  const [loginModalData, setLoginModalData] = useState({ email: "", phone: "" });
 
   const [dateSelected, setDateSelected] = useState(false);
   const [multiCityDateSelected, setMultiCityDateSelected] = useState({});
   const [mapModal, setMapModal] = useState({ open: false, segIdx: null, field: null, });
+  const [showTroubleSigningIn, setShowTroubleSigningIn] = useState(false);
   const segmentHasHeli = (seg) =>
     (seg.flightTypes || []).some((t) => t.toLowerCase() === "helicopter");
 
@@ -524,18 +527,27 @@ export const SearchBar = () => {
         else {
           setIsLoading(false);
 
+          // Check if it's a 500 error - show trouble signing in button
+          if (response.status === 500) {
+            setShowTroubleSigningIn(true);
+          }
+
           // Check if it's a duplicate key error
           if (data.error && data.error.includes("E11000 duplicate key error")) {
             if (data.error.includes("phone_1 dup key")) {
               toast.error("This phone number is already linked with another email account.");
+              setLoginModalData({ email: "", phone: fullPhoneNumber });
             } else if (data.error.includes("email_1 dup key")) {
               toast.error("This email ID is already linked with another phone number.");
+              setLoginModalData({ email: currentEmail, phone: "" });
             } else {
               toast.error("Duplicate entry found. Please check your phone number and email.");
+              setLoginModalData({ email: currentEmail, phone: fullPhoneNumber });
             }
           } else {
             // Handle other types of errors
             toast.error(data.message || data.error || "Failed to send OTP. Please try again.");
+            setLoginModalData({ email: currentEmail, phone: fullPhoneNumber });
           }
           return;
         }
@@ -545,7 +557,6 @@ export const SearchBar = () => {
         toast.error("Network error. Please check your connection and try again.");
         return;
       }
-
       // Build final payload (each segment includes flightTypes array)
       const finalData = {
         tripType,
@@ -1207,21 +1218,37 @@ export const SearchBar = () => {
               </div>
             )}
 
-            {/* (5) Search Button */}
-            <div className="flex justify-end mt-4">
+            {/* (5) Search Button and Trouble Signing In */}
+            <div className="flex justify-end items-center gap-4 mt-4">
+              {/* Trouble signing in button - only show when there's been a 500 error */}
+              {/* Trouble signing in button - only show when there's been a 500 error */}
+              {showTroubleSigningIn && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLoginModalOpen(true);
+                    setShowTroubleSigningIn(false); // Hide the button after clicking
+                    // loginModalEmail is already set from the error handling
+                  }}
+                  className="text-blue-600 hover:text-blue-800 underline text-sm font-medium transition-colors"
+                >
+                  Trouble signing in?
+                </button>
+              )}
+
               <motion.button
                 onClick={handleSearch}
                 whileHover={{ scale: 1.05 }}
                 className="bg-gradient-to-r from-blue-600 to-blue-400 text-white 
-                           px-6 py-2 rounded-md shadow-md transition-all 
-                           disabled:opacity-60 disabled:cursor-not-allowed"
+               px-6 py-2 rounded-md shadow-md transition-all 
+               disabled:opacity-60 disabled:cursor-not-allowed"
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <div className="flex items-center">
                     <div className="w-4 h-4 border-2 border-white 
-                                   border-t-transparent rounded-full 
-                                   animate-spin mr-2"
+                       border-t-transparent rounded-full 
+                       animate-spin mr-2"
                     />
                     Loading...
                   </div>
@@ -1236,14 +1263,19 @@ export const SearchBar = () => {
         {!isLoading && isVerified && <FilterAndFleetListing key={refreshKey} />}
         <LoginModal
           isOpen={isLoginModalOpen}
-          onClose={() => setIsLoginModalOpen(false)}
+          onClose={() => {
+            setIsLoginModalOpen(false);
+            setLoginModalData({ email: "", phone: "" });
+          }}
           onLoginSuccess={() => {
             setIsLoginModalOpen(false);
             setIsVerified(true);
+            setShowTroubleSigningIn(false);
+            setLoginModalData({ email: "", phone: "" });
             setRefreshKey(prev => prev + 1);
             window.dispatchEvent(new Event("updateNavbar"));
           }}
-          initialEmail={email}
+          initialEmail={loginModalData.email || loginModalData.phone || email}
         />
       </div >
       < GoogleMapModal

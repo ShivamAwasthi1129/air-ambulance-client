@@ -24,7 +24,16 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail }) => {
 
 useEffect(() => {
   if (initialEmail && isOpen) {
-    setIdentifier(initialEmail);
+    // Check if initialEmail is actually a phone number or email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    const isEmail = emailRegex.test(initialEmail);
+    
+    if (isEmail) {
+      setIdentifier(initialEmail);
+    } else {
+      // If it's not an email format, treat it as phone number
+      setIdentifier(initialEmail);
+    }
   }
 }, [initialEmail, isOpen]);
 
@@ -464,7 +473,7 @@ useEffect(() => {
             >
               OTP Login
             </button>
-            <button
+            {/* <button
               onClick={() => {
                 setIsOtpMode(false);
                 setOtpSendStatus("idle");
@@ -475,7 +484,7 @@ useEffect(() => {
                 }`}
             >
               Password Login
-            </button>
+            </button> */}
           </div>
 
           {/* Identifier field */}
