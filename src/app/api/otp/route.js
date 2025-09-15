@@ -23,7 +23,7 @@ export async function POST(req) {
 
     await connectToDatabase();
 
-    const result = await OTPTable.findOne({ $or: [{ email, phone }] });
+    const result = await OTPTable.findOne({ email, phone });
 
     if (!result) {
       // Store OTP in MongoDB
