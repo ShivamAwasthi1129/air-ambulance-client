@@ -491,19 +491,21 @@ export const SearchBar = () => {
       // );
 
       // If not verified, send OTP
-      if (!isVerified) {
-        try {
-          const response = await fetch("/api/otp", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: currentName,
-              phone: fullPhoneNumber,
-              email: currentEmail,
-            }),
-          });
-          const data = await response.json();
+      try {
+        const response = await fetch("/api/otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: currentName,
+            phone: fullPhoneNumber,
+            email: currentEmail,
+          }),
+        });
 
+        const data = await response.json();
+
+        // Handle successful response
+        if (response.ok) {
           if (data.message === "user already exists") {
             toast.info(
               data.message +
@@ -515,12 +517,33 @@ export const SearchBar = () => {
             setIsLoginModalOpen(true);
             return;
           }
-          // Show OTP modal
+          // Show OTP modal only on success
           setIsUserInfoModalOpen(true);
-        } catch (err) {
-          console.error("Error sending OTP request:", err);
-          toast.error("Failed to send OTP. Please try again.");
         }
+        // Handle error responses (500, 400, etc.)
+        else {
+          setIsLoading(false);
+
+          // Check if it's a duplicate key error
+          if (data.error && data.error.includes("E11000 duplicate key error")) {
+            if (data.error.includes("phone_1 dup key")) {
+              toast.error("This phone number is already linked with another email account.");
+            } else if (data.error.includes("email_1 dup key")) {
+              toast.error("This email ID is already linked with another phone number.");
+            } else {
+              toast.error("Duplicate entry found. Please check your phone number and email.");
+            }
+          } else {
+            // Handle other types of errors
+            toast.error(data.message || data.error || "Failed to send OTP. Please try again.");
+          }
+          return;
+        }
+      } catch (err) {
+        console.error("Error sending OTP request:", err);
+        setIsLoading(false);
+        toast.error("Network error. Please check your connection and try again.");
+        return;
       }
 
       // Build final payload (each segment includes flightTypes array)
