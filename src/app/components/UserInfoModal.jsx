@@ -123,50 +123,59 @@ export default function UserInfoModal({ show, onClose }) {
     }
   };
 
- // ========== Verify OTP (GET) ==========
-const handleVerifyOTP = async (otp = null) => {
-  const otpToVerify = otp || otpDigits.join("");
-  
-  if (!otpToVerify || otpToVerify.length !== 6 || emailOtpTimeLeft <= 0) {
-    setEmailOTPError("OTP is expired or invalid.");
-    return;
-  }
+  // ========== Verify OTP (GET) ==========
+  const handleVerifyOTP = async (otp = null) => {
+    const otpToVerify = otp || otpDigits.join("");
 
-  setIsVerifying(true);
-  setEmailOTPError("");
+    if (!otpToVerify || otpToVerify.length !== 6 || emailOtpTimeLeft <= 0) {
+      setEmailOTPError("OTP is expired or invalid.");
+      return;
+    }
 
-  try {
-    const resp = await fetch(
-      `/api/otp?email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phoneNumber)}&otp=${encodeURIComponent(otpToVerify)}`,
-      { method: "GET" }
-    );
-    const data = await resp.json();
+    setIsVerifying(true);
+    setEmailOTPError("");
 
-    if (resp.ok && data.message === "OTP verified successfully") {
-      setEmailVerified(true);
-      setEmailOTPError("");
-      clearInterval(emailTimerRef.current);
-      sessionStorage.setItem("userVerified", "true");
-      window.dispatchEvent(new Event("updateNavbar"));
-      setTimeout(() => {
-        onClose();
-      }, 1500); // Close after 1.5 seconds to show success message briefly
-      
-    } else {
-      setEmailOTPError(data.message || "Invalid or expired OTP.");
-      // Clear OTP on error
+    try {
+      const resp = await fetch(
+        `/api/otp?email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phoneNumber)}&otp=${encodeURIComponent(otpToVerify)}`,
+        { method: "GET" }
+      );
+      const data = await resp.json();
+
+      if (resp.ok && data.message === "OTP verified successfully") {
+        setEmailVerified(true);
+        setEmailOTPError("");
+        clearInterval(emailTimerRef.current);
+        sessionStorage.setItem("userVerified", "true");
+        sessionStorage.setItem(
+          "loginData",
+          JSON.stringify({
+            name,
+            email,
+            phone: phoneNumber,
+            agreedToPolicy: true,
+          })
+        );
+        window.dispatchEvent(new Event("updateNavbar"));
+        setTimeout(() => {
+          onClose();
+        }, 1500); // Close after 1.5 seconds to show success message briefly
+
+      } else {
+        setEmailOTPError(data.message || "Invalid or expired OTP.");
+        // Clear OTP on error
+        setOtpDigits(["", "", "", "", "", ""]);
+        otpInputRefs.current[0]?.focus();
+      }
+    } catch (err) {
+      console.error(err);
+      setEmailOTPError("Error verifying OTP.");
       setOtpDigits(["", "", "", "", "", ""]);
       otpInputRefs.current[0]?.focus();
+    } finally {
+      setIsVerifying(false);
     }
-  } catch (err) {
-    console.error(err);
-    setEmailOTPError("Error verifying OTP.");
-    setOtpDigits(["", "", "", "", "", ""]);
-    otpInputRefs.current[0]?.focus();
-  } finally {
-    setIsVerifying(false);
-  }
-};
+  };
 
   // ========== Resend OTP ==========
   const handleResendOTP = async () => {
@@ -187,7 +196,7 @@ const handleVerifyOTP = async (otp = null) => {
         setEmailOTPError("");
         setEmailOtpTimeLeft(300);
         setIsResendEnabled(false);
-        
+
         // Focus first input
         otpInputRefs.current[0]?.focus();
 
@@ -317,7 +326,7 @@ const handleVerifyOTP = async (otp = null) => {
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Enter the 6-digit OTP sent to your email or whatsapp
               </label>
-              
+
               {/* 6-digit OTP input boxes */}
               <div className="flex gap-2 mb-4 justify-center">
                 {otpDigits.map((digit, index) => (
@@ -347,11 +356,10 @@ const handleVerifyOTP = async (otp = null) => {
                 <button
                   onClick={handleResendOTP}
                   disabled={!isResendEnabled}
-                  className={`text-sm font-medium ${
-                    isResendEnabled
+                  className={`text-sm font-medium ${isResendEnabled
                       ? "text-blue-600 hover:text-blue-800 cursor-pointer"
                       : "text-gray-400 cursor-not-allowed"
-                  }`}
+                    }`}
                 >
                   Resend OTP
                 </button>

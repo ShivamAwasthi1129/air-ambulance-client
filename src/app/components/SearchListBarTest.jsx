@@ -205,7 +205,6 @@ export const SearchBar = () => {
   }, [tripType, isMultiCityCollapsed]);
 
   // (D) Close airport dropdown if user clicks outside
-  // In your existing useEffect for closing dropdown
   useEffect(() => {
     function handleClickOutside(e) {
       if (
@@ -216,8 +215,8 @@ export const SearchBar = () => {
         setShowDropdown(false);
         setFocusedSegmentIndex(null);
         setFocusedField(null);
-        setHasSearched(false); // Add this line
-        setIsLoadingNearbyAirports(false); // Add this line
+        setHasSearched(false);
+        setIsLoadingNearbyAirports(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -228,48 +227,50 @@ export const SearchBar = () => {
 
   // (E) Fetch airports when searchQuery changes
   useEffect(() => {
-    async function fetchAirports() {
-      // If there's a search query, use existing logic
-      if (searchQuery && searchQuery.trim()) {
-        setHasSearched(false); // Reset before search
-        try {
-          const response = await fetch(
-            `https://ow91reoh80.execute-api.ap-south-1.amazonaws.com/air/station?query=${searchQuery}`
-          );
-          const data = await response.json();
-          const searchResults = data.airports || [];
+    if (!showDropdown) return;
 
-          if (searchResults.length === 0 && userLocation) {
-            setIsLoadingNearbyAirports(true);
-            const nearby = await fetchNearbyAirports(userLocation.lat, userLocation.lng);
-            setAirports(nearby);
-            setIsLoadingNearbyAirports(false);
-            setHasSearched(true);
-          } else {
-            setAirports(searchResults);
+    const handler = setTimeout(() => {
+      async function fetchAirports() {
+        if (searchQuery && searchQuery.trim()) {
+          setHasSearched(false);
+          try {
+            const response = await fetch(
+              `https://ow91reoh80.execute-api.ap-south-1.amazonaws.com/air/station?query=${searchQuery}`
+            );
+            const data = await response.json();
+            const searchResults = data.airports || [];
+
+            if (searchResults.length === 0 && userLocation) {
+              setIsLoadingNearbyAirports(true);
+              const nearby = await fetchNearbyAirports(userLocation.lat, userLocation.lng);
+              setAirports(nearby);
+              setIsLoadingNearbyAirports(false);
+              setHasSearched(true);
+            } else {
+              setAirports(searchResults);
+              setHasSearched(true);
+            }
+          } catch (error) {
+            console.error("Error fetching airport data:", error);
+            setAirports([]);
             setHasSearched(true);
           }
-        } catch (error) {
-          console.error("Error fetching airport data:", error);
-          setAirports([]);
+        } else if (showDropdown && userLocation) {
+          setIsLoadingNearbyAirports(true);
+          setHasSearched(false);
+          const nearby = await fetchNearbyAirports(userLocation.lat, userLocation.lng);
+          setAirports(nearby);
+          setIsLoadingNearbyAirports(false);
           setHasSearched(true);
+        } else {
+          setAirports([]);
+          setHasSearched(false);
         }
       }
-      // If no search query but dropdown is focused, show nearby airports
-      else if (showDropdown && userLocation) {
-        setIsLoadingNearbyAirports(true);
-        setHasSearched(false);
-        const nearby = await fetchNearbyAirports(userLocation.lat, userLocation.lng);
-        setAirports(nearby);
-        setIsLoadingNearbyAirports(false);
-        setHasSearched(true);
-      }
-      else {
-        setAirports([]);
-        setHasSearched(false);
-      }
-    }
-    fetchAirports();
+      fetchAirports();
+    }, 400); // 400ms debounce
+
+    return () => clearTimeout(handler);
   }, [searchQuery, showDropdown, userLocation]);
 
   // (F) Fetch IP info on mount (optional)
@@ -533,18 +534,18 @@ export const SearchBar = () => {
           }
 
           // Check if it's a duplicate key error
-       
-            if (data.error.includes("Phone number already exists")) {
-              toast.error("This phone number is already linked with another email account.");
-              setLoginModalData({ email: "", phone: fullPhoneNumber });
-            } else if (data.error.includes("Email already exists")) {
-              toast.error("This email ID is already linked with another phone number.");
-              setLoginModalData({ email: currentEmail, phone: "" });
-            } else {
-              toast.error("Duplicate entry found. Please check your phone number and email.");
-              setLoginModalData({ email: currentEmail, phone: fullPhoneNumber });
-            }
-          
+
+          if (data.error.includes("Phone number already exists")) {
+            toast.error("This phone number is already linked with another email account.");
+            setLoginModalData({ email: "", phone: fullPhoneNumber });
+          } else if (data.error.includes("Email already exists")) {
+            toast.error("This email ID is already linked with another phone number.");
+            setLoginModalData({ email: currentEmail, phone: "" });
+          } else {
+            toast.error("Duplicate entry found. Please check your phone number and email.");
+            setLoginModalData({ email: currentEmail, phone: fullPhoneNumber });
+          }
+
           return;
         }
       } catch (err) {
@@ -656,9 +657,9 @@ export const SearchBar = () => {
           <div className="bg-white rounded-xl border-4 border-gray-300 p-4">
             {/* One Way Fields */}
             {tripType === "oneway" && (
-              <div className="flex flex-wrap md:flex-nowrap items-start gap-4 mb-4 border-b-2 border-gray-300 pb-4">
+              <div className="flex flex-col md:flex-row md:flex-nowrap items-start gap-4 mb-4 border-b-2 border-gray-300 pb-4">
                 {/* FROM */}
-                <div className="flex-1 relative">
+                <div className="w-full md:flex-1 relative">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     From
                   </label>
@@ -738,14 +739,14 @@ export const SearchBar = () => {
                 <motion.button
                   onClick={() => handleSwap(0)}
                   whileHover={{ scale: 1.1 }}
-                  className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full 
-                             h-10 w-10 flex items-center justify-center mt-6"
+                  className="hidden md:flex bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full 
+             h-10 w-10 items-center justify-center mt-6"
                 >
                   <SwapHorizIcon />
                 </motion.button>
 
                 {/* TO */}
-                <div className="flex-1 relative">
+                <div className="w-full md:flex-1 relative">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     To
                   </label>
@@ -911,7 +912,7 @@ export const SearchBar = () => {
                         {/* Actual fields */}
                         <div className="ml-10 flex flex-wrap lg:flex-nowrap items-start gap-4 mt-4">
                           {/* FROM */}
-                          <div className="flex-1 relative">
+                          <div className="w-full md:flex-1 relative">
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                               From
                             </label>
@@ -981,7 +982,7 @@ export const SearchBar = () => {
                             }
                           </div>
                           {/* TO */}
-                          <div className="flex-1 relative">
+                          <div className="w-full md:flex-1 relative">
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                               To
                             </label>
@@ -1133,9 +1134,9 @@ export const SearchBar = () => {
 
             {/* Show these fields only if NOT verified */}
             {!isVerified && (
-              <div className="flex flex-wrap items-center justify-center gap-4 mb-4">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
                 {/* Email */}
-                <div className="flex-1 min-w-[200px]">
+                <div className="w-full sm:flex-1 min-w-[200px] ">
                   <input
                     type="email"
                     value={email}
@@ -1145,30 +1146,7 @@ export const SearchBar = () => {
                   />
                 </div>
 
-                {/* Phone Number + Country Code */}
-                {/* <div className="flex-1 min-w-[160px] relative">
-                  <select
-                    value={countryCode}
-                    onChange={(e) => setCountryCode(e.target.value)}
-                    className="absolute inset-y-0 left-0 w-20 bg-transparent 
-                               border-0 text-gray-700 z-10"
-                  >
-                    <option value="+91">+91</option>
-                    <option value="+1">+1</option>
-                    <option value="+44">+44</option>
-                    <option value="+61">+61</option>
-                  </select>
-                  <input
-                    type="phone"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="Phone Number*"
-                    className="block w-full p-2 border rounded focus:outline-none
-                               pl-20 bg-pink-50/50"
-                  />
-                </div> */}
-
-                <div className="flex-1 min-w-[160px]">
+                <div className="w-full sm:flex-1 min-w-[160px] ">
                   <PhoneInput
                     value={phone}
                     onChange={setPhone}
@@ -1181,7 +1159,7 @@ export const SearchBar = () => {
                 </div>
 
                 {/* Name */}
-                <div className="flex-1 min-w-[180px]">
+                <div className="w-full sm:flex-1 min-w-[180px] ">
                   <input
                     type="text"
                     value={name}
@@ -1216,7 +1194,6 @@ export const SearchBar = () => {
 
             {/* (5) Search Button and Trouble Signing In */}
             <div className="flex justify-end items-center gap-4 mt-4">
-              {/* Trouble signing in button - only show when there's been a 500 error */}
               {/* Trouble signing in button - only show when there's been a 500 error */}
               {showTroubleSigningIn && (
                 <button

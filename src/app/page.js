@@ -64,7 +64,7 @@ const Home = () => {
           <h1
             className="text-6xl md:text-7xl lg:text-8xl font-bold tracking-wider capitalize text-transparent"
             style={{
-              WebkitTextStroke: "2px white",
+              WebkitTextStroke: "1px white",
               WebkitTextFillColor: "transparent",
               background: `
         url("data:image/svg+xml,%3Csvg width='200' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='white' d='M0 30 Q 25 10, 50 30 T 100 30 T 150 30 T 200 30 V60 H0 Z'/%3E%3C/svg%3E") repeat-x`,
@@ -72,7 +72,7 @@ const Home = () => {
               backgroundPosition: "0% 100%",
               backgroundClip: "text",
               WebkitBackgroundClip: "text",
-              animation: "waveFill 6s linear infinite",
+              animation: "waveFill 8s linear infinite",
             }}
           >
             {countryName}
