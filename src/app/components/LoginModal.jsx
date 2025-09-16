@@ -544,7 +544,6 @@ const formatPhone = (phone) => {
           </div>
 
           {/* Manual Verify Data button - only show for navbar source */}
-          {/* Manual Verify Data button - only show for navbar source */}
           {source === "navbar" && identifier && !userExists && !infoFetched && (
             <div className="mb-4">
               <button
@@ -561,7 +560,7 @@ const formatPhone = (phone) => {
                     Verifying Data...
                   </>
                 ) : (
-                  "Verify Data"
+                  "Verify"
                 )}
               </button>
             </div>
