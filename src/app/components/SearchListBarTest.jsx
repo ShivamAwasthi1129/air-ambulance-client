@@ -435,66 +435,46 @@ export const SearchBar = () => {
 
 
   // Final "Search" button
-  const handleSearch = async () => {
-    setIsLoading(true);
-    try {
-      // If verified, try to pull name/email/phone from loginData in session
-      if (isVerified) {
-        const storedLoginData = sessionStorage.getItem("loginData");
-        if (storedLoginData) {
-          const parsedLoginData = JSON.parse(storedLoginData);
-          // Overwrite if empty
-          if (!name.trim()) setName(parsedLoginData.name || "");
-          if (!phone.trim()) setPhone(parsedLoginData.phone || "");
-          if (!email.trim()) setEmail(parsedLoginData.email || "");
-        }
-      }
-
-      // Ensure setState is processed
-      await new Promise((resolve) => setTimeout(resolve, 0));
-      const currentName = name.trim();
-      const currentPhone = phone.trim();
-      const currentEmail = email.trim();
-
-      // Basic validations if user is not verified
-      // if (!currentName || !currentPhone || !currentEmail || !agreedToPolicy) {
-      //   toast.error(
-      //     "Name, phone, email, and agreeing to Terms & Conditions are required."
-      //   );
-      //   setIsLoading(false);
-      //   return;
-      // }
+const handleSearch = async () => {
+  setIsLoading(true);
+  try {
+    // If verified, try to pull name/email/phone from loginData in session
+    if (isVerified) {
       const storedLoginData = sessionStorage.getItem("loginData");
-      if (!storedLoginData && (!currentName || !currentPhone || !currentEmail || !agreedToPolicy)) {
-        toast.error(
-          "Name, phone, email, and agreeing to Terms & Conditions are required."
-        );
-        setIsLoading(false);
-        return;
+      if (storedLoginData) {
+        const parsedLoginData = JSON.parse(storedLoginData);
+        if (!name.trim()) setName(parsedLoginData.name || "");
+        if (!phone.trim()) setPhone(parsedLoginData.phone || "");
+        if (!email.trim()) setEmail(parsedLoginData.email || "");
       }
-      const fullPhoneNumber = `${currentPhone}`;
+    }
 
-      // Merge user info
-      const mergedUserInfo = {
-        ...userInfo,
-        name: currentName,
-        phone: fullPhoneNumber,
-        email: currentEmail,
-        agreedToPolicy,
-      };
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const currentName = name.trim();
+    const currentPhone = phone.trim();
+    const currentEmail = email.trim();
 
-      // Save the merged user info to sessionStorage as loginData
-      // sessionStorage.setItem(
-      //   "loginData",
-      //   JSON.stringify({
-      //     name: currentName,
-      //     phone: fullPhoneNumber,
-      //     email: currentEmail,
-      //     agreedToPolicy,
-      //   })
-      // );
+    // Basic validations if user is not verified and not logged in
+    const storedLoginData = sessionStorage.getItem("loginData");
+    if (!storedLoginData && (!currentName || !currentPhone || !currentEmail || !agreedToPolicy)) {
+      toast.error(
+        "Name, phone, email, and agreeing to Terms & Conditions are required."
+      );
+      setIsLoading(false);
+      return;
+    }
+    const fullPhoneNumber = `${currentPhone}`;
 
-      // If not verified, send OTP
+    const mergedUserInfo = {
+      ...userInfo,
+      name: currentName,
+      phone: fullPhoneNumber,
+      email: currentEmail,
+      agreedToPolicy,
+    };
+
+    // Only send OTP and open UserInfoModal if not logged in
+    if (!storedLoginData) {
       try {
         const response = await fetch("/api/otp", {
           method: "POST",
@@ -508,7 +488,6 @@ export const SearchBar = () => {
 
         const data = await response.json();
 
-        // Handle successful response
         if (response.ok) {
           if (data.message === "user already exists") {
             toast.info(
@@ -521,19 +500,17 @@ export const SearchBar = () => {
             setIsLoginModalOpen(true);
             return;
           }
-          // Show OTP modal only on success
-          setIsUserInfoModalOpen(true);
-        }
-        // Handle error responses (500, 400, etc.)
-        else {
+
+          // Only show OTP modal if NOT verified and loginData is not present
+          if (!isVerified && !sessionStorage.getItem("loginData")) {
+            setIsUserInfoModalOpen(true);
+          }
+        } else {
           setIsLoading(false);
 
-          // Check if it's a 500 error - show trouble signing in button
           if (response.status === 500) {
             setShowTroubleSigningIn(true);
           }
-
-          // Check if it's a duplicate key error
 
           if (data.error.includes("Phone number already exists")) {
             toast.error("This phone number is already linked with another email account.");
@@ -554,48 +531,47 @@ export const SearchBar = () => {
         toast.error("Network error. Please check your connection and try again.");
         return;
       }
-      // Build final payload (each segment includes flightTypes array)
-      const finalData = {
-        tripType,
-        segments, // => each has flightTypes: [...]
-        userInfo: mergedUserInfo,
-      };
+    }
 
-      // Store in session
-      sessionStorage.setItem("searchData", JSON.stringify(finalData));
-      setUserInfo(mergedUserInfo);
-      setRefreshKey((prev) => prev + 1);
+    // Build final payload (each segment includes flightTypes array)
+    const finalData = {
+      tripType,
+      segments,
+      userInfo: mergedUserInfo,
+    };
 
-      // POST to /api/query for flight listing
-      const finalDataFromSession = sessionStorage.getItem("searchData");
-      console.log("final payload : ", finalDataFromSession);
-      if (finalDataFromSession) {
-        const finalDataToSend = JSON.parse(finalDataFromSession);
-        const queryResponse = await fetch("/api/query", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(finalDataToSend),
-        });
+    sessionStorage.setItem("searchData", JSON.stringify(finalData));
+    setUserInfo(mergedUserInfo);
+    setRefreshKey((prev) => prev + 1);
 
-        if (queryResponse.ok) {
-          const queryData = await queryResponse.json();
-          if (queryData.id) {
-            sessionStorage.setItem("queryId", queryData.id);
-          }
+    // POST to /api/query for flight listing
+    const finalDataFromSession = sessionStorage.getItem("searchData");
+    if (finalDataFromSession) {
+      const finalDataToSend = JSON.parse(finalDataFromSession);
+      const queryResponse = await fetch("/api/query", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(finalDataToSend),
+      });
+
+      if (queryResponse.ok) {
+        const queryData = await queryResponse.json();
+        if (queryData.id) {
+          sessionStorage.setItem("queryId", queryData.id);
         }
       }
-
-      // If multi-city, collapse after searching
-      if (tripType === "multicity") {
-        setIsMultiCityCollapsed(true);
-      }
-    } catch (err) {
-      console.error("Error in handleSearch:", err);
-      toast.error("Something went wrong while searching. Please try again.");
-    } finally {
-      setIsLoading(false);
     }
-  };
+
+    if (tripType === "multicity") {
+      setIsMultiCityCollapsed(true);
+    }
+  } catch (err) {
+    console.error("Error in handleSearch:", err);
+    toast.error("Something went wrong while searching. Please try again.");
+  } finally {
+    setIsLoading(false);
+  }
+};
   // === Render ===
   return (
     <>
