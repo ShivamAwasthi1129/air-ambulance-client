@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { FaEye, FaEyeSlash, FaSpinner, FaCheckCircle } from "react-icons/fa";
 import { toast } from "react-toastify";
+import validator from "validator";
+import { isValidPhoneNumber, parsePhoneNumber } from "libphonenumber-js";
 
 const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) => {
   // ----------------------------------------------------------------
@@ -102,15 +104,37 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
     return emailRegex.test(trimmed) || (digits.length >= 7 && digits.length <= 15);
   };
 
-  const isValidEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-    return emailRegex.test(email.trim());
-  };
+const isValidEmail = (email) => {
+  if (/\s/.test(email)) return false; // Reject if any space
+  // ...rest of your validation...
+  const emailRegex = /^[^\s@]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,24}$/;
+  if (!emailRegex.test(email.trim())) return false;
+  const domain = email.trim().split('@')[1];
+  const domainParts = domain.split('.');
+  if (domainParts.length < 2) return false;
+  const tld = domainParts[domainParts.length - 1];
+  const sld = domainParts[domainParts.length - 2];
+  if (tld.length < 2 || sld.length < 2) return false;
+  if (tld === "gmail" || sld === "com") return false;
+  return true;
+};
 
-  const isValidPhone = (phone) => {
-    const digits = phone.replace(/[^0-9]/g, "");
-    return digits.length >= 7 && digits.length <= 15;
-  };
+const isValidPhone = (phone) => {
+  if (/\s/.test(phone)) return false; // Reject if any space
+  try {
+    return isValidPhoneNumber(phone, "IN");
+  } catch {
+    return false;
+  }
+};
+const formatPhone = (phone) => {
+  try {
+    const phoneNumber = parsePhoneNumber(phone, "IN");
+    return phoneNumber.formatInternational();
+  } catch {
+    return phone;
+  }
+};
 
   const handleBlurFetchIfValid = () => {
     if (isValidIdentifier(identifier)) {
@@ -513,7 +537,7 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
               type="text"
               placeholder="Enter phone or email"
               value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
+               onChange={(e) => setIdentifier(e.target.value.replace(/\s/g, ""))}
               onBlur={source === "searchbar" ? handleBlurFetchIfValid : undefined}
               className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors duration-200"
             />
@@ -559,19 +583,19 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
           )}
 
           {/* Fetched phone (read-only) */}
-          {phoneNumber && (
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-medium mb-2">
-                Phone Number
-              </label>
-              <input
-                type="text"
-                value={phoneNumber}
-                readOnly
-                className="w-full p-3 border-2 border-gray-200 rounded-lg bg-gray-50"
-              />
-            </div>
-          )}
+         {phoneNumber && (
+  <div className="mb-4">
+    <label className="block text-gray-700 text-sm font-medium mb-2">
+      Phone Number
+    </label>
+    <input
+      type="text"
+      value={formatPhone(phoneNumber)}
+      readOnly
+      className="w-full p-3 border-2 border-gray-200 rounded-lg bg-gray-50"
+    />
+  </div>
+)}
 
           {/* OTP LOGIN SECTION */}
           {isOtpMode && (
