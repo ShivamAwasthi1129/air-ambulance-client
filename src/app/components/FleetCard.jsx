@@ -794,12 +794,14 @@ export default function FlightCard({
                       ) : (
                         <div className="relative flex items-center h-12">
                           {/* Left Arrow (always visible) */}
-                          <button
-                            onClick={() => shiftAmenityLeft(flightId, length)}
-                            className="mr-2 bg-white p-1 rounded-full border hover:bg-gray-50 shadow"
-                          >
-                            <FaArrowLeft />
-                          </button>
+                          {length >= 4 && (
+                            <button
+                              onClick={() => shiftAmenityLeft(flightId, length)}
+                              className="mr-2 bg-white p-1 rounded-full border hover:bg-gray-50 shadow"
+                            >
+                              <FaArrowLeft />
+                            </button>
+                          )}
                           {/* Carousel window */}
                           <div className="h-[8rem] flex items-center overflow-hidden w-full max-w-[18rem] sm:max-w-[26rem]">
                             {/* Amenity row */}
@@ -840,12 +842,14 @@ export default function FlightCard({
                           </div>
 
                           {/* Right Arrow (always visible) */}
-                          <button
-                            onClick={() => shiftAmenityRight(flightId, length)}
-                            className="ml-2 bg-white p-1 rounded-full border hover:bg-gray-50 shadow"
-                          >
-                            <FaArrowRight />
-                          </button>
+                          {length >= 4 && (
+                            <button
+                              onClick={() => shiftAmenityRight(flightId, length)}
+                              className="ml-2 bg-white p-1 rounded-full border hover:bg-gray-50 shadow"
+                            >
+                              <FaArrowRight />
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
