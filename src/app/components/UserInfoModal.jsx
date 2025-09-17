@@ -41,11 +41,12 @@ export default function UserInfoModal({ show, onClose }) {
   const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
   const [emailVerified, setEmailVerified] = useState(false);
   const [emailOTPError, setEmailOTPError] = useState("");
-  const [emailOtpTimeLeft, setEmailOtpTimeLeft] = useState(300);
+  const [emailOtpTimeLeft, setEmailOtpTimeLeft] = useState(120);
   const [isResendEnabled, setIsResendEnabled] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const emailTimerRef = useRef(null);
   const otpInputRefs = useRef([]);
+  const [isResending, setIsResending] = useState(false);
 
   // User info from sessionStorage
   const [name, setName] = useState("");
@@ -179,6 +180,7 @@ export default function UserInfoModal({ show, onClose }) {
 
   // ========== Resend OTP ==========
   const handleResendOTP = async () => {
+    setIsResending(true);
     try {
       const response = await fetch("/api/otp", {
         method: "POST",
@@ -194,7 +196,7 @@ export default function UserInfoModal({ show, onClose }) {
         // Reset states
         setOtpDigits(["", "", "", "", "", ""]);
         setEmailOTPError("");
-        setEmailOtpTimeLeft(300);
+        setEmailOtpTimeLeft(120);
         setIsResendEnabled(false);
 
         // Focus first input
@@ -215,6 +217,8 @@ export default function UserInfoModal({ show, onClose }) {
     } catch (err) {
       console.error("Error resending OTP:", err);
       setEmailOTPError("Failed to resend OTP. Please try again.");
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -355,13 +359,20 @@ export default function UserInfoModal({ show, onClose }) {
               <div className="text-center mb-4">
                 <button
                   onClick={handleResendOTP}
-                  disabled={!isResendEnabled}
-                  className={`text-sm font-medium ${isResendEnabled
-                      ? "text-blue-600 hover:text-blue-800 cursor-pointer"
-                      : "text-gray-400 cursor-not-allowed"
+                  disabled={!isResendEnabled || isResending}
+                  className={`text-sm font-medium ${isResendEnabled && !isResending
+                    ? "text-blue-600 hover:text-blue-800 cursor-pointer"
+                    : "text-gray-400 cursor-not-allowed"
                     }`}
                 >
-                  Resend OTP
+                  {isResending ? (
+                    <span className="flex items-center justify-center">
+                      <span className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></span>
+                      Sending OTP...
+                    </span>
+                  ) : (
+                    "Resend OTP"
+                  )}
                 </button>
               </div>
 
