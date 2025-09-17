@@ -522,7 +522,6 @@ const handleSearch = async () => {
             toast.error("Duplicate entry found. Please check your phone number and email.");
             setLoginModalData({ email: currentEmail, phone: fullPhoneNumber });
           }
-
           return;
         }
       } catch (err) {

@@ -186,7 +186,7 @@ const NavBar = () => {
         setEmail("");
         setFetchedName("");
         setUserExists(false);
-        toast.error("User doesn't exist. Please use different email or phone");
+        toast.error("User doesn't exist. with such mobile number or email. Please fill the search query form for search result and Sign up.");
       }
     } catch (err) {
       console.error("Error fetching user data:", err);
@@ -194,7 +194,7 @@ const NavBar = () => {
       setEmail("");
       setFetchedName("");
       setUserExists(false);
-      toast.error("User doesn't exist. Please use different email or phone");
+      toast.error("User doesn't exist. with such mobile number or email. Please fill the search query form for search result and Sign up.");
     }
   };
 
@@ -810,8 +810,7 @@ const NavBar = () => {
           </div>
         </div>
       )}
-
-      {/* Login Modal */}
+      
       {/* Login Modal */}
       <LoginModal
         isOpen={isLoginModalOpen}
@@ -820,11 +819,11 @@ const NavBar = () => {
           setIsLoginModalOpen(false);
           window.location.reload();
         }}
-        source="navbar"  // Add this line
+        source="navbar"  
       />
       {/* Toast notifications */}
       <ToastContainer
-        autoClose={4000}
+        autoClose={12000}
         hideProgressBar={false}
         newestOnTop={false}
         closeOnClick

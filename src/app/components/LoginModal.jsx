@@ -93,6 +93,36 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
     setUserExists(false);
   }, [identifier, isOpen]);
 
+  // Mask first 6 digits of phone
+  const maskPhone = (phone) => {
+    if (!phone) return "";
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length <= 8) return "*".repeat(digits.length);
+    return "*".repeat(8) + digits.slice(8);
+  };
+
+  // Mask email (show first 2 and last 2 chars before @, rest as *)
+const maskEmail = (email) => {
+  if (!email) return "";
+  const [user, domain] = email.split("@");
+  // Mask user part as before
+  let maskedUser;
+  if (user.length <= 4) maskedUser = "*".repeat(user.length);
+  else maskedUser = user.slice(0, 2) + "*".repeat(user.length - 4) + user.slice(-2);
+
+  // Mask domain part (before the first dot)
+  const domainParts = domain.split(".");
+  if (domainParts.length < 2) return maskedUser + "@" + domain; // fallback
+
+  const domainName = domainParts[0];
+  const tld = domainParts.slice(1).join(".");
+  let maskedDomain;
+  if (domainName.length <= 2) maskedDomain = "*".repeat(domainName.length);
+  else maskedDomain = domainName[0] + "*".repeat(domainName.length - 2) + domainName.slice(-1);
+
+  return `${maskedUser}@${maskedDomain}.${tld}`;
+};
+
   // ----------------------------------------------------------------
   // Fetch user data (email/phone) from your backend
   // ----------------------------------------------------------------
@@ -104,37 +134,37 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
     return emailRegex.test(trimmed) || (digits.length >= 7 && digits.length <= 15);
   };
 
-const isValidEmail = (email) => {
-  if (/\s/.test(email)) return false; // Reject if any space
-  // ...rest of your validation...
-  const emailRegex = /^[^\s@]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,24}$/;
-  if (!emailRegex.test(email.trim())) return false;
-  const domain = email.trim().split('@')[1];
-  const domainParts = domain.split('.');
-  if (domainParts.length < 2) return false;
-  const tld = domainParts[domainParts.length - 1];
-  const sld = domainParts[domainParts.length - 2];
-  if (tld.length < 2 || sld.length < 2) return false;
-  if (tld === "gmail" || sld === "com") return false;
-  return true;
-};
+  const isValidEmail = (email) => {
+    if (/\s/.test(email)) return false; // Reject if any space
+    // ...rest of your validation...
+    const emailRegex = /^[^\s@]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,24}$/;
+    if (!emailRegex.test(email.trim())) return false;
+    const domain = email.trim().split('@')[1];
+    const domainParts = domain.split('.');
+    if (domainParts.length < 2) return false;
+    const tld = domainParts[domainParts.length - 1];
+    const sld = domainParts[domainParts.length - 2];
+    if (tld.length < 2 || sld.length < 2) return false;
+    if (tld === "gmail" || sld === "com") return false;
+    return true;
+  };
 
-const isValidPhone = (phone) => {
-  if (/\s/.test(phone)) return false; // Reject if any space
-  try {
-    return isValidPhoneNumber(phone, "IN");
-  } catch {
-    return false;
-  }
-};
-const formatPhone = (phone) => {
-  try {
-    const phoneNumber = parsePhoneNumber(phone, "IN");
-    return phoneNumber.formatInternational();
-  } catch {
-    return phone;
-  }
-};
+  const isValidPhone = (phone) => {
+    if (/\s/.test(phone)) return false; // Reject if any space
+    try {
+      return isValidPhoneNumber(phone, "IN");
+    } catch {
+      return false;
+    }
+  };
+  const formatPhone = (phone) => {
+    try {
+      const phoneNumber = parsePhoneNumber(phone, "IN");
+      return phoneNumber.formatInternational();
+    } catch {
+      return phone;
+    }
+  };
 
   const handleBlurFetchIfValid = () => {
     if (isValidIdentifier(identifier)) {
@@ -184,7 +214,7 @@ const formatPhone = (phone) => {
         setEmail("");
         setFetchedName("");
         setUserExists(false);
-        toast.error("User doesn't exist. Please use different email or phone");
+        toast.error("User doesn't exist. with such mobile number or email. Please fill the search query form for search result and Sign up.");
       }
     } catch (err) {
       console.error("Error fetching user data:", err);
@@ -193,7 +223,7 @@ const formatPhone = (phone) => {
       setFetchedName("");
       setUserExists(false);
       setOtpSendStatus("idle");
-      toast.error("User doesn't exist. Please use different email or phone");
+      toast.error("User doesn't exist. with such mobile number or email. Please fill the search query form for search result and Sign up.");
     } finally {
       setIsVerifyingData(false); // Add this line
     }
@@ -537,7 +567,7 @@ const formatPhone = (phone) => {
               type="text"
               placeholder="Enter phone or email"
               value={identifier}
-               onChange={(e) => setIdentifier(e.target.value.replace(/\s/g, ""))}
+              onChange={(e) => setIdentifier(e.target.value.replace(/\s/g, ""))}
               onBlur={source === "searchbar" ? handleBlurFetchIfValid : undefined}
               className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors duration-200"
             />
@@ -574,7 +604,11 @@ const formatPhone = (phone) => {
               </label>
               <input
                 type="text"
-                value={email}
+                value={
+                  source === "navbar"
+                    ? maskEmail(email)
+                    : email
+                }
                 readOnly
                 className="w-full p-3 border-2 border-gray-200 rounded-lg bg-gray-50"
               />
@@ -582,19 +616,25 @@ const formatPhone = (phone) => {
           )}
 
           {/* Fetched phone (read-only) */}
-         {phoneNumber && (
-  <div className="mb-4">
-    <label className="block text-gray-700 text-sm font-medium mb-2">
-      Phone Number
-    </label>
-    <input
-      type="text"
-      value={formatPhone(phoneNumber)}
-      readOnly
-      className="w-full p-3 border-2 border-gray-200 rounded-lg bg-gray-50"
-    />
-  </div>
-)}
+          {phoneNumber && (
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-medium mb-2">
+                Phone Number
+              </label>
+              <input
+                type="text"
+                value={
+                  source === "searchbar"
+                    ? maskPhone(phoneNumber)
+                    : source === "navbar"
+                      ? maskPhone(phoneNumber)
+                      : phoneNumber
+                }
+                readOnly
+                className="w-full p-3 border-2 border-gray-200 rounded-lg bg-gray-50"
+              />
+            </div>
+          )}
 
           {/* OTP LOGIN SECTION */}
           {isOtpMode && (
