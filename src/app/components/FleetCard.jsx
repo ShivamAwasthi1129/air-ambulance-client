@@ -644,7 +644,8 @@ export default function FlightCard({
                         <div className="flex items-center text-gray-600">
                           <IoMdSpeedometer className="mr-1" size={24} />
                           <span className="font-bold text-md">
-                            {Math.trunc(flight.fleetDetails.maxSpeed * 1.852) || 0} km/h
+                            {/* {Math.trunc(flight.fleetDetails.maxSpeed * 1.852) || 0} km/h */}
+                            {Math.trunc(flight.fleetDetails.maxSpeed) || 0} km/h
                           </span>
                         </div>
                       </div>

@@ -163,6 +163,77 @@ const FilterAndFleetListing = ({ refreshKey }) => {
   }
 
 
+  // Static fallback fleets when API returns no results
+  const buildStaticFleets = (seg, labels) => {
+    const base = [
+      {
+        _id: "static-1",
+        totalPrice: "USD 12,500",
+        flightTime: "2h 30m",
+        logo: "https://imgak.mmtcdn.com/flights/assets/media/dt/common/icons/GF.png",
+        fleetDetails: {
+          selectedModel: "Cessna Citation XLS",
+          engineType: "Turbofan",
+          flightType: "Jet",
+          registrationNo: "N123AB",
+          seatCapacity: 8,
+          luggage: 6,
+          maxSpeed: 430,
+          cabinHeight: 5.7,
+        },
+        additionalAmenities: {
+          "Power Supply 110V": { value: "available" },
+          "Lounge Access": { value: "available" },
+          "Airport Pickup": { value: "available" },
+        },
+        aircraftGallery: {
+          interior: { view1: "https://images.unsplash.com/photo-1529079017828-5250f6d38f74?w=800" },
+          exterior: { view1: "https://images.unsplash.com/photo-1518306727298-4c17e1bf694b?w=800" },
+          cockpit: { view1: "https://images.unsplash.com/photo-1536863634761-3b1b8b6f9f49?w=800" },
+        },
+      },
+      {
+        _id: "static-2",
+        totalPrice: "USD 18,900",
+        flightTime: "3h 10m",
+        logo: "https://imgak.mmtcdn.com/flights/assets/media/dt/common/icons/GF.png",
+        fleetDetails: {
+          selectedModel: "Pilatus PC-12",
+          engineType: "Turboprop",
+          flightType: "Propeller",
+          registrationNo: "N987ZX",
+          seatCapacity: 6,
+          luggage: 5,
+          maxSpeed: 290,
+          cabinHeight: 4.9,
+        },
+        additionalAmenities: {
+          "Cafe": { value: "available" },
+          "Air Hostess / Escorts": { value: "available" },
+          "Power Supply 110V": { value: "available" },
+        },
+        aircraftGallery: {
+          interior: { view1: "https://images.unsplash.com/photo-1527334130710-33d86f0f41db?w=800" },
+          exterior: { view1: "https://images.unsplash.com/photo-1545117316-910a27b498b4?w=800" },
+          cockpit: { view1: "https://images.unsplash.com/photo-1520975867597-3c6ad158b08b?w=800" },
+        },
+      },
+    ];
+    const expanded = [];
+    labels.forEach((label, idx) => {
+      base.forEach((b, j) => {
+        const clone = {
+          ...b,
+          _id: `${b._id}-${idx}-${j}`,
+          _sourceLabel: label,
+          _numericPrice: parseInt(b.totalPrice.replace(/\D/g, ""), 10) || 0,
+        };
+        expanded.push(clone);
+      });
+    });
+    return expanded;
+  };
+
   // Fetch data for each segment
   const fetchSegmentFleets = async (segmentIndex) => {
     const seg = searchData.segments[segmentIndex];
@@ -227,14 +298,49 @@ const FilterAndFleetListing = ({ refreshKey }) => {
         return copy;
       });
     } catch (err) {
+      const staticFleets = buildStaticFleets(seg, urlObjs.map((o) => o.label));
+
+      const prices = staticFleets.map((f) => f._numericPrice);
+      const [minP, maxP] = prices.length
+        ? [Math.min(...prices), Math.max(...prices)]
+        : [0, 0];
+
+      const flightTimes = staticFleets.map((f) => {
+        const timeStr = f.flightTime || "0h 0m";
+        const hours = parseInt(timeStr.match(/(\d+)h/)?.[1] || "0");
+        const minutes = parseInt(timeStr.match(/(\d+)m/)?.[1] || "0");
+        return hours * 60 + minutes;
+      });
+      const [minFT, maxFT] = flightTimes.length
+        ? [Math.min(...flightTimes), Math.max(...flightTimes)]
+        : [0, 0];
+
+      const maxSpeeds = staticFleets.map((f) =>
+        parseInt(f.fleetDetails?.maxSpeed || "0")
+      );
+      const [minMS, maxMS] = maxSpeeds.length
+        ? [Math.min(...maxSpeeds), Math.max(...maxSpeeds)]
+        : [0, 0];
+
       setSegmentStates((prev) => {
         const copy = [...prev];
         copy[segmentIndex] = {
           ...copy[segmentIndex],
-          fleetData: [],
-          filteredData: [],
+          fleetData: staticFleets,
+          filteredData: staticFleets,
+          minPrice: minP,
+          maxPrice: maxP,
+          priceRange: maxP,
+          minFlightTime: minFT,
+          maxFlightTime: maxFT,
+          flightTimeRange: maxFT,
+          minMaxSpeed: minMS,
+          maxMaxSpeed: maxMS,
+          maxSpeedRange: maxMS,
+          addOnServices: [],
           loading: false,
-          noData: true,
+          noData: false,
+          isFallback: true,
         };
         return copy;
       });
@@ -255,7 +361,8 @@ const FilterAndFleetListing = ({ refreshKey }) => {
       const updatedStates = [...prev];
       const currentSegment = updatedStates[segmentIndex];
       const { fleetData } = currentSegment;
-      const { selectedTypes, selectedAmenities, priceRange, flightTimeRange, maxSpeedRange } = newStates;
+      const merged = { ...currentSegment, ...newStates };
+      const { selectedTypes, selectedAmenities, priceRange, flightTimeRange, maxSpeedRange } = merged;
 
 
       const newFiltered = fleetData.filter((flight) => {
@@ -285,7 +392,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
 
       updatedStates[segmentIndex] = {
         ...currentSegment,
-        ...newStates,
+        ...merged,
         filteredData: newFiltered,
       };
       return updatedStates;
@@ -421,6 +528,8 @@ const FilterAndFleetListing = ({ refreshKey }) => {
       selectedTypes: updated,
       selectedAmenities,
       priceRange,
+      flightTimeRange,
+      maxSpeedRange,
     });
   };
 
@@ -432,6 +541,8 @@ const FilterAndFleetListing = ({ refreshKey }) => {
       selectedTypes,
       selectedAmenities: updated,
       priceRange,
+      flightTimeRange,
+      maxSpeedRange,
     });
   };
 
@@ -440,6 +551,8 @@ const FilterAndFleetListing = ({ refreshKey }) => {
       selectedTypes,
       selectedAmenities,
       priceRange: Number(val),
+      flightTimeRange,
+      maxSpeedRange,
     });
   };
   const onFlightTimeChange = (val) => {
@@ -547,24 +660,26 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                     </span>
                     ----- {searchData.segments[0]?.to}
                   </p>
-                  <button
-                    onClick={() =>
-                      handleFleetSelection(0, segmentStates[0]?.filteredData?.[0] || null)
-                    }
-                    disabled={
-                      !!selectedFleets[0] ||
-                      segmentStates[0]?.filteredData?.length === 0
-                    }
-                    className={`py-2 px-4 rounded-md shadow-md text-sm font-medium
-                      focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition-all
-                      ${!!selectedFleets[0]
-                        ? "bg-gray-400 text-white cursor-not-allowed"
-                        : "bg-blue-600 hover:bg-blue-500 text-white"
+                  {!segmentStates[0]?.isFallback && (
+                    <button
+                      onClick={() =>
+                        handleFleetSelection(0, segmentStates[0]?.filteredData?.[0] || null)
                       }
-                    `}
-                  >
-                    {selectedFleets[0] ? "Fleet Selected" : "Select Fleet"}
-                  </button>
+                      disabled={
+                        !!selectedFleets[0] ||
+                        segmentStates[0]?.filteredData?.length === 0
+                      }
+                      className={`py-2 px-4 rounded-md shadow-md text-sm font-medium
+                        focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition-all
+                        ${!!selectedFleets[0]
+                          ? "bg-gray-400 text-white cursor-not-allowed"
+                          : "bg-blue-600 hover:bg-blue-500 text-white"
+                        }
+                      `}
+                    >
+                      {selectedFleets[0] ? "Fleet Selected" : "Select Fleet"}
+                    </button>
+                  )}
 
                   {selectedFleets[0] && (
                     <Link href={"/finalEnquiry"}>
@@ -828,6 +943,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                     isMultiCity={isMultiCity}
                     addOnServices={addOnServices}
                     segment={searchData.segments[segmentIndex]}
+                    readOnly={!!currentSegmentState.isFallback}
                     label={label}
                   />
                 )}
