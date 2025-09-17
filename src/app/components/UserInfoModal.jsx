@@ -239,9 +239,9 @@ export default function UserInfoModal({ show, onClose }) {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="relative w-[90%] max-w-4xl h-[38rem] rounded-lg shadow-md overflow-hidden flex justify-center items-center">
+      <div className="relative w-[95%] md:w-[90%] max-w-4xl h-[90vh] md:h-[38rem] rounded-lg shadow-md md:overflow-hidden overflow-auto flex justify-center items-center">
         {/* ========= Left side slides ========= */}
-        <div className="w-[43%] h-[95%] overflow-hidden bg-gray-800 text-white rounded-xl absolute left-0">
+        <div className="hidden md:block w-[43%] h-[95%] overflow-hidden bg-gray-800 text-white rounded-xl md:absolute md:left-0">
           <div
             key={currentSlide}
             className="absolute inset-0 h-full w-full transition-all duration-500 ease-in-out flex flex-col justify-center items-center p-8"
@@ -289,7 +289,7 @@ export default function UserInfoModal({ show, onClose }) {
         </div>
 
         {/* ========= Right side: OTP inputs ========= */}
-        <div className="w-[60%] h-full p-6 flex flex-col justify-between rounded-xl bg-white absolute right-0 shadow-black shadow-lg">
+        <div className="w-full md:w-[60%] h-auto md:h-full p-6 flex flex-col justify-between rounded-xl bg-white md:absolute md:right-0 shadow-black shadow-lg">
           {/* Top area */}
           <div className="overflow-auto">
             {/* Close button */}
@@ -338,7 +338,7 @@ export default function UserInfoModal({ show, onClose }) {
                     value={digit}
                     onChange={(e) => handleOtpChange(index, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                    className="w-12 h-12 text-center text-lg font-semibold border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    className="w-10 h-10 md:w-12 md:h-12 text-center text-lg font-semibold border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                     disabled={emailVerified || isVerifying}
                   />
                 ))}
