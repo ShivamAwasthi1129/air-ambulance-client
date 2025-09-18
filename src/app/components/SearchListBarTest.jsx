@@ -23,16 +23,18 @@ export const SearchBar = () => {
   const [isLoadingNearbyAirports, setIsLoadingNearbyAirports] = useState(false);
   const [nearbyAirports, setNearbyAirports] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
-  const [hasSearched, setHasSearched] = useState(false); // Add this new state
+  const [hasSearched, setHasSearched] = useState(false); 
   const [loginModalEmail, setLoginModalEmail] = useState("");
   const [loginModalData, setLoginModalData] = useState({ email: "", phone: "" });
+  const [emailError, setEmailError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
 
   const [dateSelected, setDateSelected] = useState(false);
   const [multiCityDateSelected, setMultiCityDateSelected] = useState({});
   const [mapModal, setMapModal] = useState({ open: false, segIdx: null, field: null, });
   const [showTroubleSigningIn, setShowTroubleSigningIn] = useState(false);
   const segmentHasHeli = (seg) =>
-    (seg.flightTypes || []).some((t) => t.toLowerCase() === "helicopter");
+    (seg.flightTypes || []).some((t) => t.toLowerCase() === "air ambulance" || t.toLowerCase() === "helicopter");
 
   // Each segment has `flightTypes` (an array) for multi-select
   const [segments, setSegments] = useState([
@@ -81,6 +83,69 @@ export const SearchBar = () => {
   const toastTriggeredRef = useRef(false);
   // === Effects ===
   // (A) Load from session or set defaults
+
+  // Email validation function
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Phone validation function  
+  const validatePhone = (phone) => {
+    // This will check if phone has at least 10 digits (excluding country code symbols)
+    const phoneDigits = phone?.replace(/\D/g, '') || '';
+    return phoneDigits.length >= 10;
+  };
+
+  // Handle email validation with debounce
+  const handleEmailValidation = (value) => {
+    if (value.trim() === "") {
+      setEmailError("");
+      return;
+    }
+
+    if (!validateEmail(value)) {
+      setEmailError("Entered Email format is incorrect please enter correct email format");
+    } else {
+      setEmailError("");
+    }
+  };
+
+  // Handle phone validation with debounce
+  const handlePhoneValidation = (value) => {
+    if (!value) {
+      setPhoneError("");
+      return;
+    }
+
+    if (!validatePhone(value)) {
+      setPhoneError("Phone number format incorrect please correct the format");
+    } else {
+      setPhoneError("");
+    }
+  };
+
+  // Debounced email validation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (email) {
+        handleEmailValidation(email);
+      }
+    }, 1000); // 1 second delay after user stops typing
+
+    return () => clearTimeout(timer);
+  }, [email]);
+
+  // Debounced phone validation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (phone) {
+        handlePhoneValidation(phone);
+      }
+    }, 1000); // 1 second delay after user stops typing
+
+    return () => clearTimeout(timer);
+  }, [phone]);
 
   const fetchUserLocation = async () => {
     try {
@@ -268,7 +333,7 @@ export const SearchBar = () => {
         }
       }
       fetchAirports();
-    }, 400); // 400ms debounce
+    }, 200); // 400ms debounce
 
     return () => clearTimeout(handler);
   }, [searchQuery, showDropdown, userLocation]);
@@ -435,142 +500,142 @@ export const SearchBar = () => {
 
 
   // Final "Search" button
-const handleSearch = async () => {
-  setIsLoading(true);
-  try {
-    // If verified, try to pull name/email/phone from loginData in session
-    if (isVerified) {
-      const storedLoginData = sessionStorage.getItem("loginData");
-      if (storedLoginData) {
-        const parsedLoginData = JSON.parse(storedLoginData);
-        if (!name.trim()) setName(parsedLoginData.name || "");
-        if (!phone.trim()) setPhone(parsedLoginData.phone || "");
-        if (!email.trim()) setEmail(parsedLoginData.email || "");
-      }
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    const currentName = name.trim();
-    const currentPhone = phone.trim();
-    const currentEmail = email.trim();
-
-    // Basic validations if user is not verified and not logged in
-    const storedLoginData = sessionStorage.getItem("loginData");
-    if (!storedLoginData && (!currentName || !currentPhone || !currentEmail || !agreedToPolicy)) {
-      toast.error(
-        "Name, phone, email, and agreeing to Terms & Conditions are required."
-      );
-      setIsLoading(false);
-      return;
-    }
-    const fullPhoneNumber = `${currentPhone}`;
-
-    const mergedUserInfo = {
-      ...userInfo,
-      name: currentName,
-      phone: fullPhoneNumber,
-      email: currentEmail,
-      agreedToPolicy,
-    };
-
-    // Only send OTP and open UserInfoModal if not logged in
-    if (!storedLoginData) {
-      try {
-        const response = await fetch("/api/otp", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: currentName,
-            phone: fullPhoneNumber,
-            email: currentEmail,
-          }),
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          if (data.message === "user already exists") {
-            toast.info(
-              data.message +
-              " with email : " +
-              currentEmail +
-              " Check your email for credentials"
-            );
-            setIsLoading(false);
-            setIsLoginModalOpen(true);
-            return;
-          }
-
-          // Only show OTP modal if NOT verified and loginData is not present
-          if (!isVerified && !sessionStorage.getItem("loginData")) {
-            setIsUserInfoModalOpen(true);
-          }
-        } else {
-          setIsLoading(false);
-
-          if (response.status === 500) {
-            setShowTroubleSigningIn(true);
-          }
-
-          if (data.error.includes("Phone number already exists")) {
-            toast.error("This phone number is already linked with another email account.");
-            setLoginModalData({ email: "", phone: fullPhoneNumber });
-          } else if (data.error.includes("Email already exists")) {
-            toast.error("This email ID is already linked with another phone number.");
-            setLoginModalData({ email: currentEmail, phone: "" });
-          } else {
-            toast.error("Duplicate entry found. Please check your phone number and email.");
-            setLoginModalData({ email: currentEmail, phone: fullPhoneNumber });
-          }
-          return;
+  const handleSearch = async () => {
+    setIsLoading(true);
+    try {
+      // If verified, try to pull name/email/phone from loginData in session
+      if (isVerified) {
+        const storedLoginData = sessionStorage.getItem("loginData");
+        if (storedLoginData) {
+          const parsedLoginData = JSON.parse(storedLoginData);
+          if (!name.trim()) setName(parsedLoginData.name || "");
+          if (!phone.trim()) setPhone(parsedLoginData.phone || "");
+          if (!email.trim()) setEmail(parsedLoginData.email || "");
         }
-      } catch (err) {
-        console.error("Error sending OTP request:", err);
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      const currentName = name.trim();
+      const currentPhone = phone.trim();
+      const currentEmail = email.trim();
+
+      // Basic validations if user is not verified and not logged in
+      const storedLoginData = sessionStorage.getItem("loginData");
+      if (!storedLoginData && (!currentName || !currentPhone || !currentEmail || !agreedToPolicy)) {
+        toast.error(
+          "Name, phone, email, and agreeing to Terms & Conditions are required."
+        );
         setIsLoading(false);
-        toast.error("Network error. Please check your connection and try again.");
         return;
       }
-    }
+      const fullPhoneNumber = `${currentPhone}`;
 
-    // Build final payload (each segment includes flightTypes array)
-    const finalData = {
-      tripType,
-      segments,
-      userInfo: mergedUserInfo,
-    };
+      const mergedUserInfo = {
+        ...userInfo,
+        name: currentName,
+        phone: fullPhoneNumber,
+        email: currentEmail,
+        agreedToPolicy,
+      };
 
-    sessionStorage.setItem("searchData", JSON.stringify(finalData));
-    setUserInfo(mergedUserInfo);
-    setRefreshKey((prev) => prev + 1);
+      // Only send OTP and open UserInfoModal if not logged in
+      if (!storedLoginData) {
+        try {
+          const response = await fetch("/api/otp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: currentName,
+              phone: fullPhoneNumber,
+              email: currentEmail,
+            }),
+          });
 
-    // POST to /api/query for flight listing
-    const finalDataFromSession = sessionStorage.getItem("searchData");
-    if (finalDataFromSession) {
-      const finalDataToSend = JSON.parse(finalDataFromSession);
-      const queryResponse = await fetch("/api/query", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(finalDataToSend),
-      });
+          const data = await response.json();
 
-      if (queryResponse.ok) {
-        const queryData = await queryResponse.json();
-        if (queryData.id) {
-          sessionStorage.setItem("queryId", queryData.id);
+          if (response.ok) {
+            if (data.message === "user already exists") {
+              toast.info(
+                data.message +
+                " with email : " +
+                currentEmail +
+                " Check your email for credentials"
+              );
+              setIsLoading(false);
+              setIsLoginModalOpen(true);
+              return;
+            }
+
+            // Only show OTP modal if NOT verified and loginData is not present
+            if (!isVerified && !sessionStorage.getItem("loginData")) {
+              setIsUserInfoModalOpen(true);
+            }
+          } else {
+            setIsLoading(false);
+
+            if (response.status === 500) {
+              setShowTroubleSigningIn(true);
+            }
+
+            if (data.error.includes("Phone number already exists")) {
+              toast.error("This phone number is already linked with another email account.");
+              setLoginModalData({ email: "", phone: fullPhoneNumber });
+            } else if (data.error.includes("Email already exists")) {
+              toast.error("This email ID is already linked with another phone number.");
+              setLoginModalData({ email: currentEmail, phone: "" });
+            } else {
+              toast.error("Duplicate entry found. Please check your phone number and email.");
+              setLoginModalData({ email: currentEmail, phone: fullPhoneNumber });
+            }
+            return;
+          }
+        } catch (err) {
+          console.error("Error sending OTP request:", err);
+          setIsLoading(false);
+          toast.error("Network error. Please check your connection and try again.");
+          return;
         }
       }
-    }
 
-    if (tripType === "multicity") {
-      setIsMultiCityCollapsed(true);
+      // Build final payload (each segment includes flightTypes array)
+      const finalData = {
+        tripType,
+        segments,
+        userInfo: mergedUserInfo,
+      };
+
+      sessionStorage.setItem("searchData", JSON.stringify(finalData));
+      setUserInfo(mergedUserInfo);
+      setRefreshKey((prev) => prev + 1);
+
+      // POST to /api/query for flight listing
+      const finalDataFromSession = sessionStorage.getItem("searchData");
+      if (finalDataFromSession) {
+        const finalDataToSend = JSON.parse(finalDataFromSession);
+        const queryResponse = await fetch("/api/query", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(finalDataToSend),
+        });
+
+        if (queryResponse.ok) {
+          const queryData = await queryResponse.json();
+          if (queryData.id) {
+            sessionStorage.setItem("queryId", queryData.id);
+          }
+        }
+      }
+
+      if (tripType === "multicity") {
+        setIsMultiCityCollapsed(true);
+      }
+    } catch (err) {
+      console.error("Error in handleSearch:", err);
+      toast.error("Something went wrong while searching. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
-  } catch (err) {
-    console.error("Error in handleSearch:", err);
-    toast.error("Something went wrong while searching. Please try again.");
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
   // === Render ===
   return (
     <>
@@ -686,7 +751,7 @@ const handleSearch = async () => {
                             <span className="text-sm text-gray-600">Trying to search nearby airports...</span>
                           </div>
                         ) : airports.length > 0 ? (
-                          airports.slice(0, 5).map((airport, i) => (
+                          airports.map((airport, i) => (
                             <li
                               key={airport.id ?? `airport-from-${i}`}
                               onClick={() => handleSelectAirport(airport, 0, "from")}
@@ -767,7 +832,7 @@ const handleSearch = async () => {
                             <span className="text-sm text-gray-600">Trying to search nearby airports...</span>
                           </div>
                         ) : airports.length > 0 ? (
-                          airports.slice(0, 5).map((airport, i) => (
+                          airports.map((airport, i) => (
                             <li
                               key={airport.id ?? `airport-to-${i}`}
                               onClick={() => handleSelectAirport(airport, 0, "to")}
@@ -933,7 +998,7 @@ const handleSearch = async () => {
                                       <span className="text-sm text-gray-600">Trying to search nearby airports...</span>
                                     </div>
                                   ) : airports.length > 0 ? (
-                                    airports.slice(0, 5).map((airport, i) => (
+                                    airports.map((airport, i) => (
                                       <li
                                         key={airport.id ?? `airport-from-${index}-${i}`}
                                         onClick={() => handleSelectAirport(airport, index, "from")}
@@ -1002,7 +1067,7 @@ const handleSearch = async () => {
                                       <span className="text-sm text-gray-600">Trying to search nearby airports...</span>
                                     </div>
                                   ) : airports.length > 0 ? (
-                                    airports.slice(0, 5).map((airport, i) => (
+                                    airports.map((airport, i) => (
                                       <li
                                         key={airport.id ?? `airport-to-${index}-${i}`}
                                         onClick={() => handleSelectAirport(airport, index, "to")}
@@ -1111,30 +1176,51 @@ const handleSearch = async () => {
             {!isVerified && (
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
                 {/* Email */}
-                <div className="w-full sm:flex-1 min-w-[200px] ">
+                <div className="w-full sm:flex-1 min-w-[200px]">
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Email*"
-                    className="block w-full p-2 border rounded focus:outline-none bg-pink-50/50"
+                    className={`block w-full p-2 border rounded focus:outline-none bg-pink-50/50 ${emailError ? 'border-red-500' : ''
+                      }`}
                   />
+                  <div className="h-5 mt-1">
+                    {emailError && (
+                      <p className="text-red-500 text-xs">{emailError}</p>
+                    )}
+                  </div>
                 </div>
 
-                <div className="w-full sm:flex-1 min-w-[160px] ">
+                <div className="relative w-full sm:flex-1 min-w-[160px]">
+                  <label
+                    htmlFor="phone"
+                    className="absolute left-1 -top-[14%] text-gray-500 text-xs transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:text-base peer-focus:top-0 peer-focus:text-xs peer-focus:text-pink-600 px-1"
+                  >
+                    Whatsapp / Mobile Number*
+                  </label>
+
                   <PhoneInput
+                    id="phone"
                     value={phone}
                     onChange={setPhone}
-                    placeholder="Phone Number*"
-                    className="block w-full p-2 border rounded focus:outline-none bg-pink-50/50"
                     defaultCountry="IN"
                     international
                     countryCallingCodeEditable={false}
+                    className={`peer block w-full p-2 border rounded focus:outline-none bg-pink-50/50 ${phoneError ? 'border-red-500' : ''
+                      }`}
                   />
+                  <div className="h-5 mt-1">
+                    {phoneError && (
+                      <p className="text-red-500 text-xs">{phoneError}</p>
+                    )}
+                  </div>
                 </div>
 
+
+
                 {/* Name */}
-                <div className="w-full sm:flex-1 min-w-[180px] ">
+                <div className="w-full sm:flex-1 min-w-[180px]">
                   <input
                     type="text"
                     value={name}
@@ -1142,10 +1228,13 @@ const handleSearch = async () => {
                     placeholder="Your Name*"
                     className="block w-full p-2 border rounded focus:outline-none bg-pink-50/50"
                   />
+                  <div className="h-5 mt-1">
+                    {/* Empty div to maintain consistent spacing */}
+                  </div>
                 </div>
 
                 {/* Terms Checkbox */}
-                <div className="flex items-center gap-2 mt-5">
+                <div className="flex items-center gap-2 mt-0">
                   <input
                     type="checkbox"
                     id="policyCheck"
@@ -1163,7 +1252,9 @@ const handleSearch = async () => {
                       Terms &amp; Conditions
                     </Link>
                   </label>
+                  
                 </div>
+                
               </div>
             )}
 

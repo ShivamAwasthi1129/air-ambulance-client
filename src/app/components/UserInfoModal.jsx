@@ -328,7 +328,7 @@ export default function UserInfoModal({ show, onClose }) {
             {/* OTP Input Section */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-3">
-                Enter the 6-digit OTP sent to your email or whatsapp
+                Enter the 6-digit OTP sent to your Email
               </label>
 
               {/* 6-digit OTP input boxes */}

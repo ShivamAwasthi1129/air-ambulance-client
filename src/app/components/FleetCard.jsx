@@ -652,7 +652,7 @@ export default function FlightCard({
                       {/* Times row (Large times + flight duration) */}
 
                       {/* Flight Details */}
-                       <div className="flex flex-col items-start justify-between my-2 mb-0">
+                      <div className="flex flex-col items-start justify-between my-2 mb-0">
                         <div className="text-right flex justify-center items-center my-2 font-bold">
                           {/* ORIGIN */}
                           <div className="flex flex-col items-start text-sm text-gray-500 mr-4">
@@ -664,7 +664,7 @@ export default function FlightCard({
                             </p>
                             {fromBottomLabel && (
                               <p
-                                 className={`${isCoordinate(fromTopLabel) ? "text-md" : "text-xl"} text-gray-900 font-normal cursor-pointer `}
+                                className={`${isCoordinate(fromTopLabel) ? "text-md" : "text-xl"} text-gray-900 font-normal cursor-pointer `}
                                 title={fromBottomLabel} // Tooltip for full content
                               >
                                 {isCoordinate(fromTopLabel)
@@ -681,7 +681,7 @@ export default function FlightCard({
                           </div>
 
                           {/* DESTINATION */}
-                         <div className="flex flex-col items-start text-sm text-gray-500 ml-2">
+                          <div className="flex flex-col items-start text-sm text-gray-500 ml-2">
                             <p
                               className={`font-bold text-black ${isCoordinate(toTopLabel) ? "text-md" : "text-xl"
                                 }`}
@@ -690,7 +690,7 @@ export default function FlightCard({
                             </p>
                             {toBottomLabel && (
                               <p
-                                  className={`${isCoordinate(toTopLabel) ? "text-md" : "text-xl"} text-gray-900 font-normal cursor-pointer`}
+                                className={`${isCoordinate(toTopLabel) ? "text-md" : "text-xl"} text-gray-900 font-normal cursor-pointer`}
                                 title={toBottomLabel} // Tooltip for full content
                               >
                                 {isCoordinate(toTopLabel)

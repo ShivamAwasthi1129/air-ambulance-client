@@ -60,7 +60,7 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
     setIsVerifying(false);
     setReturnedOtp("");
     setShowPassword(false);
-    setIsVerifyingData(false); // Add this line
+    setIsVerifyingData(false); 
   };
 
   const handleClose = () => {
@@ -78,12 +78,12 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
   }, [isOpen, initialEmail, identifier, infoFetched, source]);
 
   // Auto-send OTP once user is confirmed to exist (only for searchbar source)
-  useEffect(() => {
-    if (!isOpen) return;
-    if (source === "searchbar" && userExists && otpSendStatus === "idle") {
-      handleSendOtp();
-    }
-  }, [isOpen, userExists, otpSendStatus, source]);
+  // useEffect(() => {
+  //   if (!isOpen) return;
+  //   if (source === "searchbar" && userExists && otpSendStatus === "idle") {
+  //     handleSendOtp();
+  //   }
+  // }, [isOpen, userExists, otpSendStatus, source]);
 
   // Reset OTP send state and existence flags when identifier changes
   useEffect(() => {
@@ -105,7 +105,7 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
 const maskEmail = (email) => {
   if (!email) return "";
   const [user, domain] = email.split("@");
-  // Mask user part as before
+  // Mask user part
   let maskedUser;
   if (user.length <= 4) maskedUser = "*".repeat(user.length);
   else maskedUser = user.slice(0, 2) + "*".repeat(user.length - 4) + user.slice(-2);
@@ -131,12 +131,11 @@ const maskEmail = (email) => {
     const trimmed = value.trim();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
     const digits = trimmed.replace(/[^0-9]/g, "");
-    return emailRegex.test(trimmed) || (digits.length >= 7 && digits.length <= 15);
+    return emailRegex.test(trimmed) || (digits.length >= 3 && digits.length <= 15);
   };
 
   const isValidEmail = (email) => {
-    if (/\s/.test(email)) return false; // Reject if any space
-    // ...rest of your validation...
+    if (/\s/.test(email)) return false;
     const emailRegex = /^[^\s@]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,24}$/;
     if (!emailRegex.test(email.trim())) return false;
     const domain = email.trim().split('@')[1];
@@ -149,22 +148,11 @@ const maskEmail = (email) => {
     return true;
   };
 
-  const isValidPhone = (phone) => {
-    if (/\s/.test(phone)) return false; // Reject if any space
-    try {
-      return isValidPhoneNumber(phone, "IN");
-    } catch {
-      return false;
-    }
-  };
-  const formatPhone = (phone) => {
-    try {
-      const phoneNumber = parsePhoneNumber(phone, "IN");
-      return phoneNumber.formatInternational();
-    } catch {
-      return phone;
-    }
-  };
+const isValidPhone = (phone) => {
+  if (/\s/.test(phone)) return false;
+  const digits = phone.replace(/\D/g, '');
+  return digits.length > 5;
+};
 
   const handleBlurFetchIfValid = () => {
     if (isValidIdentifier(identifier)) {
@@ -182,7 +170,7 @@ const maskEmail = (email) => {
       return;
     }
 
-    setIsVerifyingData(true); // Add this line
+    setIsVerifyingData(true); 
     try {
       const resp = await fetch(
         `/api/user/${encodeURIComponent(identifier)}`,
@@ -225,7 +213,7 @@ const maskEmail = (email) => {
       setOtpSendStatus("idle");
       toast.error("User doesn't exist. with such mobile number or email. Please fill the search query form for search result and Sign up.");
     } finally {
-      setIsVerifyingData(false); // Add this line
+      setIsVerifyingData(false);
     }
   };
 
@@ -557,7 +545,7 @@ const maskEmail = (email) => {
             </button> */}
           </div>
 
-          {/* Identifier field */}
+      
           {/* Identifier field */}
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-medium mb-2">
@@ -604,11 +592,7 @@ const maskEmail = (email) => {
               </label>
               <input
                 type="text"
-                value={
-                  source === "navbar"
-                    ? maskEmail(email)
-                    : email
-                }
+                value={maskEmail(email)}
                 readOnly
                 className="w-full p-3 border-2 border-gray-200 rounded-lg bg-gray-50"
               />

@@ -473,6 +473,8 @@ const FilterAndFleetListing = ({ refreshKey }) => {
     addOnServices = [],
   } = currentSegmentState;
 
+  const slidersDisabled = !!currentSegmentState.isFallback;
+
   // Combine flight types from API data + user-chosen
   const allFlightTypes = useMemo(() => {
     // From the API results
@@ -799,6 +801,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                       checked={selectedTypes.includes(type)}
                       onChange={() => onToggleType(type)}
                       className="h-4 w-4 text-blue-500 border-gray-300 rounded focus:ring-blue-400"
+                      disabled={!!currentSegmentState.isFallback}
                     />
                     <span className="text-sm text-gray-600">
                       {type} ({count})
@@ -822,8 +825,8 @@ const FilterAndFleetListing = ({ refreshKey }) => {
               max={maxFlightTime}
               value={flightTimeRange}
               onChange={(e) => onFlightTimeChange(e.target.value)}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer
-       focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+              disabled={slidersDisabled}
+              className={`w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all ${slidersDisabled ? "opacity-60 cursor-not-allowed" : ""}`}
               style={{
                 background: `linear-gradient(to right, #3b82f6 ${((flightTimeRange - minFlightTime) / (maxFlightTime - minFlightTime)) * 100}%, #e5e7eb ${((flightTimeRange - minFlightTime) / (maxFlightTime - minFlightTime)) * 100}%)`,
               }}
@@ -844,8 +847,8 @@ const FilterAndFleetListing = ({ refreshKey }) => {
               max={maxPrice}
               value={priceRange}
               onChange={(e) => onPriceChange(e.target.value)}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer
-                 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+              disabled={slidersDisabled}
+              className={`w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all ${slidersDisabled ? "opacity-60 cursor-not-allowed" : ""}`}
               style={{
                 background: `linear-gradient(to right, #3b82f6 ${((priceRange - minPrice) / (maxPrice - minPrice)) * 100
                   }%, #e5e7eb ${((priceRange - minPrice) / (maxPrice - minPrice)) * 100
@@ -874,8 +877,8 @@ const FilterAndFleetListing = ({ refreshKey }) => {
               max={maxMaxSpeed}
               value={maxSpeedRange}
               onChange={(e) => onMaxSpeedChange(e.target.value)}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer
-       focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+              disabled={slidersDisabled}
+              className={`w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all ${slidersDisabled ? "opacity-60 cursor-not-allowed" : ""}`}
               style={{
                 background: `linear-gradient(to right, #3b82f6 ${((maxSpeedRange - minMaxSpeed) / (maxMaxSpeed - minMaxSpeed)) * 100}%, #e5e7eb ${((maxSpeedRange - minMaxSpeed) / (maxMaxSpeed - minMaxSpeed)) * 100}%)`,
               }}
@@ -895,9 +898,10 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                   >
                     <input
                       type="checkbox"
-                      checked={checked}
+                      checked={selectedAmenities.includes(amenity)}
                       onChange={() => onToggleAmenity(amenity)}
                       className="h-4 w-4 text-blue-500 border-gray-300 rounded focus:ring-blue-400"
+                      disabled={!!currentSegmentState.isFallback}
                     />
                     <span className="text-sm text-gray-600">{amenity}</span>
                   </label>
