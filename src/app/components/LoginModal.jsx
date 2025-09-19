@@ -705,6 +705,7 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
                   '--PhoneInputCountrySelect-marginRight': '0.5em',
                   '--PhoneInputCountrySelectArrow-color': '#6b7280',
                   '--PhoneInput-color--focus': '#3b82f6'
+                  
                 }}
               />
             </div>
