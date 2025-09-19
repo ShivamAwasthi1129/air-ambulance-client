@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { FaEye, FaEyeSlash, FaSpinner, FaCheckCircle } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaSpinner, FaCheckCircle, FaEnvelope, FaPhone } from "react-icons/fa";
 import { toast } from "react-toastify";
-import validator from "validator";
-import { isValidPhoneNumber, parsePhoneNumber } from "libphonenumber-js";
+// import validator from "validator";
+// import { isValidPhoneNumber, parsePhoneNumber } from "libphonenumber-js";
+import PhoneInput from 'react-phone-number-input'
+import 'react-phone-number-input/style.css'
+import { isValidPhoneNumber } from 'react-phone-number-input'
 
 const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) => {
   // ----------------------------------------------------------------
@@ -24,6 +27,9 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
   const [isVerifying, setIsVerifying] = useState(false);
   const [userExists, setUserExists] = useState(false);
+  const [inputType, setInputType] = useState("email"); // "phone" or "email"
+  const [phoneValue, setPhoneValue] = useState();
+  const [emailInput, setEmailInput] = useState("");
 
   useEffect(() => {
     if (initialEmail && isOpen) {
@@ -39,6 +45,33 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
       }
     }
   }, [initialEmail, isOpen]);
+
+  // Add this style object for better phone input styling
+  const phoneInputStyle = {
+    '.PhoneInput': {
+      display: 'flex',
+      alignItems: 'center'
+    },
+    '.PhoneInputInput': {
+      border: '2px solid #e5e7eb',
+      borderLeft: 'none',
+      borderRadius: '0 0.5rem 0.5rem 0',
+      padding: '0.75rem',
+      fontSize: '1rem',
+      outline: 'none',
+      flex: 1
+    },
+    '.PhoneInputInput:focus': {
+      borderColor: '#3b82f6'
+    },
+    '.PhoneInputCountry': {
+      border: '2px solid #e5e7eb',
+      borderRight: 'none',
+      borderRadius: '0.5rem 0 0 0.5rem',
+      padding: '0.75rem 0.5rem',
+      backgroundColor: 'white'
+    }
+  };
 
 
   // ----------------------------------------------------------------
@@ -60,13 +93,45 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
     setIsVerifying(false);
     setReturnedOtp("");
     setShowPassword(false);
-    setIsVerifyingData(false); 
+    setIsVerifyingData(false);
+    setInputType("email");
+    setPhoneValue();
+    setEmailInput("");
   };
 
   const handleClose = () => {
     resetAllStates();
     onClose();
   };
+  useEffect(() => {
+    if (initialEmail && isOpen) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+      const isEmailFormat = emailRegex.test(initialEmail);
+
+      if (isEmailFormat) {
+        setInputType("email");
+        setEmailInput(initialEmail);
+        setIdentifier(initialEmail);
+      } else {
+        setInputType("phone");
+        setPhoneValue(initialEmail);
+        setIdentifier(initialEmail);
+      }
+    }
+  }, [initialEmail, isOpen]);
+
+  useEffect(() => {
+    if (inputType === "phone" && phoneValue) {
+      setIdentifier(phoneValue);
+    }
+  }, [phoneValue, inputType]);
+
+  useEffect(() => {
+    if (inputType === "email" && emailInput) {
+      setIdentifier(emailInput);
+    }
+  }, [emailInput, inputType]);
+
 
   // Auto-fetch user data only when modal opens with prefilled identifier (not while typing)
   useEffect(() => {
@@ -102,26 +167,26 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
   };
 
   // Mask email (show first 2 and last 2 chars before @, rest as *)
-const maskEmail = (email) => {
-  if (!email) return "";
-  const [user, domain] = email.split("@");
-  // Mask user part
-  let maskedUser;
-  if (user.length <= 4) maskedUser = "*".repeat(user.length);
-  else maskedUser = user.slice(0, 2) + "*".repeat(user.length - 4) + user.slice(-2);
+  const maskEmail = (email) => {
+    if (!email) return "";
+    const [user, domain] = email.split("@");
+    // Mask user part
+    let maskedUser;
+    if (user.length <= 4) maskedUser = "*".repeat(user.length);
+    else maskedUser = user.slice(0, 2) + "*".repeat(user.length - 4) + user.slice(-2);
 
-  // Mask domain part (before the first dot)
-  const domainParts = domain.split(".");
-  if (domainParts.length < 2) return maskedUser + "@" + domain; // fallback
+    // Mask domain part (before the first dot)
+    const domainParts = domain.split(".");
+    if (domainParts.length < 2) return maskedUser + "@" + domain; // fallback
 
-  const domainName = domainParts[0];
-  const tld = domainParts.slice(1).join(".");
-  let maskedDomain;
-  if (domainName.length <= 2) maskedDomain = "*".repeat(domainName.length);
-  else maskedDomain = domainName[0] + "*".repeat(domainName.length - 2) + domainName.slice(-1);
+    const domainName = domainParts[0];
+    const tld = domainParts.slice(1).join(".");
+    let maskedDomain;
+    if (domainName.length <= 2) maskedDomain = "*".repeat(domainName.length);
+    else maskedDomain = domainName[0] + "*".repeat(domainName.length - 2) + domainName.slice(-1);
 
-  return `${maskedUser}@${maskedDomain}.${tld}`;
-};
+    return `${maskedUser}@${maskedDomain}.${tld}`;
+  };
 
   // ----------------------------------------------------------------
   // Fetch user data (email/phone) from your backend
@@ -148,14 +213,27 @@ const maskEmail = (email) => {
     return true;
   };
 
-const isValidPhone = (phone) => {
-  if (/\s/.test(phone)) return false;
-  const digits = phone.replace(/\D/g, '');
-  return digits.length > 5;
-};
+  const isValidPhone = (phone) => {
+    if (/\s/.test(phone)) return false;
+    const digits = phone.replace(/\D/g, '');
+    return digits.length > 5;
+  };
 
+  // Simplified validation using only the library
+  const isValidPhoneForSelectedCountry = (phoneValue) => {
+    if (!phoneValue) return false;
+
+    // The library already knows all country rules and validates accordingly
+    return isValidPhoneNumber(phoneValue);
+  };
+
+  // Update the handleBlurFetchIfValid function
   const handleBlurFetchIfValid = () => {
-    if (isValidIdentifier(identifier)) {
+    const isValid = inputType === "email"
+      ? isValidEmail(emailInput)
+      : isValidPhoneForSelectedCountry(phoneValue);
+
+    if (isValid) {
       handleFetchUserData();
     }
   };
@@ -170,7 +248,7 @@ const isValidPhone = (phone) => {
       return;
     }
 
-    setIsVerifyingData(true); 
+    setIsVerifyingData(true);
     try {
       const resp = await fetch(
         `/api/user/${encodeURIComponent(identifier)}`,
@@ -545,29 +623,104 @@ const isValidPhone = (phone) => {
             </button> */}
           </div>
 
-      
-          {/* Identifier field */}
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-medium mb-2">
-              Phone or Email
-            </label>
-            <input
-              type="text"
-              placeholder="Enter phone or email"
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value.replace(/\s/g, ""))}
-              onBlur={source === "searchbar" ? handleBlurFetchIfValid : undefined}
-              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors duration-200"
-            />
+
+          {/* Input Type Selection */}
+          <div className="flex bg-gray-100 rounded-lg p-1 mb-4">
+            <button
+              onClick={() => {
+                setInputType("email");
+                setIdentifier(emailInput);
+              }}
+              className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-200 flex items-center justify-center ${inputType === "email"
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-800"
+                }`}
+            >
+              <FaEnvelope className="mr-2" />
+              Email
+            </button>
+            <button
+              onClick={() => {
+                setInputType("phone");
+                setIdentifier(phoneValue);
+              }}
+              className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-200 flex items-center justify-center ${inputType === "phone"
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-800"
+                }`}
+            >
+              <FaPhone className="mr-2" />
+              Phone
+            </button>
           </div>
 
+          {/* Email Input */}
+          {inputType === "email" && (
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-medium mb-2">
+                Email Address
+              </label>
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={emailInput}
+                onChange={(e) => {
+                  setEmailInput(e.target.value);
+                  setIdentifier(e.target.value);
+                }}
+                onBlur={source === "searchbar" ? handleBlurFetchIfValid : undefined}
+                className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors duration-200"
+              />
+            </div>
+          )}
+
+          {/* Phone Input */}
+          {inputType === "phone" && (
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-medium mb-2">
+                Phone Number
+              </label>
+              <PhoneInput
+                placeholder="Enter phone number"
+                value={phoneValue}
+                onChange={(value) => {
+                  setPhoneValue(value);
+                  setIdentifier(value);
+                }}
+                onBlur={source === "searchbar" ? handleBlurFetchIfValid : undefined}
+                defaultCountry="IN"
+                displayInitialValueAsLocalNumber={false}
+                international={true}
+                withCountryCallingCode={true}
+                className="w-full"
+                countrySelectProps={{
+                  className: "border-2 border-gray-200 rounded-l-lg focus:border-blue-500 focus:outline-none"
+                }}
+                numberInputProps={{
+                  className: "w-full p-3 pl-4 border-2 border-l-0 border-gray-200 rounded-r-lg focus:border-blue-500 focus:outline-none transition-colors duration-200"
+                }}
+                style={{
+                  '--PhoneInputCountryFlag-height': '1.2em',
+                  '--PhoneInputCountryFlag-width': '1.5em',
+                  '--PhoneInputCountrySelect-marginRight': '0.5em',
+                  '--PhoneInputCountrySelectArrow-color': '#6b7280',
+                  '--PhoneInput-color--focus': '#3b82f6'
+                }}
+              />
+            </div>
+          )}
           {/* Manual Verify Data button - only show for navbar source */}
           {source === "navbar" && identifier && !userExists && !infoFetched && (
             <div className="mb-4">
               <button
                 onClick={handleFetchUserData}
-                disabled={(!isValidEmail(identifier) && !isValidPhone(identifier)) || isVerifyingData}
-                className={`w-full py-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center ${((!isValidEmail(identifier) && !isValidPhone(identifier)) || isVerifyingData)
+                disabled={
+                  (inputType === "email"
+                    ? !isValidEmail(emailInput)
+                    : !isValidPhoneForSelectedCountry(phoneValue)
+                  ) || isVerifyingData
+                }
+                className={`w-full py-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center ${((inputType === "email" ? !isValidEmail(emailInput) : !isValidPhoneForSelectedCountry(phoneValue)) || isVerifyingData)
                   ? "bg-gray-400 cursor-not-allowed text-gray-500"
                   : "bg-blue-500 hover:bg-blue-600 text-white"
                   }`}
