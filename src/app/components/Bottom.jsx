@@ -1,3 +1,4 @@
+"use client";
 import React, { useEffect, useState, useRef } from "react";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import YouTubeIcon from "@mui/icons-material/YouTube";
@@ -6,23 +7,26 @@ import PinterestIcon from "@mui/icons-material/Pinterest";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import GoogleIcon from "@mui/icons-material/Google";
 import Link from "next/link";
+import { FaPlane, FaPhone, FaEnvelope, FaMapMarkerAlt, FaArrowRight } from "react-icons/fa";
 
 export const Bottom = () => {
   const [countries, setCountries] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState("Worldwide");
+
   useEffect(() => {
-    // Set country from sessionStorage after component mounts
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const savedCountry = sessionStorage.getItem("country_name");
       if (savedCountry) {
         setSelectedCountry(savedCountry);
       }
     }
   }, []);
+
   const [footerLinks, setFooterLinks] = useState([]);
   const [footerImage, setFooterImage] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const selectRef = useRef(null);
+
   useEffect(() => {
     const updateCountry = () => {
       setSelectedCountry(sessionStorage.getItem("country_name") || "Worldwide");
@@ -31,7 +35,6 @@ export const Bottom = () => {
     return () => window.removeEventListener("countryNameChanged", updateCountry);
   }, []);
 
-  // Fetch country list on mount
   useEffect(() => {
     fetch("https://admin.airambulanceaviation.co.in/api/contact?limit=255")
       .then((r) => r.json())
@@ -40,7 +43,6 @@ export const Bottom = () => {
       });
   }, []);
 
-  // Fetch footer links and image when selectedCountry changes
   useEffect(() => {
     if (!selectedCountry) return;
     fetch(
@@ -53,7 +55,6 @@ export const Bottom = () => {
       });
   }, [selectedCountry]);
 
-  // Hide dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (selectRef.current && !selectRef.current.contains(event.target)) {
@@ -68,192 +69,231 @@ export const Bottom = () => {
     };
   }, [showDropdown]);
 
+  const socialLinks = [
+    { icon: FacebookIcon, href: "https://www.facebook.com/charterflight/", label: "Facebook" },
+    { icon: YouTubeIcon, href: "https://www.youtube.com/@CharterflightsAviation/featured", label: "YouTube" },
+    { icon: LinkedInIcon, href: "https://www.linkedin.com/company/charter-flights-aviation/", label: "LinkedIn" },
+    { icon: InstagramIcon, href: "https://www.instagram.com/charterflightsaviation/", label: "Instagram" },
+    { icon: PinterestIcon, href: "https://in.pinterest.com/charterflightsa/", label: "Pinterest" },
+  ];
+
   return (
-    <div className="bg-gray-100 text-gray-800 w-full px-2 py-10 mt-4 text-xs md:text-sm">
-      <div className="max-w-screen-xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-8">
-        {/* Column 1 */}
-        <div>
-          <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3">
-            Charter Flights Aviation® – Your Ultimate Private Jet & Air Charter Solution
-          </h3>
-          <p className="text-xs md:text-sm leading-relaxed">
-            Charter Flights Aviation® (CFA) is a global leader in private jet charters, business jets, luxury air travel, helicopter services, air ambulance serivices, and seaplane rentals. As a trusted name in air charter services, we provide a premium fleet of private planes tailored for executive travel, leisure, and special occasions. Whether you're booking a private jet for business or indulging in a luxury helicopter ride, CFA ensures an unparalleled experience with top-tier comfort, safety, and convenience. Excitingly, reservations are now open for the exclusive 2025 Flight Party – a once-in-a-lifetime experience in luxury aviation. Secure your seat today and elevate your journey to new heights! Book now for the ultimate flight experience!
-          </p>
-          <div className="mt-3">
-            <label className="text-xs font-semibold">Choose Near Office:</label>
+    <footer className="relative bg-[#0a1628] text-white overflow-hidden">
+      {/* Top Gradient Line */}
+      <div className="h-1 bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#d4af37]" />
+
+      {/* Background Decorations */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#d4af37]/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#1e4976]/20 rounded-full blur-3xl" />
+
+      <div className="relative max-w-7xl mx-auto px-6 py-16">
+        {/* Top Section - Logo & Newsletter */}
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 pb-12 border-b border-white/10">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-r from-[#d4af37] to-[#f4d03f] flex items-center justify-center">
+              <FaPlane className="text-[#0a1628] text-2xl" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold">Charter Flights Aviation®</h3>
+              <p className="text-white/60 text-sm">Your Ultimate Private Jet Solution</p>
+            </div>
+          </div>
+
+          {/* Newsletter */}
+          <div className="w-full lg:w-auto">
+            <p className="text-white/80 mb-3 text-sm">Subscribe for exclusive offers & updates</p>
+            <div className="flex gap-2">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                className="flex-1 lg:w-72 px-5 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:border-[#d4af37] transition-colors"
+              />
+              <button className="px-6 py-3 bg-gradient-to-r from-[#d4af37] to-[#f4d03f] text-[#0a1628] font-bold rounded-xl hover:shadow-lg hover:shadow-[#d4af37]/30 transition-all">
+                Subscribe
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Footer Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 py-12">
+          {/* Column 1 - About */}
+          <div>
+            <h4 className="text-lg font-bold mb-6 flex items-center gap-2">
+              <span className="w-8 h-0.5 bg-[#d4af37]" />
+              About Us
+            </h4>
+            <p className="text-white/70 text-sm leading-relaxed mb-6">
+              Charter Flights Aviation® (CFA) is a global leader in private jet charters, 
+              business jets, luxury air travel, helicopter services, and air ambulance services. 
+              Experience premium aviation with unmatched comfort and safety.
+            </p>
+            
+            {/* Country Selector */}
             <div className="relative" ref={selectRef}>
-              {/* Fake input to show Worldwide until focus */}
-              {!showDropdown ? (
-                <div
-                  className="border border-gray-400 mt-1 p-1 text-xs w-full bg-white cursor-pointer rounded"
-                  tabIndex={0}
-                  onFocus={() => setShowDropdown(true)}
-                  onClick={() => setShowDropdown(true)}
-                >
-                  {selectedCountry === "Worldwide"
-                    ? "Worldwide"
-                    : selectedCountry
+              <label className="text-xs text-[#d4af37] font-semibold mb-2 block">
+                Select Your Region
+              </label>
+              <select
+                value={selectedCountry}
+                onChange={(e) => setSelectedCountry(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white focus:outline-none focus:border-[#d4af37] transition-colors appearance-none cursor-pointer"
+              >
+                <option value="Worldwide" className="bg-[#0a1628]">Worldwide</option>
+                {countries.map((c) => (
+                  <option key={c._id} value={c.country} className="bg-[#0a1628]">
+                    {c.country
                       .split("-")
                       .map((w) => w[0].toUpperCase() + w.slice(1))
                       .join(" ")}
-                </div>
-              ) : (
-                <select
-                  className="border border-gray-400 mt-1 p-1 text-xs w-full bg-white rounded"
-                  value={selectedCountry}
-                  onChange={(e) => {
-                    setSelectedCountry(e.target.value);
-                    setShowDropdown(false);
-                  }}
-                  onBlur={() => setShowDropdown(false)}
-                  autoFocus
-                >
-                  <option value="Worldwide">Worldwide</option>
-                  {countries.map((c) => (
-                    <option key={c._id} value={c.country}>
-                      {c.country
-                        .split("-")
-                        .map((w) => w[0].toUpperCase() + w.slice(1))
-                        .join(" ")}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-            <p className="text-xs mt-2 text-blue-600">
-              ✉️ charterflights@charterflightsaviation.com
-            </p>
-            <div className="flex space-x-2 mt-3">
-              <FacebookIcon fontSize="small" />
-              <YouTubeIcon fontSize="small" />
-              <GoogleIcon fontSize="small" />
-              <LinkedInIcon fontSize="small" />
-              <InstagramIcon fontSize="small" />
-              <PinterestIcon fontSize="small" />
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
-        </div>
-        {/* Column 2 */}
-        <div>
-          <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3">
-            Private clouds await you. Unlock the capabilities of flight with Charter Flights Aviation®!
-          </h3>
-          <ul className="space-y-2 text-xs md:text-sm">
-            {footerLinks.length > 0 ? (
-              footerLinks.map((link) => (
-                <li key={link._id}>
+
+          {/* Column 2 - Quick Links */}
+          <div>
+            <h4 className="text-lg font-bold mb-6 flex items-center gap-2">
+              <span className="w-8 h-0.5 bg-[#d4af37]" />
+              Quick Links
+            </h4>
+            <ul className="space-y-3">
+              {(footerLinks.length > 0
+                ? footerLinks.map((link) => ({ name: link.name, url: link.url }))
+                : [
+                    { name: "Private Jets", url: "#" },
+                    { name: "Helicopters", url: "#" },
+                    { name: "Air Ambulance", url: "#" },
+                    { name: "Charter Flights", url: "#" },
+                    { name: "Empty Leg Flights", url: "#" },
+                    { name: "About Us", url: "/aboutUs" },
+                  ]
+              ).map((link, idx) => (
+                <li key={idx}>
                   <a
                     href={link.url}
-                    target="_blank"
+                    target={link.url.startsWith("http") ? "_blank" : "_self"}
                     rel="noopener noreferrer"
-                    className="hover:text-blue-600 underline"
+                    className="text-white/70 hover:text-[#d4af37] transition-colors flex items-center gap-2 group"
                   >
-                    ▶ {link.name}
+                    <FaArrowRight className="text-xs text-[#d4af37] opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <span>{link.name}</span>
                   </a>
                 </li>
-              ))
-            ) : (
-              <>
-                <li>▶ Helicopter</li>
-                <li>▶ Charter Flights</li>
-                <li>▶ Private Jet</li>
-                <li>▶ Empty Leg</li>
-                <li>▶ Booking</li>
-                <li>▶ About</li>
-              </>
-            )}
-          </ul>
+              ))}
+            </ul>
+          </div>
+
+          {/* Column 3 - Contact */}
+          <div>
+            <h4 className="text-lg font-bold mb-6 flex items-center gap-2">
+              <span className="w-8 h-0.5 bg-[#d4af37]" />
+              Contact Us
+            </h4>
+            <ul className="space-y-4">
+              <li className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
+                  <FaEnvelope className="text-[#d4af37]" />
+                </div>
+                <div>
+                  <p className="text-xs text-white/50 mb-1">Email Us</p>
+                  <a href="mailto:charterflights@charterflightsaviation.com" className="text-white/80 hover:text-[#d4af37] transition-colors text-sm">
+                    charterflights@charterflightsaviation.com
+                  </a>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
+                  <FaPhone className="text-[#d4af37]" />
+                </div>
+                <div>
+                  <p className="text-xs text-white/50 mb-1">24/7 Support</p>
+                  <p className="text-white/80 text-sm">Available Worldwide</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
+                  <FaMapMarkerAlt className="text-[#d4af37]" />
+                </div>
+                <div>
+                  <p className="text-xs text-white/50 mb-1">Headquarters</p>
+                  <p className="text-white/80 text-sm">Global Operations</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 4 - Social & App */}
+          <div>
+            <h4 className="text-lg font-bold mb-6 flex items-center gap-2">
+              <span className="w-8 h-0.5 bg-[#d4af37]" />
+              Connect With Us
+            </h4>
+            
+            {/* Social Icons */}
+            <div className="flex gap-3 mb-8">
+              {socialLinks.map((social, idx) => (
+                <Link
+                  key={idx}
+                  href={social.href}
+                  target="_blank"
+                  className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center hover:bg-[#d4af37] hover:text-[#0a1628] transition-all duration-300 group"
+                  aria-label={social.label}
+                >
+                  <social.icon fontSize="small" className="group-hover:scale-110 transition-transform" />
+                </Link>
+              ))}
+            </div>
+
+            {/* Payment Methods */}
+            <p className="text-xs text-white/50 mb-3">Accepted Payment Methods</p>
+            <div className="flex gap-3 mb-6">
+              {["Visa", "Mastercard", "Amex", "Discover"].map((card, idx) => (
+                <div key={idx} className="px-3 py-2 bg-white rounded-lg">
+                  <span className="text-xs font-bold text-[#0a1628]">{card}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* App Downloads */}
+            <div className="space-y-2">
+              <a href="#" className="flex items-center gap-3 px-4 py-3 bg-white/10 rounded-xl hover:bg-white/20 transition-colors">
+                <span className="text-2xl">🍎</span>
+                <div>
+                  <p className="text-xs text-white/50">Download on</p>
+                  <p className="font-semibold text-sm">App Store</p>
+                </div>
+              </a>
+              <a href="#" className="flex items-center gap-3 px-4 py-3 bg-white/10 rounded-xl hover:bg-white/20 transition-colors">
+                <span className="text-2xl">🤖</span>
+                <div>
+                  <p className="text-xs text-white/50">Get it on</p>
+                  <p className="font-semibold text-sm">Google Play</p>
+                </div>
+              </a>
+            </div>
+          </div>
         </div>
 
-        {/* Column 3 */}
-        <div>
-          <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3">
-            "Get Ready to Soar with the Ultimate Flight Party in the Clouds: Stay Tuned for Exciting Updates!"
-          </h3>
-          <p className="text-xs md:text-sm mb-2">
-            You might be just one flight away from flying free with us! Empty leg ferry flights could
-            be waiting for you. Sign up to get offers and updates.
+        {/* Bottom Bar */}
+        <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-white/50 text-sm text-center md:text-left">
+            © 2025 Charter Flights Aviation®. All rights reserved.
           </p>
-          <div className="flex">
-            <input
-              type="email"
-              placeholder="your email"
-              className="border border-gray-400 p-2 text-xs md:text-sm w-full"
-            />
-            <button className="bg-green-500 text-white px-3">✔</button>
-          </div>
-          <p className="text-xs mt-2">
-            We respect your privacy and time—no junk with us.
-          </p>
-          <p className="text-xs md:text-sm mt-3">
-            "Here’s the exciting part – we have some fantastic surprises in store for you! Join our vibrant social media channels to enjoy valuable gifts and seize incredible offers. Don’t miss out on the chance to be part of the excitement. Follow us now to stay informed and be the first to uncover all the captivating details!".
-          </p>
-          <div className="flex items-center mt-3 space-x-2">
-            <p className="text-xs">Payment methods:</p>
-            <img src="https://www.citypng.com/public/uploads/preview/hd-visa-payment-logo-png-7017516947777256ndfrewd52.png" alt="Visa" className="h-8 md:h-10" />
-            <img src="https://images.seeklogo.com/logo-png/8/2/master-card-logo-png_seeklogo-89117.png" alt="MasterCard" className="h-8 md:h-10" />
-            <img src="https://www.citypng.com/public/uploads/preview/hd-amex-american-express-logo-png-701751694708970jttzjjyo6e.png" alt="Amex" className="h-8 md:h-10" />
-            <img src="https://e7.pngegg.com/pngimages/557/637/png-clipart-discover-financial-services-discover-card-credit-card-diners-club-international-credit-card-text-rectangle-thumbnail.png" alt="Discover" className="h-8 md:h-10" />
-          </div>
-        </div>
-
-        {/* Column 4 */}
-        <div>
-          <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3">
-            "Join us on our official social media channels for Charter Flights Aviation ® !"
-          </h3>
-          <p className="text-xs md:text-sm mb-2">Fly exclusive, connect with us:</p>
-          <div className="flex space-x-2 text-yellow-600">
-            <Link href="https://www.facebook.com/charterflight/" target="_blank">
-              <FacebookIcon fontSize="small" />
+          <div className="flex gap-6 text-sm">
+            <Link href="/termsAndCondition" className="text-white/50 hover:text-[#d4af37] transition-colors">
+              Terms & Conditions
             </Link>
-            <Link href="https://www.youtube.com/@CharterflightsAviation/featured" target="_blank">
-              <YouTubeIcon fontSize="small" />
+            <Link href="#" className="text-white/50 hover:text-[#d4af37] transition-colors">
+              Privacy Policy
             </Link>
-            <Link href="https://workspaceupdates.googleblog.com/2023/04/new-community-features-for-google-chat-and-an-update-currents%20.html" target="_blank">
-              <GoogleIcon fontSize="small" />
+            <Link href="#" className="text-white/50 hover:text-[#d4af37] transition-colors">
+              Cookies
             </Link>
-            <Link href="https://www.linkedin.com/company/charter-flights-aviation/" target="_blank">
-              <LinkedInIcon fontSize="small" />
-            </Link>
-            <Link href="https://www.instagram.com/charterflightsaviation/" target="_blank">
-              <InstagramIcon fontSize="small" />
-            </Link>
-            <Link href="https://in.pinterest.com/charterflightsa/" target="_blank">
-              <PinterestIcon fontSize="small" />
-            </Link>
-          </div>
-          <div className="mt-4 flex justify-center">
-            {footerImage ? (
-              <img
-                src={footerImage}
-                alt="Footer Country"
-                width={250}
-                height={220}
-                className="rounded shadow"
-                style={{ objectFit: "cover" }}
-              />
-            ) : (
-              <iframe
-                title="Facebook Page"
-                src="https://www.charterflightsaviation.com/images/facebookpage.jpg"
-                width="250"
-                height="220"
-                style={{ border: "none", overflow: "hidden" }}
-                allow="encrypted-media"
-              ></iframe>
-            )}
-          </div>
-          <div className="flex flex-col mt-4 space-y-2">
-            <a href="#" className="bg-black text-white text-xs py-2 px-3 text-center">
-              DOWNLOAD FROM APPLE STORE
-            </a>
-            <a href="#" className="bg-yellow-500 text-black text-xs py-2 px-3 text-center">
-              DOWNLOAD FROM GOOGLE PLAY
-            </a>
           </div>
         </div>
       </div>
-    </div>
+    </footer>
   );
 };
