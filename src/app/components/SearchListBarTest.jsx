@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FilterAndFleetListing from "../components/FilterAndFleetListing";
@@ -13,7 +13,9 @@ import GoogleMapModal from "./GoogleMapModal";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { FaMapLocationDot } from "react-icons/fa6";
+import { FaPlane, FaCalendarAlt, FaUsers, FaSearch, FaMapMarkerAlt, FaExchangeAlt, FaPlus, FaTrash } from "react-icons/fa";
 import LoginModal from './LoginModal';
+
 export const SearchBar = () => {
   // === State ===
   const [tripType, setTripType] = useState("oneway");
@@ -23,7 +25,7 @@ export const SearchBar = () => {
   const [isLoadingNearbyAirports, setIsLoadingNearbyAirports] = useState(false);
   const [nearbyAirports, setNearbyAirports] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
-  const [hasSearched, setHasSearched] = useState(false); 
+  const [hasSearched, setHasSearched] = useState(false);
   const [loginModalEmail, setLoginModalEmail] = useState("");
   const [loginModalData, setLoginModalData] = useState({ email: "", phone: "" });
   const [emailError, setEmailError] = useState("");
@@ -36,12 +38,9 @@ export const SearchBar = () => {
   const segmentHasHeli = (seg) =>
     (seg.flightTypes || []).some((t) => t.toLowerCase() === "air ambulance" || t.toLowerCase() === "helicopter");
 
-  // Each segment has `flightTypes` (an array) for multi-select
   const [segments, setSegments] = useState([
     {
-      // from: "Dubai International Airport (DXB)",
       from: "Dubai International Airport",
-      // to: "Indira Gandhi International Airport (DEL)",
       to: "Indira Gandhi International Airport",
       departureDate: new Date().toISOString().split("T")[0],
       departureTime: "08:00",
@@ -54,7 +53,7 @@ export const SearchBar = () => {
     setSegments((prevSegments) => {
       return prevSegments.map((segment) => {
         if (!segment.flightTypes || segment.flightTypes.length === 0) {
-          return { ...segment, flightTypes: ["Private Jet"] }; // Default to "Private Jet"
+          return { ...segment, flightTypes: ["Private Jet"] };
         }
         return segment;
       });
@@ -66,10 +65,8 @@ export const SearchBar = () => {
   const [focusedSegmentIndex, setFocusedSegmentIndex] = useState(null);
   const [focusedField, setFocusedField] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
-  // Personal info fields
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  // const [countryCode, setCountryCode] = useState("+91");
   const [email, setEmail] = useState("");
   const [agreedToPolicy, setAgreedToPolicy] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
@@ -81,8 +78,6 @@ export const SearchBar = () => {
   const [toastShown, setToastShown] = useState(false);
   const containerRef = useRef(null);
   const toastTriggeredRef = useRef(false);
-  // === Effects ===
-  // (A) Load from session or set defaults
 
   // Email validation function
   const validateEmail = (email) => {
@@ -92,7 +87,6 @@ export const SearchBar = () => {
 
   // Phone validation function  
   const validatePhone = (phone) => {
-    // This will check if phone has at least 10 digits (excluding country code symbols)
     const phoneDigits = phone?.replace(/\D/g, '') || '';
     return phoneDigits.length >= 10;
   };
@@ -103,7 +97,6 @@ export const SearchBar = () => {
       setEmailError("");
       return;
     }
-
     if (!validateEmail(value)) {
       setEmailError("Entered Email format is incorrect please enter correct email format");
     } else {
@@ -117,7 +110,6 @@ export const SearchBar = () => {
       setPhoneError("");
       return;
     }
-
     if (!validatePhone(value)) {
       setPhoneError("Phone number format incorrect please correct the format");
     } else {
@@ -125,25 +117,21 @@ export const SearchBar = () => {
     }
   };
 
-  // Debounced email validation
   useEffect(() => {
     const timer = setTimeout(() => {
       if (email) {
         handleEmailValidation(email);
       }
-    }, 1000); // 1 second delay after user stops typing
-
+    }, 1000);
     return () => clearTimeout(timer);
   }, [email]);
 
-  // Debounced phone validation
   useEffect(() => {
     const timer = setTimeout(() => {
       if (phone) {
         handlePhoneValidation(phone);
       }
-    }, 1000); // 1 second delay after user stops typing
-
+    }, 1000);
     return () => clearTimeout(timer);
   }, [phone]);
 
@@ -162,22 +150,18 @@ export const SearchBar = () => {
     }
   };
 
-  // (F) Fetch IP info and location on mount
   useEffect(() => {
     async function fetchIPAndLocation() {
       try {
         const res = await fetch("https://ipinfo.io/json");
         const data = await res.json();
         setUserInfo(data);
-
-        // Extract location for nearby airports
         if (data.loc) {
           const [lat, lng] = data.loc.split(',');
           setUserLocation({ lat: parseFloat(lat), lng: parseFloat(lng) });
         }
       } catch (err) {
         console.error("Failed to fetch IP info:", err);
-        // Try to get location separately if IP info fails
         const location = await fetchUserLocation();
         if (location) {
           setUserLocation(location);
@@ -199,11 +183,11 @@ export const SearchBar = () => {
       return [];
     }
   };
+
   useEffect(() => {
     const savedSearchData = sessionStorage.getItem("searchData");
     if (savedSearchData) {
       const parsed = JSON.parse(savedSearchData);
-
       if (parsed.tripType) setTripType(parsed.tripType);
       if (parsed.segments) setSegments(parsed.segments);
       if (parsed.userInfo) setUserInfo(parsed.userInfo);
@@ -211,17 +195,14 @@ export const SearchBar = () => {
         setShowMultiCityDetails(true);
       }
     } else {
-      // No session data => set default from/to
       setSegments((prev) => {
         const updated = [...prev];
         updated[0] = {
           ...updated[0],
-          // from: "Dubai International Airport (DXB)",
           from: "Dubai International Airport",
           fromCity: "Dubai",
           fromIATA: "DXB",
           fromICAO: "OMDB",
-          // to: "Indira Gandhi International Airport (DEL)",
           to: "Indira Gandhi International Airport",
           toCity: "New Delhi",
           toIATA: "DEL",
@@ -231,15 +212,12 @@ export const SearchBar = () => {
         return updated;
       });
     }
-
-    // Check if user is verified
     const userHasVerified = sessionStorage.getItem("userVerified");
     if (userHasVerified === "true") {
       setIsVerified(true);
     }
   }, []);
 
-  // (B) Save to session whenever these change
   useEffect(() => {
     const dataToSave = {
       tripType,
@@ -249,12 +227,10 @@ export const SearchBar = () => {
     sessionStorage.setItem("searchData", JSON.stringify(dataToSave));
   }, [tripType, segments, userInfo]);
 
-  // (C) Collapse multi-city if user clicks outside container
   useEffect(() => {
     function handleDocClick(e) {
       if (!containerRef.current) return;
       const clickedInside = containerRef.current.contains(e.target);
-
       if (tripType === "multicity") {
         if (clickedInside && isMultiCityCollapsed) {
           setIsMultiCityCollapsed(false);
@@ -269,7 +245,6 @@ export const SearchBar = () => {
     };
   }, [tripType, isMultiCityCollapsed]);
 
-  // (D) Close airport dropdown if user clicks outside
   useEffect(() => {
     function handleClickOutside(e) {
       if (
@@ -290,10 +265,8 @@ export const SearchBar = () => {
     };
   }, [showDropdown]);
 
-  // (E) Fetch airports when searchQuery changes
   useEffect(() => {
     if (!showDropdown) return;
-
     const handler = setTimeout(() => {
       async function fetchAirports() {
         if (searchQuery && searchQuery.trim()) {
@@ -304,7 +277,6 @@ export const SearchBar = () => {
             );
             const data = await response.json();
             const searchResults = data.airports || [];
-
             if (searchResults.length === 0 && userLocation) {
               setIsLoadingNearbyAirports(true);
               const nearby = await fetchNearbyAirports(userLocation.lat, userLocation.lng);
@@ -333,12 +305,10 @@ export const SearchBar = () => {
         }
       }
       fetchAirports();
-    }, 200); // 400ms debounce
-
+    }, 200);
     return () => clearTimeout(handler);
   }, [searchQuery, showDropdown, userLocation]);
 
-  // (F) Fetch IP info on mount (optional)
   useEffect(() => {
     async function fetchIP() {
       try {
@@ -351,20 +321,16 @@ export const SearchBar = () => {
     }
     fetchIP();
   }, []);
-  // === Handlers ===
-  // Toggle trip type (oneway/multicity)
+
   const handleTripTypeChange = (type) => {
     setTripType(type);
-
     if (type === "oneway") {
       setShowMultiCityDetails(false);
       setIsMultiCityCollapsed(false);
       setSegments([
         {
-          // from: "Dubai International Airport (DXB)",
           from: "Dubai International Airport",
           to: "Indira Gandhi International Airport",
-          // to: "Indira Gandhi International Airport (DEL)",
           departureDate: new Date().toISOString().split("T")[0],
           departureTime: "08:00",
           passengers: 1,
@@ -376,10 +342,8 @@ export const SearchBar = () => {
       setIsMultiCityCollapsed(false);
       setSegments([
         {
-          // from: "Dubai International Airport (DXB)",
           from: "Dubai International Airport",
           to: "Indira Gandhi International Airport",
-          // to: "Indira Gandhi International Airport (DEL)",
           departureDate: new Date().toISOString().split("T")[0],
           departureTime: "08:00",
           passengers: 1,
@@ -388,20 +352,19 @@ export const SearchBar = () => {
       ]);
     }
   };
-  // Update any field in a given segment
+
   const handleSegmentChange = (index, field, value) => {
     const updatedSegments = [...segments];
     updatedSegments[index][field] = value;
     setSegments(updatedSegments);
   };
-  // On selecting an airport from dropdown
+
   const handleSelectAirport = (
     airport,
     index = focusedSegmentIndex,
     field = focusedField
   ) => {
     if (index === null || !field) return;
-
     const updatedSegments = [...segments];
     if (field === "from") {
       updatedSegments[index] = {
@@ -420,14 +383,13 @@ export const SearchBar = () => {
         toICAO: airport.icao_code || "VIDP",
       };
     }
-
     setSegments(updatedSegments);
     setShowDropdown(false);
     setFocusedSegmentIndex(null);
     setFocusedField(null);
     setSearchQuery("");
   };
-  // Swap "from" & "to" in one-way mode
+
   const handleSwap = (index) => {
     if (tripType !== "oneway") return;
     const updated = [...segments];
@@ -436,7 +398,7 @@ export const SearchBar = () => {
     updated[index].to = temp;
     setSegments(updated);
   };
-  // Multi-city: add new segment with next-day date
+
   const handleAddCity = () => {
     setSegments((prev) => {
       const lastSegment = prev[prev.length - 1];
@@ -446,7 +408,6 @@ export const SearchBar = () => {
       }
       lastDateObj.setDate(lastDateObj.getDate() + 1);
       const nextDayISO = lastDateObj.toISOString().split("T")[0];
-
       return [
         ...prev,
         {
@@ -460,16 +421,15 @@ export const SearchBar = () => {
       ];
     });
   };
-  // Remove a segment (multi-city only)
+
   const handleRemoveCity = (index) => {
     setSegments((prev) => prev.filter((_, i) => i !== index));
   };
+
   const handleSaveCoords = (coords, address, segIdx, field) => {
     setSegments((prev) => {
       const updated = [...prev];
       if (!updated[segIdx]) return prev;
-
-      // Check if "From" and "To" coordinates are the same
       const otherField = field === "from" ? "toLoc" : "fromLoc";
       if (
         updated[segIdx][otherField] &&
@@ -478,15 +438,13 @@ export const SearchBar = () => {
       ) {
         if (!toastTriggeredRef.current) {
           toast.error("Selected coordinates of destination and arrival cannot be the same.");
-          toastTriggeredRef.current = true; // Prevent further toasts
+          toastTriggeredRef.current = true;
           setTimeout(() => {
-            toastTriggeredRef.current = false; // Reset after 3 seconds
+            toastTriggeredRef.current = false;
           }, 3000);
         }
         return prev;
       }
-
-      // Update the selected field
       if (field === "from") {
         updated[segIdx].fromLoc = { lat: coords.lat, lng: coords.lng };
         updated[segIdx].fromAddress = address;
@@ -498,12 +456,9 @@ export const SearchBar = () => {
     });
   };
 
-
-  // Final "Search" button
   const handleSearch = async () => {
     setIsLoading(true);
     try {
-      // If verified, try to pull name/email/phone from loginData in session
       if (isVerified) {
         const storedLoginData = sessionStorage.getItem("loginData");
         if (storedLoginData) {
@@ -513,13 +468,10 @@ export const SearchBar = () => {
           if (!email.trim()) setEmail(parsedLoginData.email || "");
         }
       }
-
       await new Promise((resolve) => setTimeout(resolve, 0));
       const currentName = name.trim();
       const currentPhone = phone.trim();
       const currentEmail = email.trim();
-
-      // Basic validations if user is not verified and not logged in
       const storedLoginData = sessionStorage.getItem("loginData");
       if (!storedLoginData && (!currentName || !currentPhone || !currentEmail || !agreedToPolicy)) {
         toast.error(
@@ -529,7 +481,6 @@ export const SearchBar = () => {
         return;
       }
       const fullPhoneNumber = `${currentPhone}`;
-
       const mergedUserInfo = {
         ...userInfo,
         name: currentName,
@@ -538,7 +489,6 @@ export const SearchBar = () => {
         agreedToPolicy,
       };
 
-      // Only send OTP and open UserInfoModal if not logged in
       if (!storedLoginData) {
         try {
           const response = await fetch("/api/otp", {
@@ -550,9 +500,7 @@ export const SearchBar = () => {
               email: currentEmail,
             }),
           });
-
           const data = await response.json();
-
           if (response.ok) {
             if (data.message === "user already exists") {
               toast.info(
@@ -565,18 +513,14 @@ export const SearchBar = () => {
               setIsLoginModalOpen(true);
               return;
             }
-
-            // Only show OTP modal if NOT verified and loginData is not present
             if (!isVerified && !sessionStorage.getItem("loginData")) {
               setIsUserInfoModalOpen(true);
             }
           } else {
             setIsLoading(false);
-
             if (response.status === 500) {
               setShowTroubleSigningIn(true);
             }
-
             if (data.error.includes("Phone number already exists")) {
               toast.error("This phone number is already linked with another email account.");
               setLoginModalData({ email: "", phone: fullPhoneNumber });
@@ -597,18 +541,15 @@ export const SearchBar = () => {
         }
       }
 
-      // Build final payload (each segment includes flightTypes array)
       const finalData = {
         tripType,
         segments,
         userInfo: mergedUserInfo,
       };
-
       sessionStorage.setItem("searchData", JSON.stringify(finalData));
       setUserInfo(mergedUserInfo);
       setRefreshKey((prev) => prev + 1);
 
-      // POST to /api/query for flight listing
       const finalDataFromSession = sessionStorage.getItem("searchData");
       if (finalDataFromSession) {
         const finalDataToSend = JSON.parse(finalDataFromSession);
@@ -617,7 +558,6 @@ export const SearchBar = () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(finalDataToSend),
         });
-
         if (queryResponse.ok) {
           const queryData = await queryResponse.json();
           if (queryData.id) {
@@ -625,7 +565,6 @@ export const SearchBar = () => {
           }
         }
       }
-
       if (tripType === "multicity") {
         setIsMultiCityCollapsed(true);
       }
@@ -636,10 +575,70 @@ export const SearchBar = () => {
       setIsLoading(false);
     }
   };
-  // === Render ===
+
+  // Airport Dropdown Component
+  const AirportDropdown = ({ segmentIndex, field }) => {
+    if (!showDropdown || focusedSegmentIndex !== segmentIndex || focusedField !== field) {
+      return null;
+    }
+
+    return (
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          className="absolute left-0 mt-2 w-full max-h-64 overflow-y-auto bg-white shadow-2xl rounded-2xl z-50 border border-gray-100"
+        >
+          {isLoadingNearbyAirports ? (
+            <div className="p-6 flex items-center justify-center">
+              <div className="w-5 h-5 border-2 border-[#d4af37] border-t-transparent rounded-full animate-spin mr-3"></div>
+              <span className="text-gray-600">Finding nearby airports...</span>
+            </div>
+          ) : airports.length > 0 ? (
+            airports.map((airport, i) => (
+              <motion.div
+                key={airport.id ?? `airport-${field}-${segmentIndex}-${i}`}
+                whileHover={{ backgroundColor: "rgba(212, 175, 55, 0.1)" }}
+                onClick={() => handleSelectAirport(airport, segmentIndex, field)}
+                className="p-4 cursor-pointer border-b border-gray-50 last:border-b-0"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-[#0a1628] to-[#1e4976] flex items-center justify-center flex-shrink-0">
+                    <FaPlane className="text-[#d4af37] text-sm" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-semibold text-[#0a1628]">
+                      {airport.city}, {airport.country}
+                    </div>
+                    <div className="text-sm text-gray-500 mt-0.5">
+                      {airport.name}
+                    </div>
+                    <div className="flex gap-2 mt-1">
+                      <span className="text-xs bg-[#d4af37]/20 text-[#0a1628] px-2 py-0.5 rounded-full font-medium">
+                        {airport.iata_code || "N/A"}
+                      </span>
+                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                        {airport.icao_code || "N/A"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))
+          ) : hasSearched ? (
+            <div className="p-6 text-center text-gray-500">
+              <FaPlane className="text-3xl text-gray-300 mx-auto mb-2" />
+              No airports found
+            </div>
+          ) : null}
+        </motion.div>
+      </AnimatePresence>
+    );
+  };
+
   return (
     <>
-      {/* OTP Modal (if needed) */}
       {isUserInfoModalOpen && (
         <UserInfoModal
           show={isUserInfoModalOpen}
@@ -652,677 +651,567 @@ export const SearchBar = () => {
           }}
         />
       )}
-      <div className="w-full flex flex-col items-center relative">
-        {/* Main Container */}
-        <div
+
+      <div className="w-full flex flex-col items-center relative px-4">
+        {/* Main Search Container */}
+        <motion.div
           ref={containerRef}
-          className="p-4 sm:p-6 md:p-4 max-w-6xl w-full rounded-lg bg-white/40 
-                     backdrop-blur-md shadow-md -mt-32 relative z-10"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="w-full max-w-6xl"
         >
-          {/* (1) Icon bar for ONE-WAY tripType =>  segments[0] */}
-          {tripType === "oneway" && (
-            <Icondiv
-              flightTypes={segments[0].flightTypes}
-              setFlightTypes={(updatedFlightTypes) =>
-                handleSegmentChange(0, "flightTypes", updatedFlightTypes)
-              }
-            />
-          )}
-          {/* (2) Trip Type Radio Buttons */}
-          <div className="flex items-center justify-start gap-6 mb-6">
-            <label className="inline-flex items-center cursor-pointer">
-              <input
-                type="radio"
-                name="tripType"
-                value="oneway"
-                checked={tripType === "oneway"}
-                onChange={() => handleTripTypeChange("oneway")}
-                className="form-radio text-blue-600 h-5 w-5"
-              />
-              <span className="ml-2 text-gray-800 font-medium">One Way</span>
-            </label>
-            <label className="inline-flex items-center cursor-pointer">
-              <input
-                type="radio"
-                name="tripType"
-                value="multicity"
-                checked={tripType === "multicity"}
-                onChange={() => handleTripTypeChange("multicity")}
-                className="form-radio text-blue-600 h-5 w-5"
-              />
-              <span className="ml-2 text-gray-800 font-medium">Multi City</span>
-            </label>
-          </div>
-          {/* (3) Main Fields Box */}
-          <div className="bg-white rounded-xl border-4 border-gray-300 p-4">
-            {/* One Way Fields */}
-            {tripType === "oneway" && (
-              <div className="flex flex-col md:flex-row md:flex-nowrap items-start gap-4 mb-4 border-b-2 border-gray-300 pb-4">
-                {/* FROM */}
-                <div className="w-full md:flex-1 relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    From
-                  </label>
-                  <input
-                    type="text"
-                    className="block w-full p-2 border rounded focus:outline-none"
-                    value={segments[0].from}
-                    placeholder="Type departure airport..."
-                    onFocus={() => {
-                      setFocusedSegmentIndex(0);
-                      setFocusedField("from");
-                      setShowDropdown(true);
-                      const currentValue = segments[0].from || "";
-                      setSearchQuery(currentValue);
-                    }}
-                    onChange={(e) => {
-                      handleSegmentChange(0, "from", e.target.value);
-                      setSearchQuery(e.target.value);
-                    }}
+          {/* Glass Card Container */}
+          <div className="relative bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+            {/* Gold Top Accent */}
+            <div className="h-1.5 bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#d4af37]" />
 
-                  />
-                  {segments[0].fromLoc && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Selected Coordinates: {segments[0].fromLoc.lat.toFixed(2)}, {segments[0].fromLoc.lng.toFixed(2)}
-                    </p>
-                  )}
-
-
-                  {segmentHasHeli(segments[0]) && (
-                    <button
-                      type="button"
-                      onClick={() => setMapModal({ open: true, segIdx: 0, field: "from" })}
-                      className="absolute right-2 top-8 text-blue-600 hover:text-blue-800"
-                    >
-                      <FaMapLocationDot size={26} />
-                    </button>
-                  )}
-
-
-                  {/* Dropdown */}
-
-                  {showDropdown &&
-                    focusedSegmentIndex === 0 &&
-                    focusedField === "from" && (
-                      <div className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
-                        {isLoadingNearbyAirports ? (
-                          <div className="p-4 flex items-center justify-center">
-                            <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
-                            <span className="text-sm text-gray-600">Trying to search nearby airports...</span>
-                          </div>
-                        ) : airports.length > 0 ? (
-                          airports.map((airport, i) => (
-                            <li
-                              key={airport.id ?? `airport-from-${i}`}
-                              onClick={() => handleSelectAirport(airport, 0, "from")}
-                              className="p-2 cursor-pointer hover:bg-gray-200 border-b text-sm"
-                            >
-                              <div className="font-semibold">
-                                {airport.city}, {airport.country}
-                              </div>
-                              <div className="text-xs text-gray-600">
-                                {airport.name} • {airport.iata_code || "N/A"} • {airport.icao_code || "N/A"}
-                              </div>
-                            </li>
-                          ))
-                        ) : hasSearched ? (
-                          <div className="p-4 text-center text-gray-500 text-sm">
-                            No airports found
-                          </div>
-                        ) : null}
-                      </div>
-                    )
-                  }
-                </div>
-
-                {/* Swap Icon */}
-                <motion.button
-                  onClick={() => handleSwap(0)}
-                  whileHover={{ scale: 1.1 }}
-                  className="hidden md:flex bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full 
-             h-10 w-10 items-center justify-center mt-6"
-                >
-                  <SwapHorizIcon />
-                </motion.button>
-
-                {/* TO */}
-                <div className="w-full md:flex-1 relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    To
-                  </label>
-                  <input
-                    type="text"
-                    className="block w-full p-2 border rounded focus:outline-none"
-                    value={segments[0].to}
-                    placeholder="Type destination airport..."
-                    onFocus={() => {
-                      setFocusedSegmentIndex(0);
-                      setFocusedField("to");
-                      setShowDropdown(true);
-                      const currentValue = segments[0].to || "";
-                      setSearchQuery(currentValue);
-                    }}
-                    onChange={(e) => {
-                      handleSegmentChange(0, "to", e.target.value);
-                      setSearchQuery(e.target.value);
-                    }}
-
-                  />
-                  {segments[0].toLoc && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Selected Coordinates: {segments[0].toLoc.lat.toFixed(2)}, {segments[0].toLoc.lng.toFixed(2)}
-                    </p>
-                  )}
-                  {segmentHasHeli(segments[0]) && (
-                    <button
-                      type="button"
-                      onClick={() => setMapModal({ open: true, segIdx: 0, field: "to" })}
-                      className="absolute right-2 top-8 text-blue-600 hover:text-blue-800"
-                    >
-                      <FaMapLocationDot size={26} />
-                    </button>
-                  )}
-                  {showDropdown &&
-                    focusedSegmentIndex === 0 &&
-                    focusedField === "to" && (
-                      <div className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
-                        {isLoadingNearbyAirports ? (
-                          <div className="p-4 flex items-center justify-center">
-                            <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
-                            <span className="text-sm text-gray-600">Trying to search nearby airports...</span>
-                          </div>
-                        ) : airports.length > 0 ? (
-                          airports.map((airport, i) => (
-                            <li
-                              key={airport.id ?? `airport-to-${i}`}
-                              onClick={() => handleSelectAirport(airport, 0, "to")}
-                              className="p-2 cursor-pointer hover:bg-gray-200 border-b text-sm"
-                            >
-                              <div className="font-semibold">
-                                {airport.city}, {airport.country}
-                              </div>
-                              <div className="text-xs text-gray-600">
-                                {airport.name} • {airport.iata_code || "N/A"} • {airport.icao_code || "N/A"}
-                              </div>
-                            </li>
-                          ))
-                        ) : hasSearched ? (
-                          <div className="p-4 text-center text-gray-500 text-sm">
-                            No airports found
-                          </div>
-                        ) : null}
-                      </div>
-                    )
-                  }
-                </div>
-                {/* Departure Date & Time */}
-                <div className="w-full sm:w-1/2 md:w-[200px]">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Departure Date & Time
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={`${segments[0].departureDate}T${segments[0].departureTime || "08:00"}`}
-                    onFocus={() => setDateSelected(false)}
-                    onChange={(e) => {
-                      const [date, time] = e.target.value.split("T");
-                      if (!dateSelected) {
-                        // first pick => update date only
-                        handleSegmentChange(0, "departureDate", date);
-                        setDateSelected(true);
-                      } else {
-                        // second pick => update time, then blur
-                        handleSegmentChange(0, "departureTime", time);
-                        e.target.blur();
-                        setDateSelected(false);
-                      }
-                    }}
-                    min={`${new Date().toISOString().split("T")[0]}T00:00`}
-                    className="block w-full p-2 border rounded focus:outline-none"
-                  />
-                </div>
-
-                {/* Seats */}
-                <div className="w-full sm:w-1/2 md:w-[140px]">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Seats
-                  </label>
-                  <select
-                    value={segments[0].passengers}
-                    onChange={(e) =>
-                      handleSegmentChange(0, "passengers", e.target.value)
+            <div className="p-6 md:p-8">
+              {/* Flight Type Icons - Only for One Way */}
+              {tripType === "oneway" && (
+                <div className="mb-6">
+                  <Icondiv
+                    flightTypes={segments[0].flightTypes}
+                    setFlightTypes={(updatedFlightTypes) =>
+                      handleSegmentChange(0, "flightTypes", updatedFlightTypes)
                     }
-                    className="block w-full p-2 border rounded focus:outline-none"
-                  >
-                    {[...Array(32).keys()].map((num) => (
-                      <option key={num + 1} value={num + 1}>
-                        {num + 1}
-                      </option>
-                    ))}
-                    <option value="33">33+</option>
-                    <option value="45">45+</option>
-                    <option value="80">80+</option>
-                    <option value="100">100+</option>
-                    <option value="200">200+</option>
-                    <option value="300">300+</option>
-                  </select>
-                </div>
-              </div>
-            )}
-
-            {/* Multi-City View */}
-            {tripType === "multicity" && (
-              <>
-                {isMultiCityCollapsed ? (
-                  <div
-                    className="p-4 rounded-md bg-gray-200 text-gray-700 cursor-pointer"
-                    onClick={() => setIsMultiCityCollapsed(false)}
-                  >
-                    <p className="mb-0">
-                      <strong>Multi-City</strong> – (click to expand)
-                    </p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-3 mb-4">
-                    {segments.map((segment, index) => (
-                      <div
-                        key={index}
-                        className="relative bg-gray-50 border-2 border-gray-300 
-                                   rounded-md p-4"
-                      >
-                        {/* Purple vertical label for "Trip X" */}
-                        <div
-                          className="absolute -left-12 top-1/2 -translate-y-1/2 w-[100px]
-                                     bg-purple-600 text-white text-center text-sm font-semibold
-                                     py-1 transform -rotate-90 origin-center rounded-md"
-                          style={{ transformOrigin: "center" }}
-                        >
-                          Trip {index + 1}
-                        </div>
-
-                        {/* Icon div for each segment */}
-                        <div className="mt-20 ml-10">
-                          <Icondiv
-                            flightTypes={segment.flightTypes}
-                            setFlightTypes={(updatedFlightTypes) =>
-                              handleSegmentChange(index, "flightTypes", updatedFlightTypes)
-                            }
-                          /></div>
-
-                        {/* Actual fields */}
-                        <div className="ml-10 flex flex-wrap lg:flex-nowrap items-start gap-4 mt-4">
-                          {/* FROM */}
-                          <div className="w-full md:flex-1 relative">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              From
-                            </label>
-                            <input
-                              type="text"
-                              className="block w-full p-2 border rounded focus:outline-none"
-                              value={segment.from}
-                              placeholder="Type departure airport..."
-                              onFocus={() => {
-                                setFocusedSegmentIndex(index);
-                                setFocusedField("from");
-                                setShowDropdown(true);
-                                const currentValue = segment.from || "";
-                                setSearchQuery(currentValue);
-                              }}
-                              onChange={(e) => {
-                                handleSegmentChange(index, "from", e.target.value);
-                                setSearchQuery(e.target.value);
-                              }}
-                            />
-                            {segment.fromLoc && (
-                              <p className="text-xs text-gray-500 mt-1">
-                                Selected Coordinates: {segment.fromLoc.lat.toFixed(2)}, {segment.fromLoc.lng.toFixed(2)}
-                              </p>
-                            )}
-                            {segmentHasHeli(segment) && (
-                              <button
-                                type="button"
-                                onClick={() => setMapModal({ open: true, segIdx: index, field: "from" })}
-                                className="absolute right-2 top-8 text-blue-600 hover:text-blue-800"
-                              >
-                                <FaMapLocationDot size={26} />
-                              </button>
-                            )}
-                            {/* Dropdown */}
-                            {showDropdown &&
-                              focusedSegmentIndex === index &&
-                              focusedField === "from" && (
-                                <div className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
-                                  {isLoadingNearbyAirports ? (
-                                    <div className="p-4 flex items-center justify-center">
-                                      <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
-                                      <span className="text-sm text-gray-600">Trying to search nearby airports...</span>
-                                    </div>
-                                  ) : airports.length > 0 ? (
-                                    airports.map((airport, i) => (
-                                      <li
-                                        key={airport.id ?? `airport-from-${index}-${i}`}
-                                        onClick={() => handleSelectAirport(airport, index, "from")}
-                                        className="p-2 cursor-pointer hover:bg-gray-200 border-b text-sm"
-                                      >
-                                        <div className="font-semibold">
-                                          {airport.city}, {airport.country}
-                                        </div>
-                                        <div className="text-xs text-gray-600">
-                                          {airport.name} • {airport.iata_code || "N/A"} • {airport.icao_code || "N/A"}
-                                        </div>
-                                      </li>
-                                    ))
-                                  ) : hasSearched ? (
-                                    <div className="p-4 text-center text-gray-500 text-sm">
-                                      No airports found
-                                    </div>
-                                  ) : null}
-                                </div>
-                              )
-                            }
-                          </div>
-                          {/* TO */}
-                          <div className="w-full md:flex-1 relative">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              To
-                            </label>
-                            <input
-                              type="text"
-                              className="block w-full p-2 border rounded focus:outline-none"
-                              value={segment.to}
-                              placeholder="Type destination airport..."
-                              onFocus={() => {
-                                setFocusedSegmentIndex(index);
-                                setFocusedField("to");
-                                setShowDropdown(true);
-                                const currentValue = segment.to || "";
-                                setSearchQuery(currentValue);
-                              }}
-                              onChange={(e) => {
-                                handleSegmentChange(index, "to", e.target.value);
-                                setSearchQuery(e.target.value);
-                              }}
-                            />
-                            {segment.toLoc && (
-                              <p className="text-xs text-gray-500 mt-1">
-                                Selected Coordinates: {segment.toLoc.lat.toFixed(2)}, {segment.toLoc.lng.toFixed(2)}
-                              </p>
-                            )}
-                            {segmentHasHeli(segment) && (
-                              <button
-                                type="button"
-                                onClick={() => setMapModal({ open: true, segIdx: index, field: "to" })}
-                                className="absolute right-2 top-8 text-blue-600 hover:text-blue-800"
-                              >
-                                <FaMapLocationDot size={26} />
-                              </button>
-                            )}
-                            {showDropdown &&
-                              focusedSegmentIndex === index &&
-                              focusedField === "to" && (
-                                <div className="absolute left-0 mt-1 w-full max-h-48 overflow-y-auto bg-white text-black shadow-md rounded z-50">
-                                  {isLoadingNearbyAirports ? (
-                                    <div className="p-4 flex items-center justify-center">
-                                      <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
-                                      <span className="text-sm text-gray-600">Trying to search nearby airports...</span>
-                                    </div>
-                                  ) : airports.length > 0 ? (
-                                    airports.map((airport, i) => (
-                                      <li
-                                        key={airport.id ?? `airport-to-${index}-${i}`}
-                                        onClick={() => handleSelectAirport(airport, index, "to")}
-                                        className="p-2 cursor-pointer hover:bg-gray-200 border-b text-sm"
-                                      >
-                                        <div className="font-semibold">
-                                          {airport.city}, {airport.country}
-                                        </div>
-                                        <div className="text-xs text-gray-600">
-                                          {airport.name} • {airport.iata_code || "N/A"} • {airport.icao_code || "N/A"}
-                                        </div>
-                                      </li>
-                                    ))
-                                  ) : hasSearched ? (
-                                    <div className="p-4 text-center text-gray-500 text-sm">
-                                      No airports found
-                                    </div>
-                                  ) : null}
-                                </div>
-                              )
-                            }
-                          </div>
-                          {/* DATE & TIME */}
-                          <div className="w-full sm:w-1/2 md:w-[200px]">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Depart
-                            </label>
-                            <input
-                              type="datetime-local"
-                              value={`${segment.departureDate}T${segment.departureTime || "08:00"}`}
-                              onFocus={() => setMultiCityDateSelected(prev => ({ ...prev, [index]: false }))}
-                              onChange={(e) => {
-                                const [date, time] = e.target.value.split("T");
-                                if (!multiCityDateSelected[index]) {
-                                  handleSegmentChange(index, "departureDate", date);
-                                  setMultiCityDateSelected(prev => ({ ...prev, [index]: true }));
-                                } else {
-                                  handleSegmentChange(index, "departureTime", time);
-                                  e.target.blur();
-                                  setMultiCityDateSelected(prev => ({ ...prev, [index]: false }));
-                                }
-                              }}
-                              min={`${new Date().toISOString().split("T")[0]}T00:00`}
-                              className="block w-full p-2 border rounded focus:outline-none"
-                            />
-                          </div>
-
-                          {/* Seats */}
-                          <div className="w-full sm:w-1/2 md:w-[140px]">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Seats
-                            </label>
-                            <select
-                              value={segment.passengers}
-                              onChange={(e) =>
-                                handleSegmentChange(index, "passengers", e.target.value)
-                              }
-                              className="block w-full p-2 border rounded focus:outline-none"
-                            >
-                              {[...Array(32).keys()].map((num) => (
-                                <option key={num + 1} value={num + 1}>
-                                  {num + 1}
-                                </option>
-                              ))}
-                              <option value="33+">33+</option>
-                            </select>
-                          </div>
-
-                          {/* Remove segment (if more than 1) */}
-                          <div className="mt-3 flex items-center gap-4">
-                            {segments.length > 1 && (
-                              <motion.button
-                                onClick={() => handleRemoveCity(index)}
-                                whileHover={{ scale: 1.1 }}
-                                className="bg-red-500 hover:bg-red-600 text-white p-2 
-                                           rounded-md flex items-center justify-center"
-                              >
-                                <DeleteIcon />
-                              </motion.button>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Add Another Flight (only on last segment) */}
-                        {index === segments.length - 1 && (
-                          <div className="mt-3 flex items-center gap-4 ml-10">
-                            <button
-                              type="button"
-                              onClick={handleAddCity}
-                              className="py-1 px-3 border rounded text-blue-600 
-                                         border-blue-600 hover:bg-blue-600 
-                                         hover:text-white transition"
-                            >
-                              + Add Another Flight
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Show these fields only if NOT verified */}
-            {!isVerified && (
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
-                {/* Email */}
-                <div className="w-full sm:flex-1 min-w-[200px]">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email*"
-                    className={`block w-full p-2 border rounded focus:outline-none bg-pink-50/50 ${emailError ? 'border-red-500' : ''
-                      }`}
                   />
-                  <div className="h-5 mt-1">
-                    {emailError && (
-                      <p className="text-red-500 text-xs">{emailError}</p>
-                    )}
-                  </div>
                 </div>
-
-                <div className="relative w-full sm:flex-1 min-w-[160px]">
-                  <label
-                    htmlFor="phone"
-                    className="absolute left-1 -top-[14%] text-gray-500 text-xs transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:text-base peer-focus:top-0 peer-focus:text-xs peer-focus:text-pink-600 px-1"
-                  >
-                    Whatsapp / Mobile Number*
-                  </label>
-
-                  <PhoneInput
-                    id="phone"
-                    value={phone}
-                    onChange={setPhone}
-                    defaultCountry="IN"
-                    international
-                    countryCallingCodeEditable={false}
-                    className={`peer block w-full p-2 border rounded focus:outline-none bg-pink-50/50 ${phoneError ? 'border-red-500' : ''
-                      }`}
-                  />
-                  <div className="h-5 mt-1">
-                    {phoneError && (
-                      <p className="text-red-500 text-xs">{phoneError}</p>
-                    )}
-                  </div>
-                </div>
-
-
-
-                {/* Name */}
-                <div className="w-full sm:flex-1 min-w-[180px]">
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Your Name*"
-                    className="block w-full p-2 border rounded focus:outline-none bg-pink-50/50"
-                  />
-                  <div className="h-5 mt-1">
-                    {/* Empty div to maintain consistent spacing */}
-                  </div>
-                </div>
-
-                {/* Terms Checkbox */}
-                <div className="flex items-center gap-2 mt-0">
-                  <input
-                    type="checkbox"
-                    id="policyCheck"
-                    checked={agreedToPolicy}
-                    onChange={(e) => setAgreedToPolicy(e.target.checked)}
-                    className="h-5 w-5 text-blue-600 border-gray-300 
-                               rounded focus:ring-blue-500"
-                  />
-                  <label
-                    htmlFor="policyCheck"
-                    className="text-xs text-gray-700 cursor-pointer"
-                  >
-                    I agree to the{" "}
-                    <Link href="/termsAndCondition" className="underline">
-                      Terms &amp; Conditions
-                    </Link>
-                  </label>
-                  
-                </div>
-                
-              </div>
-            )}
-
-            {/* (5) Search Button and Trouble Signing In */}
-            <div className="flex justify-end items-center gap-4 mt-4">
-              {/* Trouble signing in button - only show when there's been a 500 error */}
-              {showTroubleSigningIn && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsLoginModalOpen(true);
-                    setShowTroubleSigningIn(false); // Hide the button after clicking
-                    // loginModalEmail is already set from the error handling
-                  }}
-                  className="text-blue-600 hover:text-blue-800 underline text-sm font-medium transition-colors"
-                >
-                  Trouble signing in?
-                </button>
               )}
 
-              <motion.button
-                onClick={handleSearch}
-                whileHover={{ scale: 1.05 }}
-                className="bg-gradient-to-r from-blue-600 to-blue-400 text-white 
-               px-6 py-2 rounded-md shadow-md transition-all 
-               disabled:opacity-60 disabled:cursor-not-allowed"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <div className="flex items-center">
-                    <div className="w-4 h-4 border-2 border-white 
-                       border-t-transparent rounded-full 
-                       animate-spin mr-2"
-                    />
-                    Loading...
+              {/* Trip Type Selector */}
+              <div className="flex items-center gap-4 mb-8">
+                <div className="inline-flex bg-gray-100 p-1 rounded-full">
+                  {[
+                    { type: "oneway", label: "One Way", icon: "→" },
+                    { type: "multicity", label: "Multi City", icon: "⟷" },
+                  ].map((option) => (
+                    <button
+                      key={option.type}
+                      onClick={() => handleTripTypeChange(option.type)}
+                      className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 flex items-center gap-2 ${
+                        tripType === option.type
+                          ? "bg-[#0a1628] text-white shadow-lg"
+                          : "text-gray-600 hover:text-[#0a1628]"
+                      }`}
+                    >
+                      <span>{option.icon}</span>
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* One Way Search Fields */}
+              {tripType === "oneway" && (
+                <div className="space-y-6">
+                  {/* Main Fields Row */}
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                    {/* FROM */}
+                    <div className="md:col-span-4 relative">
+                      <label className="flex items-center gap-2 text-sm font-semibold text-[#0a1628] mb-2">
+                        <FaMapMarkerAlt className="text-[#d4af37]" />
+                        From
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          className="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#d4af37] focus:bg-white transition-all text-[#0a1628] font-medium"
+                          value={segments[0].from}
+                          placeholder="Departure airport..."
+                          onFocus={() => {
+                            setFocusedSegmentIndex(0);
+                            setFocusedField("from");
+                            setShowDropdown(true);
+                            setSearchQuery(segments[0].from || "");
+                          }}
+                          onChange={(e) => {
+                            handleSegmentChange(0, "from", e.target.value);
+                            setSearchQuery(e.target.value);
+                          }}
+                        />
+                        {segmentHasHeli(segments[0]) && (
+                          <button
+                            type="button"
+                            onClick={() => setMapModal({ open: true, segIdx: 0, field: "from" })}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#d4af37] hover:text-[#b87333] transition-colors"
+                          >
+                            <FaMapLocationDot size={22} />
+                          </button>
+                        )}
+                      </div>
+                      {segments[0].fromLoc && (
+                        <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                          <FaMapMarkerAlt className="text-[#d4af37]" />
+                          {segments[0].fromLoc.lat.toFixed(2)}, {segments[0].fromLoc.lng.toFixed(2)}
+                        </p>
+                      )}
+                      <AirportDropdown segmentIndex={0} field="from" />
+                    </div>
+
+                    {/* Swap Button */}
+                    <div className="hidden md:flex md:col-span-1 justify-center pb-4">
+                      <motion.button
+                        onClick={() => handleSwap(0)}
+                        whileHover={{ scale: 1.1, rotate: 180 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="w-12 h-12 bg-gradient-to-r from-[#d4af37] to-[#f4d03f] rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow"
+                      >
+                        <FaExchangeAlt className="text-[#0a1628]" />
+                      </motion.button>
+                    </div>
+
+                    {/* TO */}
+                    <div className="md:col-span-4 relative">
+                      <label className="flex items-center gap-2 text-sm font-semibold text-[#0a1628] mb-2">
+                        <FaMapMarkerAlt className="text-[#d4af37]" />
+                        To
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          className="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#d4af37] focus:bg-white transition-all text-[#0a1628] font-medium"
+                          value={segments[0].to}
+                          placeholder="Destination airport..."
+                          onFocus={() => {
+                            setFocusedSegmentIndex(0);
+                            setFocusedField("to");
+                            setShowDropdown(true);
+                            setSearchQuery(segments[0].to || "");
+                          }}
+                          onChange={(e) => {
+                            handleSegmentChange(0, "to", e.target.value);
+                            setSearchQuery(e.target.value);
+                          }}
+                        />
+                        {segmentHasHeli(segments[0]) && (
+                          <button
+                            type="button"
+                            onClick={() => setMapModal({ open: true, segIdx: 0, field: "to" })}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#d4af37] hover:text-[#b87333] transition-colors"
+                          >
+                            <FaMapLocationDot size={22} />
+                          </button>
+                        )}
+                      </div>
+                      {segments[0].toLoc && (
+                        <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                          <FaMapMarkerAlt className="text-[#d4af37]" />
+                          {segments[0].toLoc.lat.toFixed(2)}, {segments[0].toLoc.lng.toFixed(2)}
+                        </p>
+                      )}
+                      <AirportDropdown segmentIndex={0} field="to" />
+                    </div>
+
+                    {/* Date & Time */}
+                    <div className="md:col-span-2">
+                      <label className="flex items-center gap-2 text-sm font-semibold text-[#0a1628] mb-2">
+                        <FaCalendarAlt className="text-[#d4af37]" />
+                        Departure
+                      </label>
+                      <input
+                        type="datetime-local"
+                        value={`${segments[0].departureDate}T${segments[0].departureTime || "08:00"}`}
+                        onFocus={() => setDateSelected(false)}
+                        onChange={(e) => {
+                          const [date, time] = e.target.value.split("T");
+                          if (!dateSelected) {
+                            handleSegmentChange(0, "departureDate", date);
+                            setDateSelected(true);
+                          } else {
+                            handleSegmentChange(0, "departureTime", time);
+                            e.target.blur();
+                            setDateSelected(false);
+                          }
+                        }}
+                        min={`${new Date().toISOString().split("T")[0]}T00:00`}
+                        className="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#d4af37] focus:bg-white transition-all text-[#0a1628] font-medium"
+                      />
+                    </div>
+
+                    {/* Passengers */}
+                    <div className="md:col-span-1">
+                      <label className="flex items-center gap-2 text-sm font-semibold text-[#0a1628] mb-2">
+                        <FaUsers className="text-[#d4af37]" />
+                        Seats
+                      </label>
+                      <select
+                        value={segments[0].passengers}
+                        onChange={(e) => handleSegmentChange(0, "passengers", e.target.value)}
+                        className="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#d4af37] focus:bg-white transition-all text-[#0a1628] font-medium appearance-none cursor-pointer"
+                      >
+                        {[...Array(32).keys()].map((num) => (
+                          <option key={num + 1} value={num + 1}>{num + 1}</option>
+                        ))}
+                        <option value="33">33+</option>
+                        <option value="45">45+</option>
+                        <option value="80">80+</option>
+                        <option value="100">100+</option>
+                      </select>
+                    </div>
                   </div>
-                ) : (
-                  "Search"
+                </div>
+              )}
+
+              {/* Multi-City View */}
+              {tripType === "multicity" && (
+                <>
+                  {isMultiCityCollapsed ? (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="p-6 rounded-2xl bg-gradient-to-r from-[#0a1628] to-[#1e4976] cursor-pointer"
+                      onClick={() => setIsMultiCityCollapsed(false)}
+                    >
+                      <div className="flex items-center justify-between text-white">
+                        <div className="flex items-center gap-3">
+                          <FaPlane className="text-[#d4af37]" />
+                          <span className="font-semibold">Multi-City Trip</span>
+                          <span className="bg-[#d4af37] text-[#0a1628] px-2 py-0.5 rounded-full text-xs font-bold">
+                            {segments.length} Flights
+                          </span>
+                        </div>
+                        <span className="text-[#d4af37] text-sm">Click to expand</span>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <div className="space-y-6">
+                      {segments.map((segment, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="relative bg-gray-50 rounded-2xl p-6 border-2 border-gray-200"
+                        >
+                          {/* Trip Badge */}
+                          <div className="absolute -left-3 top-6 bg-gradient-to-r from-[#d4af37] to-[#f4d03f] text-[#0a1628] px-4 py-1 rounded-r-full font-bold text-sm shadow-lg">
+                            Flight {index + 1}
+                          </div>
+
+                          {/* Icon div for each segment */}
+                          <div className="mb-6 mt-4">
+                            <Icondiv
+                              flightTypes={segment.flightTypes}
+                              setFlightTypes={(updatedFlightTypes) =>
+                                handleSegmentChange(index, "flightTypes", updatedFlightTypes)
+                              }
+                            />
+                          </div>
+
+                          {/* Fields Grid */}
+                          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                            {/* FROM */}
+                            <div className="md:col-span-4 relative">
+                              <label className="flex items-center gap-2 text-sm font-semibold text-[#0a1628] mb-2">
+                                <FaMapMarkerAlt className="text-[#d4af37]" />
+                                From
+                              </label>
+                              <div className="relative">
+                                <input
+                                  type="text"
+                                  className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#d4af37] transition-all text-[#0a1628] font-medium"
+                                  value={segment.from}
+                                  placeholder="Departure airport..."
+                                  onFocus={() => {
+                                    setFocusedSegmentIndex(index);
+                                    setFocusedField("from");
+                                    setShowDropdown(true);
+                                    setSearchQuery(segment.from || "");
+                                  }}
+                                  onChange={(e) => {
+                                    handleSegmentChange(index, "from", e.target.value);
+                                    setSearchQuery(e.target.value);
+                                  }}
+                                />
+                                {segmentHasHeli(segment) && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setMapModal({ open: true, segIdx: index, field: "from" })}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#d4af37]"
+                                  >
+                                    <FaMapLocationDot size={20} />
+                                  </button>
+                                )}
+                              </div>
+                              <AirportDropdown segmentIndex={index} field="from" />
+                            </div>
+
+                            {/* TO */}
+                            <div className="md:col-span-4 relative">
+                              <label className="flex items-center gap-2 text-sm font-semibold text-[#0a1628] mb-2">
+                                <FaMapMarkerAlt className="text-[#d4af37]" />
+                                To
+                              </label>
+                              <div className="relative">
+                                <input
+                                  type="text"
+                                  className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#d4af37] transition-all text-[#0a1628] font-medium"
+                                  value={segment.to}
+                                  placeholder="Destination airport..."
+                                  onFocus={() => {
+                                    setFocusedSegmentIndex(index);
+                                    setFocusedField("to");
+                                    setShowDropdown(true);
+                                    setSearchQuery(segment.to || "");
+                                  }}
+                                  onChange={(e) => {
+                                    handleSegmentChange(index, "to", e.target.value);
+                                    setSearchQuery(e.target.value);
+                                  }}
+                                />
+                                {segmentHasHeli(segment) && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setMapModal({ open: true, segIdx: index, field: "to" })}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#d4af37]"
+                                  >
+                                    <FaMapLocationDot size={20} />
+                                  </button>
+                                )}
+                              </div>
+                              <AirportDropdown segmentIndex={index} field="to" />
+                            </div>
+
+                            {/* Date & Time */}
+                            <div className="md:col-span-2">
+                              <label className="flex items-center gap-2 text-sm font-semibold text-[#0a1628] mb-2">
+                                <FaCalendarAlt className="text-[#d4af37]" />
+                                Depart
+                              </label>
+                              <input
+                                type="datetime-local"
+                                value={`${segment.departureDate}T${segment.departureTime || "08:00"}`}
+                                onFocus={() => setMultiCityDateSelected(prev => ({ ...prev, [index]: false }))}
+                                onChange={(e) => {
+                                  const [date, time] = e.target.value.split("T");
+                                  if (!multiCityDateSelected[index]) {
+                                    handleSegmentChange(index, "departureDate", date);
+                                    setMultiCityDateSelected(prev => ({ ...prev, [index]: true }));
+                                  } else {
+                                    handleSegmentChange(index, "departureTime", time);
+                                    e.target.blur();
+                                    setMultiCityDateSelected(prev => ({ ...prev, [index]: false }));
+                                  }
+                                }}
+                                min={`${new Date().toISOString().split("T")[0]}T00:00`}
+                                className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#d4af37] transition-all text-[#0a1628] font-medium"
+                              />
+                            </div>
+
+                            {/* Seats */}
+                            <div className="md:col-span-1">
+                              <label className="flex items-center gap-2 text-sm font-semibold text-[#0a1628] mb-2">
+                                <FaUsers className="text-[#d4af37]" />
+                                Seats
+                              </label>
+                              <select
+                                value={segment.passengers}
+                                onChange={(e) => handleSegmentChange(index, "passengers", e.target.value)}
+                                className="w-full px-3 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#d4af37] transition-all text-[#0a1628] font-medium"
+                              >
+                                {[...Array(32).keys()].map((num) => (
+                                  <option key={num + 1} value={num + 1}>{num + 1}</option>
+                                ))}
+                                <option value="33+">33+</option>
+                              </select>
+                            </div>
+
+                            {/* Remove Button */}
+                            {segments.length > 1 && (
+                              <div className="md:col-span-1 flex justify-center">
+                                <motion.button
+                                  onClick={() => handleRemoveCity(index)}
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  className="w-10 h-10 bg-red-500 hover:bg-red-600 text-white rounded-xl flex items-center justify-center shadow-lg transition-colors"
+                                >
+                                  <FaTrash className="text-sm" />
+                                </motion.button>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Add Flight Button - Only on last segment */}
+                          {index === segments.length - 1 && (
+                            <motion.button
+                              onClick={handleAddCity}
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              className="mt-4 w-full py-3 border-2 border-dashed border-[#d4af37] rounded-xl text-[#d4af37] font-semibold hover:bg-[#d4af37]/10 transition-colors flex items-center justify-center gap-2"
+                            >
+                              <FaPlus />
+                              Add Another Flight
+                            </motion.button>
+                          )}
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* User Info Fields - Only if not verified */}
+              {!isVerified && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-8 p-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200"
+                >
+                  <h4 className="text-sm font-bold text-[#0a1628] mb-4 flex items-center gap-2">
+                    <span className="w-8 h-8 bg-[#d4af37] rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                    Quick Verification
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Email */}
+                    <div>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Email Address*"
+                        className={`w-full px-4 py-3 bg-white border-2 rounded-xl focus:outline-none focus:border-[#d4af37] transition-all ${
+                          emailError ? "border-red-400" : "border-gray-200"
+                        }`}
+                      />
+                      {emailError && (
+                        <p className="text-red-500 text-xs mt-1">{emailError}</p>
+                      )}
+                    </div>
+
+                    {/* Phone */}
+                    <div>
+                      <PhoneInput
+                        value={phone}
+                        onChange={setPhone}
+                        defaultCountry="IN"
+                        international
+                        countryCallingCodeEditable={false}
+                        className={`phone-input-premium w-full px-4 py-3 bg-white border-2 rounded-xl focus:outline-none ${
+                          phoneError ? "border-red-400" : "border-gray-200"
+                        }`}
+                      />
+                      {phoneError && (
+                        <p className="text-red-500 text-xs mt-1">{phoneError}</p>
+                      )}
+                    </div>
+
+                    {/* Name */}
+                    <div>
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Your Name*"
+                        className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#d4af37] transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Terms Checkbox */}
+                  <div className="mt-4 flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="policyCheck"
+                      checked={agreedToPolicy}
+                      onChange={(e) => setAgreedToPolicy(e.target.checked)}
+                      className="w-5 h-5 rounded border-gray-300 text-[#d4af37] focus:ring-[#d4af37]"
+                    />
+                    <label htmlFor="policyCheck" className="text-sm text-gray-600 cursor-pointer">
+                      I agree to the{" "}
+                      <Link href="/termsAndCondition" className="text-[#d4af37] font-semibold hover:underline">
+                        Terms & Conditions
+                      </Link>
+                    </label>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Search Button */}
+              <div className="mt-8 flex justify-end items-center gap-4">
+                {showTroubleSigningIn && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsLoginModalOpen(true);
+                      setShowTroubleSigningIn(false);
+                    }}
+                    className="text-[#d4af37] hover:text-[#b87333] underline text-sm font-medium transition-colors"
+                  >
+                    Trouble signing in?
+                  </button>
                 )}
-              </motion.button>
+
+                <motion.button
+                  onClick={handleSearch}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  disabled={isLoading}
+                  className="relative px-10 py-4 bg-gradient-to-r from-[#0a1628] to-[#1e4976] text-white rounded-xl font-bold shadow-xl hover:shadow-2xl transition-all disabled:opacity-60 disabled:cursor-not-allowed overflow-hidden group"
+                >
+                  {/* Shimmer Effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                  
+                  {isLoading ? (
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Searching...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <FaSearch />
+                      Search Flights
+                    </div>
+                  )}
+                </motion.button>
+              </div>
             </div>
           </div>
-        </div>
-        {/* (6) Conditionally render the flight listing (if verified) */}
+        </motion.div>
+
+        {/* Flight Listing */}
         {!isLoading && isVerified && <FilterAndFleetListing key={refreshKey} />}
+
+        {/* Login Modal */}
         <LoginModal
           isOpen={isLoginModalOpen}
           onClose={() => {
             setIsLoginModalOpen(false);
-            setLoginModalEmail(""); // Clear the stored email when closing
+            setLoginModalEmail("");
           }}
           onLoginSuccess={() => {
             setIsLoginModalOpen(false);
             setIsVerified(true);
-            setShowTroubleSigningIn(false); // Hide trouble signing in button on successful login
-            setLoginModalEmail(""); // Clear the stored email on successful login
-            setRefreshKey(prev => prev + 1);
+            setShowTroubleSigningIn(false);
+            setLoginModalEmail("");
+            setRefreshKey((prev) => prev + 1);
             window.dispatchEvent(new Event("updateNavbar"));
           }}
-          initialEmail={loginModalData.email || loginModalData.phone || loginModalEmail || email} // Pass phone if present
-          source="searchbar"  // Add this line
+          initialEmail={loginModalData.email || loginModalData.phone || loginModalEmail || email}
+          source="searchbar"
         />
-      </div >
-      < GoogleMapModal
+      </div>
+
+      <GoogleMapModal
         open={mapModal.open}
         onClose={() => setMapModal({ open: false, segIdx: null, field: null })}
         onSave={(coords, address) => handleSaveCoords(coords, address, mapModal.segIdx, mapModal.field)}
       />
+
+      {/* Custom Phone Input Styles */}
+      <style jsx global>{`
+        .phone-input-premium .PhoneInputInput {
+          border: none !important;
+          outline: none !important;
+          background: transparent !important;
+          font-size: 1rem;
+          width: 100%;
+        }
+        .phone-input-premium .PhoneInputCountry {
+          margin-right: 0.5rem;
+        }
+      `}</style>
     </>
   );
 };
