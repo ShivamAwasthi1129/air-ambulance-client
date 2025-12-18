@@ -1,5 +1,8 @@
+"use client";
+import { FaStar, FaPlane } from "react-icons/fa";
+import { motion } from "framer-motion";
+
 export default function BestFlightSection({ data }) {
-  // Use cards from API data, fallback to static if not available
   const countryName = typeof window !== "undefined"
     ? sessionStorage.getItem("country_name") || "WorldWide"
     : "WorldWide";
@@ -12,55 +15,78 @@ export default function BestFlightSection({ data }) {
             price: 809,
             rating: 5,
             heading: "Royal flight salute in Dubai Airport",
-            paragraph: "custom",
+            paragraph: "Custom VIP services available",
           },
         ];
 
   return (
-    <section className="px-4 py-10 md:px-16 bg-white">
-      <h2 className="text-2xl md:text-3xl font-bold text-blue-600 text-center">
-        Best Charter flights and Air Charter Service in {countryName}
-      </h2>
-      <p className="text-gray-700 text-center mt-2 mb-8">
-        Charter flights aviation add on special services in {countryName}
-      </p>
+    <section className="py-12 bg-white">
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+          className="text-center mb-8"
+        >
+          <span className="inline-flex items-center gap-2 bg-[#e8f4ff] text-[#008cff] px-4 py-1.5 rounded-full text-sm font-semibold mb-4">
+            <FaPlane className="text-xs" />
+            Best Services
+          </span>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+            Best Charter Flights in <span className="text-[#008cff]">{countryName}</span>
+          </h2>
+          <p className="text-gray-600 text-sm">
+            Charter flights aviation special add-on services
+          </p>
+        </motion.div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {cards.map((card, index) => (
-          <div
-            key={card._id || index}
-            className="flex justify-between items-center bg-white rounded-xl shadow-md p-4 gap-4 hover:shadow-lg transition"
-          >
-            {/* Left content */}
-            <div className="flex flex-col justify-between w-2/3">
-              <div>
-                <h3 className="font-semibold text-sm sm:text-base text-gray-900">
-                  {card.heading}
-                </h3>
-                <p className="text-xs text-gray-600 mt-1">
-                  {card.paragraph}
-                </p>
-              </div>
-              <div className="mt-2 flex items-center justify-between">
-                <span className="text-green-700 bg-green-200 px-3 py-1 rounded font-semibold text-sm">
-                  ${card.price || 809} Onwards
-                </span>
-                <span className="text-yellow-400 text-sm ml-2">
-                  {"★".repeat(Math.round(card.rating || 5))}
-                </span>
-              </div>
-            </div>
+        {/* Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {cards.map((card, index) => (
+            <motion.div
+              key={card._id || index}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: index * 0.05 }}
+              viewport={{ once: true }}
+              className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:border-[#008cff]/30 hover:shadow-lg transition-all duration-300 group"
+            >
+              <div className="flex items-stretch">
+                {/* Left content */}
+                <div className="flex-1 p-4">
+                  <h3 className="font-bold text-gray-900 text-sm mb-2 line-clamp-2 group-hover:text-[#008cff] transition-colors">
+                    {card.heading}
+                  </h3>
+                  <p className="text-gray-500 text-xs mb-3 line-clamp-2">
+                    {card.paragraph}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="bg-green-50 text-green-700 px-3 py-1 rounded-lg text-xs font-bold">
+                      ${card.price || 809} Onwards
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <FaStar className="text-yellow-400 text-xs" />
+                      <span className="text-gray-600 text-xs font-medium">
+                        {card.rating || 5}.0
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
-            {/* Right image */}
-            <div className="w-1/3">
-              <img
-                src={card.image}
-                alt={card.heading}
-                className="w-full h-24 object-cover rounded-lg"
-              />
-            </div>
-          </div>
-        ))}
+                {/* Right image */}
+                <div className="w-28 flex-shrink-0">
+                  <img
+                    src={card.image}
+                    alt={card.heading}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );

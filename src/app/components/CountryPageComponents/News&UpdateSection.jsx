@@ -1,5 +1,8 @@
+"use client";
+import { FaCalendarAlt, FaArrowRight, FaNewspaper } from "react-icons/fa";
+import { motion } from "framer-motion";
+
 export default function NewsAndUpdates({ data }) {
-  // Extract news array from API data
   const news =
     data && Array.isArray(data) && data[0]?.news && data[0].news.length > 0
       ? data[0].news
@@ -29,53 +32,91 @@ export default function NewsAndUpdates({ data }) {
   ];
 
   return (
-    <section className="px-4 py-10 md:px-16 bg-white text-gray-800 space-y-6">
-      {/* News Block */}
-      {news.map((item, idx) => (
-        <div
-          key={idx}
-          className="flex flex-col md:flex-row items-start gap-4 md:gap-6 p-5 rounded-xl border border-gray-200 shadow-md mb-4"
+    <section className="py-12 bg-[#f7f9fc]">
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+          className="text-center mb-8"
         >
-          {/* Image */}
-          <div className="w-full md:w-auto flex-shrink-0">
-            <img
-              src={item.image}
-              alt={item.heading}
-              className="rounded-lg w-[600px] h-[200px] object-cover"
-            />
-          </div>
-          {/* Content */}
-          <div className="flex-1 space-y-2">
-            <h3 className="text-lg sm:text-xl font-semibold leading-tight">
-              {item.heading}
-            </h3>
-            <p className="text-blue-600 font-medium text-sm sm:text-base">
-              {item.date
-                ? new Date(item.date).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })
-                : "Date not available"}
-            </p>
-            <p className="text-sm sm:text-base text-gray-700 leading-snug">
-              {item.paragraph}
-            </p>
-          </div>
-        </div>
-      ))}
+          <span className="inline-flex items-center gap-2 bg-[#e8f4ff] text-[#008cff] px-4 py-1.5 rounded-full text-sm font-semibold mb-4">
+            <FaNewspaper className="text-xs" />
+            Latest Updates
+          </span>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+            News & Announcements
+          </h2>
+        </motion.div>
 
-      {/* Buttons */}
-      <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-        {buttons.map((btn, i) => (
-          <a
-            key={i}
-            href={btn.link}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm sm:text-base font-medium shadow-sm"
-          >
-            {btn.label}
-          </a>
-        ))}
+        {/* News Block */}
+        <div className="space-y-5">
+          {news.map((item, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: idx * 0.1 }}
+              viewport={{ once: true }}
+              className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:border-[#008cff]/20 transition-colors shadow-sm"
+            >
+              <div className="flex flex-col md:flex-row">
+                {/* Image */}
+                <div className="md:w-1/3 flex-shrink-0">
+                  <img
+                    src={item.image}
+                    alt={item.heading}
+                    className="w-full h-48 md:h-full object-cover"
+                  />
+                </div>
+                {/* Content */}
+                <div className="flex-1 p-5 md:p-6">
+                  <div className="flex items-center gap-2 text-[#008cff] text-xs font-medium mb-3">
+                    <FaCalendarAlt className="text-xs" />
+                    {item.date
+                      ? new Date(item.date).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })
+                      : "Date not available"}
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-3 leading-tight">
+                    {item.heading}
+                  </h3>
+                  <p className="text-gray-600 text-sm leading-relaxed line-clamp-3 mb-4">
+                    {item.paragraph}
+                  </p>
+                  <button className="inline-flex items-center gap-2 text-[#008cff] font-semibold text-sm hover:gap-3 transition-all">
+                    Read More
+                    <FaArrowRight className="text-xs" />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+          className="flex flex-wrap gap-3 justify-center mt-8"
+        >
+          {buttons.map((btn, i) => (
+            <a
+              key={i}
+              href={btn.link}
+              className="bg-[#008cff] text-white px-4 py-2.5 rounded-xl hover:bg-[#0070cc] transition-colors text-xs font-semibold shadow-sm"
+            >
+              {btn.label}
+            </a>
+          ))}
+        </motion.div>
       </div>
     </section>
   );

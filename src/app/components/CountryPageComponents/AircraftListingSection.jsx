@@ -30,45 +30,35 @@ export default function AircraftListingSection({ data }) {
   const filters = ["All", "Jets", "Helicopters", "Turboprop"];
 
   return (
-    <section className="relative py-20 bg-gradient-to-b from-white via-gray-50 to-white overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute top-20 left-0 w-72 h-72 bg-[#d4af37]/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 right-0 w-96 h-96 bg-[#1e4976]/5 rounded-full blur-3xl" />
-
-      <div className="max-w-7xl mx-auto px-6">
+    <section className="relative py-12 bg-[#f7f9fc] overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
         {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-          className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-12 gap-6"
+          className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4"
         >
           <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-1 bg-gradient-to-r from-[#d4af37] to-[#b87333] rounded-full" />
-              <span className="text-[#d4af37] font-semibold text-sm uppercase tracking-wider">
-                Our Fleet
-              </span>
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-[#0a1628] mb-3">
-              Luxury Charter Fleet
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+              Our Fleet Collection
             </h2>
-            <p className="text-gray-600 text-lg max-w-xl">
-              Discover our premium collection of private jets and helicopters for your next journey
+            <p className="text-gray-600 text-sm">
+              Browse our premium collection of private jets and helicopters
             </p>
           </div>
 
-          {/* Filter Tabs */}
-          <div className="flex flex-wrap gap-2 bg-gray-100 p-1.5 rounded-full">
+          {/* Filter Tabs - MMT Style */}
+          <div className="flex flex-wrap gap-2 bg-white p-1 rounded-xl border border-gray-200 shadow-sm">
             {filters.map((filter) => (
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter)}
-                className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                   activeFilter === filter
-                    ? "bg-[#0a1628] text-white shadow-lg"
-                    : "text-gray-600 hover:text-[#0a1628]"
+                    ? "bg-[#008cff] text-white shadow-md"
+                    : "text-gray-600 hover:bg-gray-50"
                 }`}
               >
                 {filter}
@@ -78,17 +68,17 @@ export default function AircraftListingSection({ data }) {
         </motion.div>
 
         {/* Aircraft Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {aircrafts.map((aircraft, index) => (
             <motion.div
               key={aircraft._id}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
+              transition={{ duration: 0.4, delay: index * 0.05 }}
               viewport={{ once: true }}
               className="group"
             >
-              <div className="premium-card h-full">
+              <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-[#008cff]/30 hover:shadow-lg transition-all duration-300">
                 {/* Image Container */}
                 <div className="relative overflow-hidden">
                   <img
@@ -97,95 +87,76 @@ export default function AircraftListingSection({ data }) {
                       "https://images.pexels.com/photos/1441122/pexels-photo-1441122.jpeg"
                     }
                     alt={aircraft.fleetDetails.selectedModel}
-                    className="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-700"
+                    className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-500"
                   />
 
-                  {/* Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
                   {/* Top Badges */}
-                  <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
-                    <div className="flex flex-col gap-2">
+                  <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
+                    <div className="flex flex-col gap-1.5">
                       {aircraft.featured && (
-                        <span className="bg-gradient-to-r from-[#d4af37] to-[#f4d03f] text-[#0a1628] text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
-                          ⭐ Featured
+                        <span className="bg-[#ff6b00] text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm">
+                          Featured
                         </span>
                       )}
-                      <span className="bg-[#0a1628]/80 backdrop-blur-sm text-white text-xs font-medium px-3 py-1.5 rounded-full">
+                      <span className="bg-[#051423]/80 backdrop-blur-sm text-white text-[10px] font-medium px-2 py-1 rounded-md">
                         {aircraft.fleetDetails.selectedType || "Private Jet"}
                       </span>
                     </div>
                     <button
                       onClick={() => toggleFavorite(aircraft._id)}
-                      className="bg-white/90 backdrop-blur-sm hover:bg-white p-2.5 rounded-full shadow-lg transition-all duration-300 hover:scale-110"
+                      className="bg-white/90 hover:bg-white p-2 rounded-full shadow-md transition-all duration-200 hover:scale-105"
                     >
                       {favorites.has(aircraft._id) ? (
-                        <FaHeart className="text-red-500 text-base" />
+                        <FaHeart className="text-red-500 text-sm" />
                       ) : (
-                        <FaRegHeart className="text-gray-600 text-base" />
+                        <FaRegHeart className="text-gray-500 text-sm" />
                       )}
-                    </button>
-                  </div>
-
-                  {/* Quick View Button */}
-                  <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-4 group-hover:translate-y-0">
-                    <button className="w-full py-3 bg-white/95 backdrop-blur-sm rounded-xl font-semibold text-[#0a1628] hover:bg-[#d4af37] hover:text-[#0a1628] transition-colors">
-                      Quick View
                     </button>
                   </div>
                 </div>
 
                 {/* Content */}
-                <div className="p-5">
+                <div className="p-4">
                   {/* Title and Rating */}
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-lg font-bold text-[#0a1628] leading-tight group-hover:text-[#1e4976] transition-colors">
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="text-base font-bold text-gray-900 leading-tight group-hover:text-[#008cff] transition-colors line-clamp-1">
                       {aircraft.fleetDetails.selectedModel}
                     </h3>
-                    <div className="flex items-center gap-1 bg-[#d4af37]/10 px-2 py-1 rounded-lg">
-                      <FaStar className="text-[#d4af37] text-sm" />
-                      <span className="text-sm font-bold text-[#0a1628]">4.9</span>
+                    <div className="flex items-center gap-1 bg-green-50 px-2 py-0.5 rounded-md">
+                      <FaStar className="text-green-600 text-xs" />
+                      <span className="text-xs font-bold text-green-700">4.9</span>
                     </div>
                   </div>
 
                   {/* Specifications */}
-                  <div className="grid grid-cols-3 gap-3 mb-5">
-                    <div className="text-center p-2 bg-gray-50 rounded-xl">
-                      <FaUser className="text-[#1e4976] text-sm mx-auto mb-1" />
-                      <span className="text-xs text-gray-600 block">
-                        {aircraft.fleetDetails.seatCapacity}
-                      </span>
-                      <span className="text-[10px] text-gray-400">Seats</span>
+                  <div className="flex items-center justify-between gap-2 mb-4 text-gray-500">
+                    <div className="flex items-center gap-1 text-xs">
+                      <FaUser className="text-[#008cff]" />
+                      <span>{aircraft.fleetDetails.seatCapacity} Seats</span>
                     </div>
-                    <div className="text-center p-2 bg-gray-50 rounded-xl">
-                      <FaSuitcase className="text-[#1e4976] text-sm mx-auto mb-1" />
-                      <span className="text-xs text-gray-600 block">
-                        {aircraft.fleetDetails.luggage || "4"}
-                      </span>
-                      <span className="text-[10px] text-gray-400">Bags</span>
+                    <div className="flex items-center gap-1 text-xs">
+                      <FaSuitcase className="text-[#008cff]" />
+                      <span>{aircraft.fleetDetails.luggage || "4"} Bags</span>
                     </div>
-                    <div className="text-center p-2 bg-gray-50 rounded-xl">
-                      <FaTachometerAlt className="text-[#1e4976] text-sm mx-auto mb-1" />
-                      <span className="text-xs text-gray-600 block">
-                        {aircraft.fleetDetails.maxSpeed || "850"}
-                      </span>
-                      <span className="text-[10px] text-gray-400">km/h</span>
+                    <div className="flex items-center gap-1 text-xs">
+                      <FaTachometerAlt className="text-[#008cff]" />
+                      <span>{aircraft.fleetDetails.maxSpeed || "850"} km/h</span>
                     </div>
                   </div>
 
                   {/* Price and CTA */}
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                     <div>
-                      <span className="text-xs text-gray-500">Starting from</span>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-bold text-[#0a1628]">
+                      <span className="text-[10px] text-gray-400">Starting from</span>
+                      <div className="flex items-baseline gap-0.5">
+                        <span className="text-lg font-bold text-gray-900">
                           ${aircraft.fleetDetails.pricing || "2,500"}
                         </span>
-                        <span className="text-sm text-gray-500">/hr</span>
+                        <span className="text-xs text-gray-400">/hr</span>
                       </div>
                     </div>
-                    <button className="w-12 h-12 rounded-full bg-[#0a1628] text-white flex items-center justify-center hover:bg-[#d4af37] hover:text-[#0a1628] transition-all duration-300 group-hover:scale-110">
-                      <FaArrowRight className="text-sm" />
+                    <button className="px-4 py-2 rounded-lg bg-[#008cff] text-white text-xs font-semibold hover:bg-[#0070cc] transition-colors">
+                      Book Now
                     </button>
                   </div>
                 </div>
@@ -195,19 +166,20 @@ export default function AircraftListingSection({ data }) {
         </div>
 
         {/* View All Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="text-center mt-12"
-        >
-          <button className="inline-flex items-center gap-3 bg-[#0a1628] text-white px-8 py-4 rounded-full font-semibold hover:bg-[#1e4976] transition-all duration-300 group shadow-xl hover:shadow-2xl">
-            <FaPlane className="group-hover:translate-x-1 transition-transform" />
-            Explore Full Fleet
-            <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
-          </button>
-        </motion.div>
+        {aircrafts.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+            className="text-center mt-8"
+          >
+            <button className="inline-flex items-center gap-2 border-2 border-[#008cff] text-[#008cff] px-6 py-3 rounded-xl font-semibold hover:bg-[#008cff] hover:text-white transition-all duration-200 text-sm">
+              View All Aircraft
+              <FaArrowRight className="text-xs" />
+            </button>
+          </motion.div>
+        )}
       </div>
     </section>
   );

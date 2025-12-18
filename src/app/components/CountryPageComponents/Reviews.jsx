@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { FaArrowLeft, FaArrowRight, FaStar, FaQuoteLeft } from "react-icons/fa";
+import { FaArrowLeft, FaArrowRight, FaStar, FaQuoteLeft, FaCheckCircle } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function ReviewSection({ data }) {
@@ -30,10 +30,6 @@ export default function ReviewSection({ data }) {
               "Value for money": 5,
               "Flight quality": 5,
               Comfortness: 5,
-              Availability: 5,
-              "Response Time": 5,
-              Payments: 5,
-              "Qualified Staff": 5,
             },
           },
           {
@@ -47,10 +43,6 @@ export default function ReviewSection({ data }) {
               "Value for money": 5,
               "Flight quality": 5,
               Comfortness: 5,
-              Availability: 5,
-              "Response Time": 5,
-              Payments: 5,
-              "Qualified Staff": 5,
             },
           },
         ];
@@ -66,8 +58,8 @@ export default function ReviewSection({ data }) {
         {Array.from({ length: 5 }).map((_, i) => (
           <FaStar
             key={i}
-            size={14}
-            className={i < count ? "text-[#d4af37]" : "text-gray-300"}
+            size={12}
+            className={i < count ? "text-[#008cff]" : "text-gray-200"}
           />
         ))}
       </div>
@@ -75,28 +67,24 @@ export default function ReviewSection({ data }) {
   };
 
   return (
-    <section className="relative py-20 overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0a1628] via-[#0f2744] to-[#0a1628]" />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#d4af37]/10 rounded-full blur-3xl" />
-
-      <div className="relative max-w-6xl mx-auto px-6">
+    <section className="relative py-12 overflow-hidden bg-gradient-to-b from-[#051423] to-[#1e4976]">
+      <div className="relative max-w-5xl mx-auto px-4 md:px-6">
         {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-          className="text-center mb-12"
+          className="text-center mb-10"
         >
-          <div className="inline-flex items-center gap-2 bg-white/10 text-[#d4af37] px-4 py-2 rounded-full text-sm font-medium mb-6 backdrop-blur-sm">
+          <span className="inline-flex items-center gap-2 bg-white/10 text-[#008cff] px-4 py-1.5 rounded-full text-sm font-semibold mb-4 backdrop-blur-sm">
             <FaStar className="text-xs" />
-            Client Testimonials
-          </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            Client Reviews
+          </span>
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
             What Our Clients Say
           </h2>
-          <p className="text-white/60 text-lg max-w-xl mx-auto">
+          <p className="text-white/60 text-sm max-w-lg mx-auto">
             Real experiences from travelers who chose excellence
           </p>
         </motion.div>
@@ -106,24 +94,22 @@ export default function ReviewSection({ data }) {
           {/* Navigation Arrows */}
           <button
             onClick={prev}
-            className="absolute top-1/2 -left-4 md:-left-8 transform -translate-y-1/2 z-20 
-                       bg-white hover:bg-[#d4af37] text-[#0a1628]
-                       w-12 h-12 md:w-14 md:h-14 rounded-full shadow-2xl 
-                       transition-all duration-300 flex items-center justify-center
-                       hover:scale-110"
+            className="absolute top-1/2 -left-2 md:-left-6 transform -translate-y-1/2 z-20 
+                       bg-white hover:bg-[#008cff] text-gray-700 hover:text-white
+                       w-10 h-10 md:w-12 md:h-12 rounded-full shadow-lg 
+                       transition-all duration-200 flex items-center justify-center"
           >
-            <FaArrowLeft className="text-sm md:text-base" />
+            <FaArrowLeft className="text-sm" />
           </button>
 
           <button
             onClick={next}
-            className="absolute top-1/2 -right-4 md:-right-8 transform -translate-y-1/2 z-20 
-                       bg-white hover:bg-[#d4af37] text-[#0a1628]
-                       w-12 h-12 md:w-14 md:h-14 rounded-full shadow-2xl 
-                       transition-all duration-300 flex items-center justify-center
-                       hover:scale-110"
+            className="absolute top-1/2 -right-2 md:-right-6 transform -translate-y-1/2 z-20 
+                       bg-white hover:bg-[#008cff] text-gray-700 hover:text-white
+                       w-10 h-10 md:w-12 md:h-12 rounded-full shadow-lg 
+                       transition-all duration-200 flex items-center justify-center"
           >
-            <FaArrowRight className="text-sm md:text-base" />
+            <FaArrowRight className="text-sm" />
           </button>
 
           {/* Main Review Card */}
@@ -133,83 +119,67 @@ export default function ReviewSection({ data }) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4 }}
-              className="glass-card-dark p-8 md:p-12 mx-4 md:mx-0"
+              transition={{ duration: 0.3 }}
+              className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 md:p-8 mx-2 md:mx-0 border border-white/10"
             >
-              {/* Quote Icon */}
-              <div className="flex justify-center mb-8">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-[#d4af37] to-[#f4d03f] flex items-center justify-center shadow-lg">
-                  <FaQuoteLeft className="text-[#0a1628] text-2xl" />
-                </div>
-              </div>
-
               {/* Profile Section */}
-              <div className="flex flex-col items-center text-center mb-8">
-                <div className="relative mb-4">
-                  <div className="absolute -inset-2 bg-gradient-to-r from-[#d4af37] to-[#b87333] rounded-full blur-md opacity-50" />
+              <div className="flex flex-col md:flex-row items-center gap-6 mb-6">
+                <div className="relative">
                   <img
                     src={reviews[current].image}
                     alt={reviews[current].name}
-                    className="relative w-24 h-24 md:w-28 md:h-28 rounded-full object-cover 
-                             border-4 border-[#d4af37] shadow-2xl"
+                    className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-3 border-[#008cff] shadow-lg"
                   />
-                  <div className="absolute -bottom-2 -right-2 bg-green-500 w-6 h-6 rounded-full border-4 border-[#0a1628] flex items-center justify-center">
-                    <span className="text-white text-xs">✓</span>
+                  <div className="absolute -bottom-1 -right-1 bg-green-500 w-6 h-6 rounded-full border-2 border-white flex items-center justify-center">
+                    <FaCheckCircle className="text-white text-xs" />
                   </div>
                 </div>
 
-                <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">
-                  {reviews[current].name}
-                </h3>
-
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="flex gap-1">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <FaStar
-                        key={i}
-                        className={`text-lg ${
-                          i < Math.floor(reviews[current].rating)
-                            ? "text-[#d4af37]"
-                            : "text-gray-600"
-                        }`}
-                      />
-                    ))}
+                <div className="text-center md:text-left">
+                  <h3 className="text-xl md:text-2xl font-bold text-white mb-1">
+                    {reviews[current].name}
+                  </h3>
+                  <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
+                    <div className="flex gap-0.5">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <FaStar
+                          key={i}
+                          className={`text-sm ${
+                            i < Math.floor(reviews[current].rating)
+                              ? "text-[#008cff]"
+                              : "text-gray-500"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-[#008cff] font-bold text-lg ml-1">
+                      {reviews[current].rating.toFixed(1)}
+                    </span>
                   </div>
-                  <span className="text-[#d4af37] font-bold text-xl ml-2">
-                    {reviews[current].rating.toFixed(1)}
-                  </span>
+                  <span className="text-white/50 text-xs">Verified Customer</span>
                 </div>
-
-                <span className="text-white/50 text-sm">Verified Customer</span>
               </div>
 
               {/* Review Text */}
-              <div className="mb-10">
-                <p className="text-white/80 text-lg md:text-xl leading-relaxed text-center 
-                            max-w-3xl mx-auto font-light italic">
+              <div className="mb-6">
+                <FaQuoteLeft className="text-[#008cff] text-xl mb-3" />
+                <p className="text-white/80 text-base leading-relaxed italic">
                   "{reviews[current].review}"
                 </p>
               </div>
 
               {/* Service Ratings */}
-              <div className="bg-white/5 rounded-2xl p-6 backdrop-blur-sm border border-white/10">
-                <h4 className="text-lg font-bold text-center text-white mb-6">
-                  Service Ratings
-                </h4>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {Object.entries(reviews[current].serviceRatings).map(
+              <div className="bg-white/5 rounded-xl p-4 border border-white/5">
+                <h4 className="text-sm font-semibold text-white mb-4">Service Ratings</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {Object.entries(reviews[current].serviceRatings).slice(0, 4).map(
                     ([key, value], index) => (
                       <div
                         key={index}
-                        className="bg-white/5 rounded-xl p-4 hover:bg-white/10 transition-colors border border-white/5"
+                        className="bg-white/5 rounded-lg p-3 text-center"
                       >
-                        <div className="flex flex-col items-center text-center">
-                          <span className="font-medium text-white/70 text-sm mb-2 min-h-10 flex items-center">
-                            {key}
-                          </span>
-                          {renderStars(value)}
-                        </div>
+                        <span className="text-white/70 text-xs block mb-2">{key}</span>
+                        {renderStars(value)}
                       </div>
                     )
                   )}
@@ -219,14 +189,14 @@ export default function ReviewSection({ data }) {
           </AnimatePresence>
 
           {/* Pagination Dots */}
-          <div className="flex justify-center mt-8 space-x-3">
+          <div className="flex justify-center mt-6 space-x-2">
             {reviews.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrent(index)}
-                className={`h-2 rounded-full transition-all duration-300 ${
+                className={`h-2 rounded-full transition-all duration-200 ${
                   index === current
-                    ? "bg-[#d4af37] w-8"
+                    ? "bg-[#008cff] w-6"
                     : "bg-white/30 hover:bg-white/50 w-2"
                 }`}
               />

@@ -145,15 +145,23 @@ const NavBar = () => {
   return (
     <div className="z-50 relative w-full">
       {/* Top Bar - MMT Style */}
-      <div className="bg-[#051423] text-white">
+      <div className="bg-[#041422] text-white">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between py-2 text-sm">
-            {/* Left - Offers */}
-            <div className="hidden md:flex items-center gap-6">
-              <span className="flex items-center gap-1 text-xs text-white/80">
-                <MdLocalOffer className="text-[#ff6b00]" />
-                Exclusive Deals Available!
-              </span>
+            {/* Left - Marquee Offers */}
+            <div className="hidden md:flex items-center flex-1 overflow-hidden mr-4">
+              <div className="marquee-container">
+                <div className="marquee-content">
+                  <span className="flex items-center gap-2 text-xs text-white/90 whitespace-nowrap">
+                    <MdLocalOffer className="text-[#ff6b00]" />
+                    ✨ Get 10% OFF on First Booking | 24/7 Support Available | Instant Quote | Book Now & Fly in Style ✈️
+                  </span>
+                  <span className="flex items-center gap-2 text-xs text-white/90 whitespace-nowrap ml-8">
+                    <MdLocalOffer className="text-[#ff6b00]" />
+                    ✨ Get 10% OFF on First Booking | 24/7 Support Available | Instant Quote | Book Now & Fly in Style ✈️
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* Right - Contact & Country */}

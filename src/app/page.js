@@ -1,11 +1,37 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import NavBar from "./components/Navbar";
 import { SearchBar } from "./components/SearchListBarTest";
-import { Bottom } from "./components/Bottom";
 import CountryPage from "./components/CountryPage";
 import { FaPlane, FaShieldAlt, FaClock, FaGlobe, FaStar, FaHeadset, FaCheckCircle, FaPercent, FaArrowRight } from "react-icons/fa";
 import { MdFlightTakeoff, MdLocalOffer } from "react-icons/md";
+
+// Static data moved outside component to prevent re-creation
+const OFFERS = [
+  { title: "CHARTER DEAL", discount: "UP TO 20% OFF", desc: "On Private Jet Bookings", code: "JETFLY20", bg: "from-[#051423] to-[#15457b]", validTill: "31 Dec 2025" },
+  { title: "HELICOPTER", discount: "FLAT ₹50,000 OFF", desc: "On Heli Taxi Services", code: "HELI50K", bg: "from-[#ff6b00] to-[#ff8f00]", validTill: "15 Jan 2026" },
+  { title: "AIR AMBULANCE", discount: "PRIORITY BOOKING", desc: "24/7 Emergency Service", code: "EMERGENCY", bg: "from-[#eb2026] to-[#ff4444]", validTill: "Always" },
+  { title: "GROUP CHARTER", discount: "15% OFF", desc: "For 10+ Passengers", code: "GROUP15", bg: "from-[#2e7d32] to-[#4caf50]", validTill: "28 Feb 2026" }
+];
+
+const POPULAR_DESTINATIONS = [
+  { name: "Dubai", image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400", flights: "500+ flights" },
+  { name: "Singapore", image: "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=400", flights: "320+ flights" },
+  { name: "London", image: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=400", flights: "450+ flights" },
+  { name: "New York", image: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=400", flights: "380+ flights" },
+  { name: "Paris", image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400", flights: "290+ flights" },
+  { name: "Tokyo", image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400", flights: "210+ flights" }
+];
+
+const TRUST_BADGES = [
+  { icon: "✈️", title: "500+ Aircraft", desc: "Verified fleet worldwide", color: "bg-blue-50" },
+  { icon: "🛡️", title: "100% Safe", desc: "All safety certified", color: "bg-green-50" },
+  { icon: "⏰", title: "24/7 Support", desc: "Round the clock service", color: "bg-orange-50" },
+  { icon: "💰", title: "Best Prices", desc: "Price match guarantee", color: "bg-purple-50" }
+];
+
+// Cache for API data
+const dataCache = new Map();
 
 const Home = () => {
   const [apiData, setApiData] = useState(null);
@@ -31,148 +57,103 @@ const Home = () => {
     };
     window.addEventListener("countryNameChanged", updateCountryName);
     updateCountryName();
-    return () => {
-      window.removeEventListener("countryNameChanged", updateCountryName);
-    };
+    return () => window.removeEventListener("countryNameChanged", updateCountryName);
+  }, []);
+
+  // Optimized data fetching with caching
+  const fetchData = useCallback(async (country) => {
+    const cacheKey = `home_${country}`;
+    
+    // Check cache first
+    if (dataCache.has(cacheKey)) {
+      setApiData(dataCache.get(cacheKey));
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `https://ow91reoh80.execute-api.ap-south-1.amazonaws.com/air/home?country=${encodeURIComponent(country)}`
+      );
+      const data = await res.json();
+      dataCache.set(cacheKey, data); // Cache the result
+      setApiData(data);
+    } catch (error) {
+      console.error("Failed to fetch home data:", error);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
     const country = sessionStorage.getItem("country_name") || "WorldWide";
-    fetch(
-      `https://ow91reoh80.execute-api.ap-south-1.amazonaws.com/air/home?country=${encodeURIComponent(
-        country
-      )}`
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        setApiData(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, [countryName]);
+    fetchData(country);
+  }, [countryName, fetchData]);
 
-  if (loading)
+  // Memoized hero data
+  const heroData = useMemo(() => apiData?.[0]?.hero || null, [apiData]);
+
+  // Show loading state but render the search bar section
+  if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="premium-loader mx-auto mb-4"></div>
-          <p className="text-[#008cff] text-lg font-semibold">Loading flights...</p>
+      <div className="flex flex-col min-h-screen bg-[#f4f4f4]">
+        {/* Hero Section with placeholder */}
+        <section className="hero-section-compact relative">
+          <div className="hero-pattern" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#051423] to-[#15457b]" />
+          <div className="relative z-10 container mx-auto px-4 py-6">
+            <h1 className="text-xl md:text-2xl font-bold text-white text-center">
+              Private Jet in: <span className="text-[#008cff]">WorldWide</span>
+            </h1>
+          </div>
+        </section>
+        {/* Search Widget */}
+        <div className="container mx-auto px-4">
+          <SearchBar />
+        </div>
+        {/* Loading indicator */}
+        <div className="flex-1 flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="premium-loader mx-auto mb-4"></div>
+            <p className="text-[#008cff] text-lg font-semibold">Loading flights...</p>
+          </div>
         </div>
       </div>
     );
+  }
 
-  if (!apiData || !apiData[0]) return <div>Failed to load data.</div>;
-
-  const heroData = apiData[0].hero;
-
-  const offers = [
-    {
-      title: "CHARTER DEAL",
-      discount: "UP TO 20% OFF",
-      desc: "On Private Jet Bookings",
-      code: "JETFLY20",
-      bg: "from-[#051423] to-[#15457b]",
-      validTill: "31 Dec 2025"
-    },
-    {
-      title: "HELICOPTER",
-      discount: "FLAT ₹50,000 OFF",
-      desc: "On Heli Taxi Services",
-      code: "HELI50K",
-      bg: "from-[#ff6b00] to-[#ff8f00]",
-      validTill: "15 Jan 2026"
-    },
-    {
-      title: "AIR AMBULANCE",
-      discount: "PRIORITY BOOKING",
-      desc: "24/7 Emergency Service",
-      code: "EMERGENCY",
-      bg: "from-[#eb2026] to-[#ff4444]",
-      validTill: "Always"
-    },
-    {
-      title: "GROUP CHARTER",
-      discount: "15% OFF",
-      desc: "For 10+ Passengers",
-      code: "GROUP15",
-      bg: "from-[#2e7d32] to-[#4caf50]",
-      validTill: "28 Feb 2026"
-    }
-  ];
-
-  const popularDestinations = [
-    { name: "Dubai", image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400", flights: "500+ flights" },
-    { name: "Singapore", image: "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=400", flights: "320+ flights" },
-    { name: "London", image: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=400", flights: "450+ flights" },
-    { name: "New York", image: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=400", flights: "380+ flights" },
-    { name: "Paris", image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400", flights: "290+ flights" },
-    { name: "Tokyo", image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400", flights: "210+ flights" },
-  ];
-
-  const trustBadges = [
-    { icon: "✈️", title: "500+ Aircraft", desc: "Verified fleet worldwide", color: "bg-blue-50" },
-    { icon: "🛡️", title: "100% Safe", desc: "All safety certified", color: "bg-green-50" },
-    { icon: "⏰", title: "24/7 Support", desc: "Round the clock service", color: "bg-orange-50" },
-    { icon: "💰", title: "Best Prices", desc: "Price match guarantee", color: "bg-purple-50" },
-  ];
+  if (!apiData || !apiData[0]) {
+    return (
+      <div className="flex flex-col min-h-screen bg-[#f4f4f4]">
+        <section className="hero-section-compact relative">
+          <div className="hero-pattern" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#051423] to-[#15457b]" />
+          <div className="relative z-10 container mx-auto px-4 py-6">
+            <h1 className="text-xl md:text-2xl font-bold text-white text-center">
+              Private Jet in: <span className="text-[#008cff]">{countryName}</span>
+            </h1>
+          </div>
+        </section>
+        <div className="container mx-auto px-4">
+          <SearchBar />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f4f4f4]">
-      {/* Hero Section */}
-      <section className="hero-section relative">
+      {/* Hero Section - Compact */}
+      <section className="hero-section-compact relative">
         <div className="hero-pattern" />
         
-        {/* Background Image */}
-        <div className="absolute inset-0">
-          <img
-            src={heroData.image}
-            alt="Private charter plane"
-            className="w-full h-full object-cover opacity-30"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#051423]/95 to-[#15457b]/90" />
-        </div>
+        {/* Background */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#051423] to-[#15457b]" />
 
-        <div className="relative z-10 container mx-auto px-4 pt-8 pb-32">
-          {/* Welcome Message */}
-          {userName && (
-            <div className="mb-6 animate-fadeIn">
-              <span className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-white text-sm">
-                <span>👋</span>
-                Welcome back, <span className="font-semibold">{userName}</span>!
-              </span>
-            </div>
-          )}
-
-          {/* Hero Content */}
-          <div className="max-w-3xl animate-slideUp">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight">
-              Book Private Jets &
-              <br />
-              <span className="text-[#008cff]">Charter Flights</span>
-            </h1>
-            <p className="text-xl text-white/80 mb-6">
-              {countryName !== "WorldWide" 
-                ? `Premium aviation services in ${countryName}. Private jets, helicopters & air ambulance.`
-                : "Luxury air travel worldwide. Private jets, helicopters & emergency air ambulance services."
-              }
-            </p>
-
-            {/* Quick Stats */}
-            <div className="flex flex-wrap gap-6 text-white/90">
-              <div className="flex items-center gap-2">
-                <FaCheckCircle className="text-[#4caf50]" />
-                <span className="text-sm">Instant Confirmation</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <FaCheckCircle className="text-[#4caf50]" />
-                <span className="text-sm">No Hidden Charges</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <FaCheckCircle className="text-[#4caf50]" />
-                <span className="text-sm">24/7 Customer Support</span>
-              </div>
-            </div>
-          </div>
+        <div className="relative z-10 container mx-auto px-4 py-6">
+          <h1 className="text-xl md:text-2xl font-bold text-white text-center">
+            Private Jet in: <span className="text-[#008cff]">{countryName}</span>
+          </h1>
         </div>
       </section>
 
@@ -197,7 +178,7 @@ const Home = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {offers.map((offer, index) => (
+          {OFFERS.map((offer, index) => (
             <div 
               key={index}
               className={`offer-card bg-gradient-to-br ${offer.bg} p-5 text-white hover-scale cursor-pointer`}
@@ -221,7 +202,7 @@ const Home = () => {
       {/* Trust Badges */}
       <section className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {trustBadges.map((badge, index) => (
+          {TRUST_BADGES.map((badge, index) => (
             <div key={index} className="trust-badge">
               <div className={`icon ${badge.color}`}>
                 {badge.icon}
@@ -248,7 +229,7 @@ const Home = () => {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {popularDestinations.map((dest, index) => (
+          {POPULAR_DESTINATIONS.map((dest, index) => (
             <div key={index} className="destination-card card-elevated">
               <img src={dest.image} alt={dest.name} />
               <div className="overlay">
@@ -324,11 +305,6 @@ const Home = () => {
 
       {/* Country Page Content */}
       <CountryPage apiData={apiData} />
-
-      {/* Footer */}
-      <footer className="relative bottom-0 mt-auto">
-        <Bottom />
-      </footer>
 
       {/* WhatsApp Float Button */}
       <a 

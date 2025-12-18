@@ -576,67 +576,66 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50">
-      <div className="bg-white rounded-2xl shadow-2xl w-96 relative overflow-hidden">
-        {/* Gradient header */}
-        <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6 text-white">
-          <h2 className="text-2xl font-bold text-center">Welcome Back</h2>
-          <p className="text-center text-blue-100 mt-1">Sign in to your account</p>
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative overflow-hidden animate-modal-in">
+        {/* Header - MakeMyTrip Style */}
+        <div className="bg-gradient-to-r from-[#051423] to-[#1e4976] p-8 text-white relative overflow-hidden">
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[#008cff]/20 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#008cff]/10 rounded-full blur-xl"></div>
+          
+          <div className="relative z-10">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <div className="w-10 h-10 bg-[#008cff] rounded-lg flex items-center justify-center">
+                <span className="text-white text-xl">✈️</span>
+              </div>
+            </div>
+            <h2 className="text-2xl font-bold text-center">Welcome Back</h2>
+            <p className="text-center text-white/70 mt-1 text-sm">Sign in to continue your journey</p>
+          </div>
         </div>
 
         <div className="p-6">
           {/* Close modal */}
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 text-white hover:text-gray-200 text-2xl font-bold transition-colors duration-200"
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all duration-200"
             aria-label="Close login modal"
           >
-            &times;
+            <span className="text-xl leading-none">&times;</span>
           </button>
 
           {/* Toggle between OTP and Password modes */}
-          <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
+          <div className="flex bg-gray-100 rounded-xl p-1 mb-6">
             <button
               onClick={() => {
                 setIsOtpMode(true);
                 setOtpSendStatus("idle");
                 setOtpDigits(['', '', '', '', '', '']);
               }}
-              className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-200 ${isOtpMode
-                ? "bg-white text-blue-600 shadow-sm"
-                : "text-gray-600 hover:text-gray-800"
+              className={`flex-1 py-2.5 px-4 rounded-lg font-semibold text-sm transition-all duration-200 ${isOtpMode
+                ? "bg-[#008cff] text-white shadow-md"
+                : "text-gray-600 hover:text-[#008cff]"
                 }`}
             >
               OTP Login
             </button>
-            {/* <button
-              onClick={() => {
-                setIsOtpMode(false);
-                setOtpSendStatus("idle");
-              }}
-              className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-200 ${!isOtpMode
-                ? "bg-white text-blue-600 shadow-sm"
-                : "text-gray-600 hover:text-gray-800"
-                }`}
-            >
-              Password Login
-            </button> */}
           </div>
 
 
           {/* Input Type Selection */}
-          <div className="flex bg-gray-100 rounded-lg p-1 mb-4">
+          <div className="flex bg-gray-50 rounded-xl p-1 mb-5 border border-gray-200">
             <button
               onClick={() => {
                 setInputType("email");
                 setIdentifier(emailInput);
               }}
-              className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-200 flex items-center justify-center ${inputType === "email"
-                ? "bg-white text-blue-600 shadow-sm"
-                : "text-gray-600 hover:text-gray-800"
+              className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 ${inputType === "email"
+                ? "bg-white text-[#008cff] shadow-sm border border-[#008cff]/20"
+                : "text-gray-500 hover:text-[#008cff]"
                 }`}
             >
-              <FaEnvelope className="mr-2" />
+              <FaEnvelope className="text-xs" />
               Email
             </button>
             <button
@@ -644,12 +643,12 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
                 setInputType("phone");
                 setIdentifier(phoneValue);
               }}
-              className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-200 flex items-center justify-center ${inputType === "phone"
-                ? "bg-white text-blue-600 shadow-sm"
-                : "text-gray-600 hover:text-gray-800"
+              className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 ${inputType === "phone"
+                ? "bg-white text-[#008cff] shadow-sm border border-[#008cff]/20"
+                : "text-gray-500 hover:text-[#008cff]"
                 }`}
             >
-              <FaPhone className="mr-2" />
+              <FaPhone className="text-xs" />
               Phone
             </button>
           </div>
@@ -657,7 +656,7 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
           {/* Email Input */}
           {inputType === "email" && (
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-medium mb-2">
+              <label className="block text-gray-700 text-sm font-semibold mb-2">
                 Email Address
               </label>
               <input
@@ -669,7 +668,7 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
                   setIdentifier(e.target.value);
                 }}
                 onBlur={source === "searchbar" ? handleBlurFetchIfValid : undefined}
-                className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors duration-200"
+                className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-[#008cff] focus:outline-none transition-all duration-200 bg-gray-50 focus:bg-white"
               />
             </div>
           )}
@@ -677,7 +676,7 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
           {/* Phone Input */}
           {inputType === "phone" && (
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-medium mb-2">
+              <label className="block text-gray-700 text-sm font-semibold mb-2">
                 Phone Number
               </label>
               <PhoneInput
@@ -692,19 +691,19 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
                 displayInitialValueAsLocalNumber={false}
                 international={true}
                 withCountryCallingCode={true}
-                className="w-full"
+                className="w-full phone-input-mmt"
                 countrySelectProps={{
-                  className: "border-2 border-gray-200 rounded-l-lg focus:border-blue-500 focus:outline-none"
+                  className: "border-2 border-gray-200 rounded-l-xl focus:border-[#008cff] focus:outline-none bg-gray-50"
                 }}
                 numberInputProps={{
-                  className: "w-full p-3 pl-4 border-2 border-l-0 border-gray-200 rounded-r-lg focus:border-blue-500 focus:outline-none transition-colors duration-200"
+                  className: "w-full p-3 pl-4 border-2 border-l-0 border-gray-200 rounded-r-xl focus:border-[#008cff] focus:outline-none transition-all duration-200 bg-gray-50 focus:bg-white"
                 }}
                 style={{
                   '--PhoneInputCountryFlag-height': '1.2em',
                   '--PhoneInputCountryFlag-width': '1.5em',
                   '--PhoneInputCountrySelect-marginRight': '0.5em',
                   '--PhoneInputCountrySelectArrow-color': '#6b7280',
-                  '--PhoneInput-color--focus': '#3b82f6'
+                  '--PhoneInput-color--focus': '#008cff'
                   
                 }}
               />
@@ -721,18 +720,18 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
                     : !isValidPhoneForSelectedCountry(phoneValue)
                   ) || isVerifyingData
                 }
-                className={`w-full py-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center ${((inputType === "email" ? !isValidEmail(emailInput) : !isValidPhoneForSelectedCountry(phoneValue)) || isVerifyingData)
-                  ? "bg-gray-400 cursor-not-allowed text-gray-500"
-                  : "bg-blue-500 hover:bg-blue-600 text-white"
+                className={`w-full py-3 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center ${((inputType === "email" ? !isValidEmail(emailInput) : !isValidPhoneForSelectedCountry(phoneValue)) || isVerifyingData)
+                  ? "bg-gray-200 cursor-not-allowed text-gray-400"
+                  : "bg-[#008cff] hover:bg-[#0070cc] text-white shadow-md hover:shadow-lg"
                   }`}
               >
                 {isVerifyingData ? (
                   <>
                     <FaSpinner className="animate-spin mr-2" />
-                    Verifying Data...
+                    Verifying...
                   </>
                 ) : (
-                  "Verify"
+                  "Continue"
                 )}
               </button>
             </div>
@@ -741,36 +740,42 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
           {/* Fetched email (read-only) */}
           {email && (
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-medium mb-2">
-                Email
+              <label className="block text-gray-600 text-xs font-semibold mb-2 uppercase tracking-wide">
+                Registered Email
               </label>
-              <input
-                type="text"
-                value={maskEmail(email)}
-                readOnly
-                className="w-full p-3 border-2 border-gray-200 rounded-lg bg-gray-50"
-              />
+              <div className="flex items-center gap-2 p-3 border border-green-200 rounded-xl bg-green-50">
+                <FaCheckCircle className="text-green-500 text-sm" />
+                <input
+                  type="text"
+                  value={maskEmail(email)}
+                  readOnly
+                  className="flex-1 bg-transparent text-gray-700 focus:outline-none"
+                />
+              </div>
             </div>
           )}
 
           {/* Fetched phone (read-only) */}
           {phoneNumber && (
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-medium mb-2">
-                Phone Number
+              <label className="block text-gray-600 text-xs font-semibold mb-2 uppercase tracking-wide">
+                Registered Phone
               </label>
-              <input
-                type="text"
-                value={
-                  source === "searchbar"
-                    ? maskPhone(phoneNumber)
-                    : source === "navbar"
+              <div className="flex items-center gap-2 p-3 border border-green-200 rounded-xl bg-green-50">
+                <FaCheckCircle className="text-green-500 text-sm" />
+                <input
+                  type="text"
+                  value={
+                    source === "searchbar"
                       ? maskPhone(phoneNumber)
-                      : phoneNumber
-                }
-                readOnly
-                className="w-full p-3 border-2 border-gray-200 rounded-lg bg-gray-50"
-              />
+                      : source === "navbar"
+                        ? maskPhone(phoneNumber)
+                        : phoneNumber
+                  }
+                  readOnly
+                  className="flex-1 bg-transparent text-gray-700 focus:outline-none"
+                />
+              </div>
             </div>
           )}
 
@@ -783,9 +788,9 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
               ) && (
                   <button
                     onClick={handleSendOtp}
-                    className={`w-full py-3 rounded-lg font-medium mb-4 flex items-center justify-center transition-all duration-200 ${otpSendStatus === "sending" || otpSendStatus === "sent"
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-md hover:shadow-lg"
+                    className={`w-full py-3.5 rounded-xl font-semibold mb-5 flex items-center justify-center transition-all duration-200 ${otpSendStatus === "sending" || otpSendStatus === "sent"
+                      ? "bg-gray-200 cursor-not-allowed text-gray-500"
+                      : "bg-gradient-to-r from-[#008cff] to-[#0057a8] hover:from-[#0070cc] hover:to-[#004a8f] text-white shadow-lg hover:shadow-xl"
                       }`}
                     disabled={otpSendStatus === "sending" || otpSendStatus === "sent"}
                   >
@@ -796,8 +801,8 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
                       </>
                     ) : otpSendStatus === "sent" ? (
                       <>
-                        OTP Sent
-                        <FaCheckCircle className="ml-2 text-green-400" />
+                        <FaCheckCircle className="mr-2 text-green-400" />
+                        OTP Sent Successfully
                       </>
                     ) : (
                       "Send OTP"
@@ -806,11 +811,11 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
                 )}
               {/* OTP Input Fields - 6 digit boxes */}
               {otpSendStatus === "sent" && (
-                <div className="mb-6">
-                  <label className="block text-gray-700 text-sm font-medium mb-3 text-center">
-                    Enter 6-digit OTP
+                <div className="mb-6 bg-gray-50 p-5 rounded-xl border border-gray-100">
+                  <label className="block text-gray-700 text-sm font-semibold mb-4 text-center">
+                    Enter 6-digit OTP sent to your phone/email
                   </label>
-                  <div className="flex justify-center space-x-3">
+                  <div className="flex justify-center gap-2">
                     {otpDigits.map((digit, index) => (
                       <input
                         key={index}
@@ -820,14 +825,14 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
                         value={digit}
                         onChange={(e) => handleOtpChange(index, e.target.value)}
                         onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                        className="w-12 h-12 text-center text-xl font-bold border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors duration-200"
+                        className="w-11 h-12 text-center text-xl font-bold border-2 border-gray-200 rounded-xl focus:border-[#008cff] focus:outline-none transition-all duration-200 bg-white focus:ring-2 focus:ring-[#008cff]/20"
                       />
                     ))}
                   </div>
                   {isVerifying && (
-                    <div className="flex items-center justify-center mt-4">
-                      <FaSpinner className="animate-spin mr-2 text-blue-500" />
-                      <span className="text-blue-500 font-medium">Verifying OTP...</span>
+                    <div className="flex items-center justify-center mt-4 py-2">
+                      <FaSpinner className="animate-spin mr-2 text-[#008cff]" />
+                      <span className="text-[#008cff] font-semibold text-sm">Verifying OTP...</span>
                     </div>
                   )}
                 </div>
@@ -839,7 +844,7 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
           {!isOtpMode && (
             <>
               <div className="mb-6 relative">
-                <label className="block text-gray-700 text-sm font-medium mb-2">
+                <label className="block text-gray-700 text-sm font-semibold mb-2">
                   Password
                 </label>
                 <input
@@ -847,18 +852,18 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors duration-200 pr-12"
+                  className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-[#008cff] focus:outline-none transition-all duration-200 pr-12 bg-gray-50 focus:bg-white"
                 />
                 <div
-                  className="absolute right-3 top-10 cursor-pointer text-gray-500 hover:text-gray-700"
+                  className="absolute right-4 top-10 cursor-pointer text-gray-400 hover:text-[#008cff] transition-colors"
                   onClick={() => setShowPassword((prev) => !prev)}
                 >
-                  {showPassword ? <FaEye size={20} /> : <FaEyeSlash size={20} />}
+                  {showPassword ? <FaEye size={18} /> : <FaEyeSlash size={18} />}
                 </div>
               </div>
               <button
                 onClick={handleLoginClick}
-                className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex justify-center items-center"
+                className="w-full py-3.5 bg-gradient-to-r from-[#008cff] to-[#0057a8] hover:from-[#0070cc] hover:to-[#004a8f] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex justify-center items-center"
                 disabled={isLoggingIn}
               >
                 {isLoggingIn ? (
@@ -872,6 +877,11 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess, initialEmail, source }) =
               </button>
             </>
           )}
+          
+          {/* Footer */}
+          <p className="text-center text-gray-400 text-xs mt-6">
+            By continuing, you agree to our Terms of Service & Privacy Policy
+          </p>
         </div>
       </div>
     </div>

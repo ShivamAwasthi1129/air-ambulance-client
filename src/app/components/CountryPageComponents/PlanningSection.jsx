@@ -75,58 +75,55 @@ export default function PlanningSection() {
     {
       type: "Light Jets",
       guests: "2-4 guests",
-      desc: "Ideal for short trips with recliner seats",
+      desc: "Ideal for short trips",
       color: "from-blue-500 to-blue-600",
     },
     {
       type: "Mid-size Jets",
       guests: "5-7 guests",
-      desc: "Comfortable spacious cabin",
+      desc: "Comfortable cabin",
       color: "from-purple-500 to-purple-600",
     },
     {
       type: "Super Mid-size",
       guests: "9-13 guests",
-      desc: "Meeting cabins with sofa seating",
+      desc: "Meeting cabins",
       color: "from-emerald-500 to-emerald-600",
     },
     {
       type: "Large Business",
       guests: "9-13 guests",
-      desc: "Conference cabin included",
+      desc: "Conference cabin",
       color: "from-orange-500 to-orange-600",
     },
     {
       type: "Super Luxury",
       guests: "9-32 guests",
-      desc: "Private bedroom & conference room",
-      color: "from-[#d4af37] to-[#b87333]",
+      desc: "Private bedroom",
+      color: "from-[#008cff] to-[#0057a8]",
     },
   ];
 
   return (
-    <section className="relative py-20 bg-gradient-to-b from-white to-gray-50 overflow-hidden">
-      {/* Background Decoration */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#d4af37]/5 rounded-full blur-3xl -z-10" />
-
-      <div className="max-w-7xl mx-auto px-6">
+    <section className="relative py-12 bg-[#f7f9fc] overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
         {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="text-center mb-10"
         >
-          <div className="inline-flex items-center gap-2 bg-[#0a1628] text-[#d4af37] px-4 py-2 rounded-full text-sm font-medium mb-6">
+          <span className="inline-flex items-center gap-2 bg-[#e8f4ff] text-[#008cff] px-4 py-1.5 rounded-full text-sm font-semibold mb-4">
             <FaPlane className="text-xs" />
             Flight Planning
-          </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-[#0a1628] mb-4">
+          </span>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
             Plan Your Private Flight
           </h2>
-          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-            Discover various options from turbo-prop flights to luxurious private jets with premium seating
+          <p className="text-gray-600 text-sm max-w-2xl mx-auto">
+            Discover various options from turbo-prop flights to luxurious private jets
           </p>
         </motion.div>
 
@@ -134,22 +131,22 @@ export default function PlanningSection() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-16"
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-10"
         >
           {jetTypes.map((jet, idx) => (
             <div
               key={idx}
-              className="group bg-white rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-[#d4af37]/30 cursor-pointer"
+              className="group bg-white rounded-xl p-4 border border-gray-100 hover:border-[#008cff]/30 transition-all duration-200 cursor-pointer hover:shadow-md"
             >
               <div
-                className={`w-12 h-12 rounded-xl bg-gradient-to-r ${jet.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}
+                className={`w-10 h-10 rounded-lg bg-gradient-to-r ${jet.color} flex items-center justify-center mb-3 group-hover:scale-105 transition-transform`}
               >
-                <FaPlane className="text-white text-lg" />
+                <FaPlane className="text-white text-sm" />
               </div>
-              <h4 className="font-bold text-[#0a1628] mb-1">{jet.type}</h4>
-              <p className="text-[#d4af37] font-semibold text-sm mb-2">{jet.guests}</p>
+              <h4 className="font-bold text-gray-900 text-sm mb-0.5">{jet.type}</h4>
+              <p className="text-[#008cff] font-semibold text-xs mb-1">{jet.guests}</p>
               <p className="text-gray-500 text-xs">{jet.desc}</p>
             </div>
           ))}
@@ -159,66 +156,64 @@ export default function PlanningSection() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-          className="bg-gradient-to-r from-[#0a1628] to-[#1e4976] rounded-3xl p-8 mb-16 shadow-2xl"
+          className="bg-gradient-to-r from-[#051423] to-[#1e4976] rounded-2xl p-5 mb-10 shadow-lg"
         >
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-[#d4af37] flex items-center justify-center flex-shrink-0">
-                <FaCheckCircle className="text-[#0a1628] text-xl" />
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#008cff] flex items-center justify-center flex-shrink-0">
+                <FaCheckCircle className="text-white" />
               </div>
               <div>
-                <h4 className="text-white font-bold text-lg mb-2">
+                <h4 className="text-white font-bold text-sm mb-1">
                   Customized Charter Services
                 </h4>
-                <p className="text-white/70 text-sm">
-                  Our charter flights provide customized private jet rentals with additional
-                  services. Pricing may vary based on fleet availability, clearances, and
-                  special permissions.
+                <p className="text-white/70 text-xs">
+                  Pricing may vary based on fleet availability, clearances, and special permissions.
                 </p>
               </div>
             </div>
-            <button className="bg-[#d4af37] text-[#0a1628] px-6 py-3 rounded-full font-bold hover:bg-[#f4d03f] transition-colors flex items-center gap-2 whitespace-nowrap">
+            <button className="bg-[#008cff] text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-[#0070cc] transition-colors flex items-center gap-2 whitespace-nowrap text-sm">
               Get Quote
-              <FaArrowRight />
+              <FaArrowRight className="text-xs" />
             </button>
           </div>
         </motion.div>
 
         {/* Flight Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {flightCards.map((card, idx) => (
             <motion.div
               key={card.id}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: idx * 0.1 }}
+              transition={{ duration: 0.4, delay: idx * 0.05 }}
               viewport={{ once: true }}
-              className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100"
+              className="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-[#008cff]/30 hover:shadow-lg transition-all duration-300"
             >
               {/* Card Header */}
-              <div className="bg-gradient-to-r from-[#0a1628] to-[#1e4976] p-6 text-center">
-                <p className="text-[#d4af37] text-sm font-medium mb-3">
+              <div className="bg-gradient-to-r from-[#051423] to-[#1e4976] p-5 text-center">
+                <p className="text-[#008cff] text-xs font-medium mb-2">
                   ✈️ Approx {card.duration}
                 </p>
 
                 {/* Route */}
-                <div className="flex items-center justify-center gap-4 mb-3">
+                <div className="flex items-center justify-center gap-3 mb-2">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-white">{card.from}</div>
-                    <div className="text-xs text-white/60">{card.fromCity}</div>
+                    <div className="text-xl font-bold text-white">{card.from}</div>
+                    <div className="text-[10px] text-white/60">{card.fromCity}</div>
                   </div>
 
                   <div className="flex items-center">
-                    <div className="w-8 h-px bg-[#d4af37]" />
-                    <FaPlane className="text-[#d4af37] text-lg mx-2" />
-                    <div className="w-8 h-px bg-[#d4af37]" />
+                    <div className="w-6 h-px bg-[#008cff]" />
+                    <FaPlane className="text-[#008cff] text-sm mx-1" />
+                    <div className="w-6 h-px bg-[#008cff]" />
                   </div>
 
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-white">{card.to}</div>
-                    <div className="text-xs text-white/60">{card.toCity}</div>
+                    <div className="text-xl font-bold text-white">{card.to}</div>
+                    <div className="text-[10px] text-white/60">{card.toCity}</div>
                   </div>
                 </div>
 
@@ -229,8 +224,8 @@ export default function PlanningSection() {
                     { icon: FaSuitcase, label: "Luggage" },
                     { icon: FaUsers, label: "Guests" },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-1 text-white/60 text-xs">
-                      <item.icon className="text-[#d4af37] text-xs" />
+                    <div key={i} className="flex items-center gap-1 text-white/50 text-[10px]">
+                      <item.icon className="text-[#008cff] text-[10px]" />
                       <span>{item.label}</span>
                     </div>
                   ))}
@@ -238,17 +233,17 @@ export default function PlanningSection() {
               </div>
 
               {/* Jet Options */}
-              <div className="p-5 space-y-3">
+              <div className="p-4 space-y-2">
                 {card.jets.map((jet, index) => (
                   <div
                     key={index}
-                    className="flex justify-between items-center p-3 bg-gray-50 rounded-xl hover:bg-[#d4af37]/10 transition-colors cursor-pointer group/item"
+                    className="flex justify-between items-center p-2.5 bg-gray-50 rounded-lg hover:bg-[#e8f4ff] transition-colors cursor-pointer group/item"
                   >
                     <div>
-                      <span className="text-[#0a1628] font-semibold text-sm">{jet.type}</span>
-                      <span className="text-gray-500 text-xs block">{jet.capacity}</span>
+                      <span className="text-gray-900 font-semibold text-xs">{jet.type}</span>
+                      <span className="text-gray-500 text-[10px] block">{jet.capacity}</span>
                     </div>
-                    <span className="text-[#0a1628] font-bold text-sm group-hover/item:text-[#d4af37] transition-colors">
+                    <span className="text-gray-900 font-bold text-xs group-hover/item:text-[#008cff] transition-colors">
                       {jet.status}
                     </span>
                   </div>
@@ -256,14 +251,14 @@ export default function PlanningSection() {
               </div>
 
               {/* Rating Footer */}
-              <div className="px-5 pb-5">
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                  <div className="flex text-[#d4af37]">
+              <div className="px-4 pb-4">
+                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                  <div className="flex text-[#008cff]">
                     {[...Array(5)].map((_, i) => (
-                      <FaStar key={i} className="text-sm" />
+                      <FaStar key={i} className="text-xs" />
                     ))}
                   </div>
-                  <span className="text-gray-500 text-xs">Top Rated Route</span>
+                  <span className="text-gray-500 text-[10px]">Top Rated Route</span>
                 </div>
               </div>
             </motion.div>

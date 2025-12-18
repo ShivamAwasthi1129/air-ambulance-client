@@ -659,30 +659,9 @@ export const SearchBar = () => {
           transition={{ duration: 0.4 }}
           className="w-full max-w-6xl search-widget"
         >
-          {/* Service Type Tabs */}
-          <div className="flex items-center border-b border-gray-200 overflow-x-auto">
-            {[
-              { type: "jet", label: "Private Jet", icon: <MdFlight className="text-2xl" /> },
-              { type: "heli", label: "Helicopter", icon: <FaHelicopter className="text-xl" /> },
-              { type: "ambulance", label: "Air Ambulance", icon: <MdLocalHospital className="text-2xl" /> },
-            ].map((service) => (
-              <div
-                key={service.type}
-                onClick={() => {
-                  const newType = service.type === "jet" ? "Private Jet" : service.type === "heli" ? "Helicopter" : "Air Ambulance";
-                  handleSegmentChange(0, "flightTypes", [newType]);
-                }}
-                className={`search-tab ${segments[0].flightTypes?.includes(service.type === "jet" ? "Private Jet" : service.type === "heli" ? "Helicopter" : "Air Ambulance") ? "active" : ""}`}
-              >
-                {service.icon}
-                <span className="whitespace-nowrap">{service.label}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="p-6">
+          <div className="p-4">
             {/* Trip Type Toggle */}
-            <div className="flex items-center gap-4 mb-6">
+            <div className="flex items-center gap-4 mb-4">
               <label className="trip-type-btn cursor-pointer">
                 <input
                   type="radio"
@@ -716,7 +695,7 @@ export const SearchBar = () => {
             {tripType === "oneway" && (
               <>
                 {/* Flight Type Icons */}
-                <div className="mb-6">
+                <div className="mb-4">
                   <Icondiv
                     flightTypes={segments[0].flightTypes}
                     setFlightTypes={(updatedFlightTypes) =>
@@ -726,7 +705,7 @@ export const SearchBar = () => {
                 </div>
 
                 {/* Main Search Row */}
-                <div className="flex flex-col lg:flex-row gap-4 items-stretch">
+                <div className="flex flex-col lg:flex-row gap-3 items-stretch">
                   {/* From & To Container */}
                   <div className="flex-1 flex flex-col md:flex-row relative">
                     {/* FROM */}
@@ -1033,10 +1012,10 @@ export const SearchBar = () => {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-6 pt-6 border-t border-gray-200"
+                className="mt-4 pt-4 border-t border-gray-200"
               >
-                <p className="text-sm font-semibold text-gray-600 mb-4">Enter your details to continue</p>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <p className="text-xs font-semibold text-gray-600 mb-3">Enter your details to continue</p>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                   {/* Name */}
                   <div>
                     <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Name *</label>
@@ -1101,7 +1080,7 @@ export const SearchBar = () => {
             )}
 
             {/* Search Button */}
-            <div className="mt-6 flex justify-center items-center gap-4">
+            <div className="mt-4 flex justify-center items-center gap-4">
               {showTroubleSigningIn && (
                 <button
                   type="button"

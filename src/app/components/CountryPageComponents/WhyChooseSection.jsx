@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { FaQuoteLeft, FaArrowRight, FaCheckCircle } from "react-icons/fa";
+import { FaQuoteLeft, FaArrowRight, FaCheckCircle, FaStar } from "react-icons/fa";
 import { motion } from "framer-motion";
 
 export default function WhyChooseSection({ data }) {
@@ -34,124 +34,100 @@ export default function WhyChooseSection({ data }) {
         ];
 
   return (
-    <section className="relative py-20 overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-gray-50 via-white to-gray-50" />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-[#d4af37]/5 rounded-full blur-3xl" />
-
-      <div className="relative max-w-7xl mx-auto px-6">
+    <section className="relative py-12 bg-[#f7f9fc] overflow-hidden">
+      <div className="relative max-w-7xl mx-auto px-4 md:px-6">
         {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="text-center mb-10"
         >
-          <div className="inline-flex items-center gap-2 bg-[#0a1628] text-[#d4af37] px-4 py-2 rounded-full text-sm font-medium mb-6">
-            <span className="w-2 h-2 bg-[#d4af37] rounded-full animate-pulse" />
+          <span className="inline-flex items-center gap-2 bg-[#e8f4ff] text-[#008cff] px-4 py-1.5 rounded-full text-sm font-semibold mb-4">
+            <FaStar className="text-xs" />
             Why Choose Us
-          </div>
+          </span>
           
-          <h2 className="text-4xl md:text-5xl font-bold text-[#0a1628] mb-6 max-w-3xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 max-w-3xl mx-auto">
             {mainHeading}
           </h2>
 
-          <div className="max-w-4xl mx-auto space-y-4">
+          <div className="max-w-3xl mx-auto space-y-3">
             {mainParagraphs.map((p, idx) => (
-              <motion.p
-                key={idx}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: idx * 0.1 }}
-                viewport={{ once: true }}
-                className="text-gray-600 text-lg leading-relaxed"
-              >
+              <p key={idx} className="text-gray-600 text-base leading-relaxed">
                 {p}
-              </motion.p>
+              </p>
             ))}
           </div>
         </motion.div>
 
         {/* Services Grid */}
-        <div className="space-y-16">
+        <div className="space-y-10">
           {subArticles.map((service, index) => (
             <motion.div
               key={index}
-              initial={{ opacity: 0, y: 40 }}
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7 }}
+              transition={{ duration: 0.5 }}
               viewport={{ once: true }}
               className={`flex flex-col ${
                 index % 2 === 0 ? "lg:flex-row" : "lg:flex-row-reverse"
-              } items-center gap-10`}
+              } items-center gap-8`}
             >
               {/* Image */}
               <div className="w-full lg:w-1/2">
-                <div className="relative group">
-                  {/* Decorative Frame */}
-                  <div className="absolute -inset-4 bg-gradient-to-r from-[#d4af37] to-[#b87333] rounded-3xl opacity-20 group-hover:opacity-30 transition-opacity blur-xl" />
+                <div className="relative group rounded-2xl overflow-hidden shadow-lg">
+                  <img
+                    src={service.image}
+                    alt={service.heading}
+                    className="w-full h-[300px] md:h-[350px] object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
                   
-                  <div className="relative overflow-hidden rounded-3xl shadow-2xl">
-                    <img
-                      src={service.image}
-                      alt={service.heading}
-                      className="w-full h-[350px] md:h-[400px] object-cover group-hover:scale-105 transition-transform duration-700"
-                    />
-                    
-                    {/* Overlay Gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628]/60 via-transparent to-transparent" />
-                    
-                    {/* Quote Badge */}
-                    <div className="absolute bottom-6 left-6 right-6">
-                      <div className="glass-card p-4 flex items-start gap-3">
-                        <FaQuoteLeft className="text-[#d4af37] text-xl flex-shrink-0 mt-1" />
-                        <p className="text-white text-sm font-medium italic">
-                          "Excellence in aviation, delivered with passion"
-                        </p>
-                      </div>
+                  {/* Overlay Gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#051423]/70 via-transparent to-transparent" />
+                  
+                  {/* Quote Badge */}
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <div className="bg-white/95 backdrop-blur-sm rounded-xl p-4 flex items-start gap-3">
+                      <FaQuoteLeft className="text-[#008cff] text-lg flex-shrink-0 mt-1" />
+                      <p className="text-gray-700 text-sm font-medium italic">
+                        "Excellence in aviation, delivered with passion"
+                      </p>
                     </div>
-                  </div>
-
-                  {/* Floating Badge */}
-                  <div className="absolute -top-4 -right-4 bg-gradient-to-r from-[#d4af37] to-[#f4d03f] text-[#0a1628] px-6 py-3 rounded-2xl shadow-xl font-bold">
-                    Premium
                   </div>
                 </div>
               </div>
 
               {/* Text Content */}
               <div className="w-full lg:w-1/2">
-                <div className="bg-white p-8 md:p-10 rounded-3xl shadow-xl border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
-                  {/* Heading with accent */}
-                  <div className="flex items-start gap-4 mb-6">
-                    <div className="w-1 h-16 bg-gradient-to-b from-[#d4af37] to-[#b87333] rounded-full flex-shrink-0" />
-                    <h3 className="text-2xl md:text-3xl font-bold text-[#0a1628] leading-tight">
+                <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-100 hover:border-[#008cff]/20 transition-colors">
+                  {/* Heading */}
+                  <div className="flex items-start gap-3 mb-5">
+                    <div className="w-1 h-12 bg-[#008cff] rounded-full flex-shrink-0" />
+                    <h3 className="text-xl md:text-2xl font-bold text-gray-900 leading-tight">
                       {service.heading}
                     </h3>
                   </div>
 
                   {/* Paragraphs */}
-                  <div className="space-y-4 mb-8">
+                  <div className="space-y-3 mb-6">
                     {service.paragraphs.map((paragraph, i) => (
-                      <p
-                        key={i}
-                        className="text-gray-600 leading-relaxed text-base"
-                      >
+                      <p key={i} className="text-gray-600 leading-relaxed text-sm">
                         {paragraph}
                       </p>
                     ))}
                   </div>
 
                   {/* Feature Points */}
-                  <div className="grid grid-cols-2 gap-3 mb-8">
+                  <div className="grid grid-cols-2 gap-2 mb-6">
                     {["Safety First", "24/7 Support", "Best Prices", "Luxury Fleet"].map(
                       (feature, i) => (
                         <div
                           key={i}
                           className="flex items-center gap-2 text-sm text-gray-700"
                         >
-                          <FaCheckCircle className="text-[#d4af37]" />
+                          <FaCheckCircle className="text-[#008cff] text-xs" />
                           <span>{feature}</span>
                         </div>
                       )
@@ -159,9 +135,9 @@ export default function WhyChooseSection({ data }) {
                   </div>
 
                   {/* CTA Button */}
-                  <button className="inline-flex items-center gap-2 bg-[#0a1628] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#1e4976] transition-colors group">
+                  <button className="inline-flex items-center gap-2 bg-[#008cff] text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-[#0070cc] transition-colors text-sm">
                     Learn More
-                    <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
+                    <FaArrowRight className="text-xs" />
                   </button>
                 </div>
               </div>
@@ -171,13 +147,13 @@ export default function WhyChooseSection({ data }) {
 
         {/* Bottom Stats */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-          className="mt-20 bg-gradient-to-r from-[#0a1628] to-[#1e4976] rounded-3xl p-8 md:p-12 shadow-2xl"
+          className="mt-12 bg-gradient-to-r from-[#051423] to-[#1e4976] rounded-2xl p-6 md:p-8 shadow-xl"
         >
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {[
               { number: "15+", label: "Years Experience" },
               { number: "500+", label: "Aircraft Fleet" },
@@ -185,10 +161,10 @@ export default function WhyChooseSection({ data }) {
               { number: "50+", label: "Countries Served" },
             ].map((stat, idx) => (
               <div key={idx} className="group">
-                <h4 className="text-4xl md:text-5xl font-bold text-[#d4af37] mb-2 group-hover:scale-110 transition-transform">
+                <h4 className="text-3xl md:text-4xl font-bold text-[#008cff] mb-1 group-hover:scale-105 transition-transform">
                   {stat.number}
                 </h4>
-                <p className="text-white/70 text-sm">{stat.label}</p>
+                <p className="text-white/70 text-xs md:text-sm">{stat.label}</p>
               </div>
             ))}
           </div>
