@@ -5,20 +5,13 @@ import { SearchBar } from "./components/SearchListBarTest";
 import { Bottom } from "./components/Bottom";
 import { useTypewriter, Cursor } from "react-simple-typewriter";
 import CountryPage from "./components/CountryPage";
+import SkeletonLoader from "./components/SkeletalLoader";
 
 const Home = () => {
   const [apiData, setApiData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [countryName, setCountryName] = useState("WorldWide");
-  // if (window.performance && window.performance.getEntriesByType) {
-  //   const navEntries = window.performance.getEntriesByType("navigation");
-  //   if (navEntries.length > 0 && navEntries[0].type === "reload") {
-  //     sessionStorage.removeItem("country_name");
-  //   }
-  // }
-
   useEffect(() => {
-    // Set default country name on first load if not present
     if (!sessionStorage.getItem("country_name")) {
       sessionStorage.setItem("country_name", "WorldWide");
     }
@@ -46,12 +39,12 @@ const Home = () => {
       })
       .catch(() => setLoading(false));
   }, [countryName]);
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div><SkeletonLoader /></div>;
   if (!apiData || !apiData[0]) return <div>Failed to load data.</div>;
   const heroData = apiData[0].hero;
   return (
     <div className="flex flex-col min-h-screen">
-      <NavBar />
+      {/* <NavBar /> */}
       {/* Dynamic Background Image */}
       <img
         src={heroData.image}
@@ -71,7 +64,7 @@ const Home = () => {
           <h1
             className="text-6xl md:text-7xl lg:text-8xl font-bold tracking-wider capitalize text-transparent"
             style={{
-              WebkitTextStroke: "2px white",
+              WebkitTextStroke: "1px white",
               WebkitTextFillColor: "transparent",
               background: `
         url("data:image/svg+xml,%3Csvg width='200' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='white' d='M0 30 Q 25 10, 50 30 T 100 30 T 150 30 T 200 30 V60 H0 Z'/%3E%3C/svg%3E") repeat-x`,
@@ -79,7 +72,7 @@ const Home = () => {
               backgroundPosition: "0% 100%",
               backgroundClip: "text",
               WebkitBackgroundClip: "text",
-              animation: "waveFill 6s linear infinite",
+              animation: "waveFill 8s linear infinite",
             }}
           >
             {countryName}
@@ -104,7 +97,7 @@ const Home = () => {
       </div>
       <CountryPage apiData={apiData} />
       <footer className="relative bottom-0 mt-24">
-        <Bottom />
+        {/* <Bottom /> */}
       </footer>
     </div>
   );

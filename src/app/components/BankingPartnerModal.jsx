@@ -417,7 +417,7 @@ function PaymentForm() {
           onChange={(e) => setReferenceId(e.target.value)}
         />
         <Input
-          label="Amount"
+          label="Amount in USD"
           type="number"
           placeholder="e.g. 1500.00"
           min="1"

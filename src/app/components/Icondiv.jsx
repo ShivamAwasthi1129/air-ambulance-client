@@ -1,33 +1,53 @@
 "use client";
 export const Icondiv = ({ flightTypes, setFlightTypes }) => {
-   // this function is for multiple option selection 
-//   const toggleFlightType = (type) => {
-//   if (flightTypes.includes(type)) {
-//     if (flightTypes.length === 1) {
-//       return;
-//     }
-//     setFlightTypes(flightTypes.filter((ft) => ft !== type));
-//   } else {
-//     setFlightTypes([...flightTypes, type]);
-//   }
-// };
+  // this function is for multiple option selection 
+  //   const toggleFlightType = (type) => {
+  //   if (flightTypes.includes(type)) {
+  //     if (flightTypes.length === 1) {
+  //       return;
+  //     }
+  //     setFlightTypes(flightTypes.filter((ft) => ft !== type));
+  //   } else {
+  //     setFlightTypes([...flightTypes, type]);
+  //   }
+  // };
 
 
-// this function if for single option selection
-const toggleFlightType = (type) => {
-  setFlightTypes([type]);
-};
+  // this function if for single option selection
+  const toggleFlightType = (type) => {
+    setFlightTypes([type]);
+  };
 
   // A small helper to generate dynamic CSS classes for an icon's container
   const getIconClasses = (type) => {
     return flightTypes.includes(type)
       ? "bg-blue-600 text-white"
       : "text-gray-700 hover:bg-gray-300";
-      
+
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-around gap-3 mb-4 w-1/2 bg-white rounded-xl border-2 border-gray-300 p-2 -mt-20">
+    <div
+      className="
+    flex flex-row 
+    items-center 
+    gap-3 
+    mb-4 
+    w-full 
+    bg-white 
+    rounded-xl 
+    border-2 
+    border-gray-300 
+    p-2 
+    -mt-20
+    overflow-x-auto
+    scrollbar-thin
+    md:justify-around
+    md:w-1/2
+    md:flex-nowrap
+  "
+      style={{ WebkitOverflowScrolling: "touch" }}
+    >
       {/* Private Jet */}
       <div
         onClick={() => toggleFlightType("Private Jet")}
@@ -40,7 +60,7 @@ const toggleFlightType = (type) => {
             viewBox="0 0 1080 678.6"
             width="40"
             height="40"
-            className="fill-current"
+            className="fill-current w-7 h-7 md:w-10 md:h-10"
           >
             <path
               fill="currentColor"
@@ -48,7 +68,7 @@ const toggleFlightType = (type) => {
             />
           </svg>
         </span>
-        <span className="text-[13px] m-0">Private Jet</span>
+        <span className="text-[10px] md:text-[13px] m-0">Private Jet</span>
       </div>
 
       {/* Helicopter */}
@@ -63,9 +83,9 @@ const toggleFlightType = (type) => {
             viewBox="0 0 1080 678.6"
             width="40"
             height="40"
-            className="fill-current"
+            className="fill-current w-7 h-7 md:w-10 md:h-10"
           >
-             <path
+            <path
               fill="currentColor"
               d="M920.08,488.87v-74.33c0-160.82-188.44-199.29-188.44-199.29h-107.16v-57.85h-102.82v57.85H236.75l-21.55-92.12h-87.78l15.33,164.14h242.53s54.67,130.16,77.23,175.13c22.42,44.98,61.32,44.25,61.32,44.25h360.97c36.16,0,35.29-17.79,35.29-17.79ZM720.07,391.11v-142.88c141.44,17.64,157.49,142.88,157.49,142.88h-157.49Z"
             />
@@ -83,7 +103,7 @@ const toggleFlightType = (type) => {
             />
           </svg>
         </span>
-        <span className="text-[13px] m-0">Helicopter</span>
+        <span className="text-[10px] md:text-[13px] m-0">Helicopter</span>
       </div>
 
       {/* Air Ambulance */}
@@ -97,9 +117,9 @@ const toggleFlightType = (type) => {
             viewBox="0 0 1080 678.6"
             width="40"
             height="40"
-            className="fill-current"
+            className="fill-current w-7 h-7 md:w-10 md:h-10"
           >
-              <path
+            <path
               fill="currentColor"
               d="M954.55,43.39H147.89c-11.98,0-21.69-9.71-21.69-21.69S135.91,0,147.89,0h806.66c11.98,0,21.69,9.71,21.69,21.69s-9.71,21.69-21.69,21.69Z"
             />
@@ -120,7 +140,7 @@ const toggleFlightType = (type) => {
             />
           </svg>
         </span>
-        <span className="text-[13px] m-0">Air Ambulance</span>
+        <span className="text-[10px] md:text-[13px] m-0">Air Ambulance</span>
       </div>
 
       {/* Air Cargo */}
@@ -135,9 +155,9 @@ const toggleFlightType = (type) => {
             viewBox="0 0 1080 678.6"
             width="40"
             height="40"
-            className="fill-current"
+            className="fill-current w-7 h-7 md:w-10 md:h-10"
           >
-             <path
+            <path
               fill="currentColor"
               d="M756.34,19.57c38.47-16.92,113.53-37.6,191.77,8.68.58,0,1.16-.14,1.74,0-21.11,29.21-55.24,48.16-93.86,48.16-42.37,0-79.4-22.85-99.64-56.84Z"
             />
@@ -188,7 +208,7 @@ const toggleFlightType = (type) => {
             />
           </svg>
         </span>
-        <span className="text-[13px] m-0">Air Cargo</span>
+        <span className="text-[10px] md:text-[13px] m-0">Air Cargo</span>
       </div>
 
       {/* Sea Plane */}
@@ -203,9 +223,9 @@ const toggleFlightType = (type) => {
             viewBox="0 0 1080 678.6"
             width="40"
             height="40"
-            className="fill-current"
+            className="fill-current w-7 h-7 md:w-10 md:h-10"
           >
-           <g>
+            <g>
               <path
                 fill="currentColor"
                 d="M1010.57,224.95s-45.12,2.17-143.61,0c-61.03-16.05-128.57-26.75-154.31-28.92-24.59-2.17-93.14-20.39-153.15-12.87-60.02,7.52-217.51,64.21-205.65,74.91,11.71,10.7,65.37,11.86,65.37,11.86v25.45l-63.2-1.3s-60.02,6.36-120.04-8.68c-98.49-27.77-118.3-84.02-142.45-122.64-24.15-38.61-46.57-32.11-46.57-32.11H8.36c-18.8,0,0,56.69,0,56.69l34.85,178.46s16.63,12.87,76.5,21.4c306.45,23.57,519.04.58,700.11-32.68,183.23-34.27,218.52-98.49,218.52-115.7s-27.77-13.88-27.77-13.88Z"
@@ -253,7 +273,7 @@ const toggleFlightType = (type) => {
             />
           </svg>
         </span>
-        <span className="text-[13px] m-0">Sea Plane</span>
+        <span className="text-[10px] md:text-[13px] m-0">Sea Plane</span>
       </div>
     </div>
   );

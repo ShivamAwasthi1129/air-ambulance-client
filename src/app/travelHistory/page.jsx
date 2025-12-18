@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import NavBar from "../components/Navbar";
+// import NavBar from "../components/Navbar";
 import {
   AiOutlineCheckCircle,
   AiOutlineEdit,
@@ -13,10 +13,11 @@ import {
 
 const TITLES = ["Mr.", "Miss", "Ms.", "Mrs.", "Mx.", "Master", "Baby", "Child", "Senior Citizen"];
 const DESIGNATIONS = ["Dr.", "Prof.", "Minister", "MLA", "President", "VIP", "None"];
-const DOCUMENT_TYPES = ["Passport", "Driving License", "Resident Card", "Other"];
+const MEAL_PREFERENCES = ["Veg", "Non-Veg", "Vegan", "Hindu", "Kosher", "Muslim", "Jain", "Diabetic", "None"];
+const DOCUMENT_TYPES = ["Passport", "Driving License", "Resident Card", "Other Documents"];
+const COUNTRIES = ["India", "USA", "UK", "Canada", "Australia", "Germany", "France", "UAE", "Singapore", "Other"];
 const GENDERS = ["Male", "Female", "Other"];
 const NATIONALITIES = ["Indian", "American", "British", "Canadian", "Australian", "German", "French", "Other"];
-const MEAL_PREFERENCES = ["Veg", "Non-Veg", "Vegan", "Hindu", "Koshe", "Muslim", "Jain", "Diabetic", "None"];
 const SEAT_PREFERENCES = ["Window", "Aisle", "Middle", "Bed", "Sofa", "Recliner", "No Preference"];
 
 const TravelHistory = () => {
@@ -107,12 +108,21 @@ const TravelHistory = () => {
     const existingData = passengerData[booking._id];
 
     if (existingData) {
+      // Normalize document_types to arrays in existingData journey_legs passengers
+      const normalizedJourneyLegs = (existingData.journey_legs || []).map(leg => ({
+        ...leg,
+        passengers: (leg.passengers || []).map(passenger => ({
+          ...passenger,
+          document_types: Array.isArray(passenger.document_types) ? passenger.document_types : []
+        }))
+      }));
+
       setPassengerFormData(prev => ({
         ...prev,
         [booking._id]: {
           user_email: user.email,
           booking_for: existingData.booking_for || "self",
-          journey_legs: existingData.journey_legs || [],
+          journey_legs: normalizedJourneyLegs,
           notes: existingData.notes || ""
         }
       }));
@@ -125,25 +135,58 @@ const TravelHistory = () => {
         arrival_datetime: null, // You might need to calculate this
         passengers: Array.from({ length: segment.passengers }, () => ({
           title: "",
+          designation: "",
           full_name: "",
           gender: "",
           date_of_birth: "",
           actual_age: "",
-          visa_issued_by: "",
-          visa_waiver_vvip: "",
-          diplomatic: "",
           nationality: "",
           contact_number: "",
           email: "",
-          document_type: "",
-          document_number: "",
-          document_expiry: "",
-          visa_required: false,
-          visa_number: "",
-          visa_expiry: null,
-          special_assistance: "None",
-          meal_preference: "",
+          residential_address: {
+            address: "",
+            city: "",
+            country: ""
+          },
+          document_types: [], // Array to store multiple document types
+          passport_details: {
+            passport_number: "",
+            passport_expiry: "",
+            visa_required: false,
+            visa_number: "",
+            visa_expiry: "",
+            on_arrival: "",
+            visa_country_name: ""
+          },
+          driving_license_details: {
+            license_number: "",
+            expiry_date: ""
+          },
+          resident_card_details: {
+            card_number: "",
+            expiry_date: ""
+          },
+          other_document_details: {
+            document_name: "",
+            document_number: "",
+            date_of_issue: "",
+            validity_date: ""
+          },
+          special_document: false,
+          special_document_details: {
+            document_name: "",
+            document_number: "",
+            document_expiry: ""
+          },
+          visa_waiver_program: false,
+          visa_waiver_details: {
+            document_name: "",
+            document_number: "",
+            expiry_date: ""
+          },
+          meal_preferences: [], // Array for multiple selections
           seat_preference: "",
+          special_assistance: "None",
           is_lead_passenger: false
         })),
         pets: []
@@ -190,6 +233,87 @@ const TravelHistory = () => {
                     ...(field === "date_of_birth" && {
                       actual_age: calculateActualAge(value)
                     })
+                  }
+                  : passenger
+              )
+            }
+            : leg
+        )
+      }
+    }));
+  };
+  // Add function to handle document type selection
+  const updateDocumentTypes = (bookingId, legIndex, passengerIndex, documentType, isChecked) => {
+    setPassengerFormData(prev => ({
+      ...prev,
+      [bookingId]: {
+        ...prev[bookingId],
+        journey_legs: prev[bookingId].journey_legs.map((leg, lIndex) =>
+          lIndex === legIndex
+            ? {
+              ...leg,
+              passengers: leg.passengers.map((passenger, pIndex) =>
+                pIndex === passengerIndex
+                  ? {
+                    ...passenger,
+                    document_types: isChecked
+                      ? [...passenger.document_types, documentType]
+                      : passenger.document_types.filter(type => type !== documentType)
+                  }
+                  : passenger
+              )
+            }
+            : leg
+        )
+      }
+    }));
+  };
+
+  // Add function to handle meal preferences
+  const updateMealPreferences = (bookingId, legIndex, passengerIndex, mealType, isChecked) => {
+    setPassengerFormData(prev => ({
+      ...prev,
+      [bookingId]: {
+        ...prev[bookingId],
+        journey_legs: prev[bookingId].journey_legs.map((leg, lIndex) =>
+          lIndex === legIndex
+            ? {
+              ...leg,
+              passengers: leg.passengers.map((passenger, pIndex) =>
+                pIndex === passengerIndex
+                  ? {
+                    ...passenger,
+                    meal_preferences: isChecked
+                      ? [...passenger.meal_preferences, mealType]
+                      : passenger.meal_preferences.filter(type => type !== mealType)
+                  }
+                  : passenger
+              )
+            }
+            : leg
+        )
+      }
+    }));
+  };
+
+  // Add function to update nested object fields
+  const updateNestedField = (bookingId, legIndex, passengerIndex, objectPath, field, value) => {
+    setPassengerFormData(prev => ({
+      ...prev,
+      [bookingId]: {
+        ...prev[bookingId],
+        journey_legs: prev[bookingId].journey_legs.map((leg, lIndex) =>
+          lIndex === legIndex
+            ? {
+              ...leg,
+              passengers: leg.passengers.map((passenger, pIndex) =>
+                pIndex === passengerIndex
+                  ? {
+                    ...passenger,
+                    [objectPath]: {
+                      ...passenger[objectPath],
+                      [field]: value
+                    }
                   }
                   : passenger
               )
@@ -264,14 +388,14 @@ const TravelHistory = () => {
     });
 
     return filledPassengers;
-    
+
   };
   const copyPassengerData = (bookingId, targetLegIndex, targetPassengerIndex, sourcePassenger) => {
-  const fieldsToUpdate = [
-  'title', 'full_name', 'gender', 'date_of_birth', 'actual_age', 'nationality', 'contact_number',
-  'email', 'document_type', 'document_number', 'document_expiry', 'visa_issued_by', 'visa_waiver_vvip', 'diplomatic', 'visa_number', 'visa_expiry', 'meal_preference', 'seat_preference',
-  'special_assistance'
-];
+    const fieldsToUpdate = [
+      'title', 'full_name', 'gender', 'date_of_birth', 'actual_age', 'nationality', 'contact_number',
+      'email', 'document_type', 'document_number', 'document_expiry', 'visa_issued_by', 'visa_waiver_vvip', 'diplomatic', 'visa_number', 'visa_expiry', 'meal_preference', 'seat_preference',
+      'special_assistance'
+    ];
 
     fieldsToUpdate.forEach(field => {
       updatePassengerField(bookingId, targetLegIndex, targetPassengerIndex, field, sourcePassenger[field]);
@@ -483,319 +607,709 @@ const TravelHistory = () => {
                 {leg.passengers.map((passenger, passengerIndex) => (
                   <div key={passengerIndex} className="bg-gray-50 rounded-lg p-4 space-y-3">
                     <h6 className="font-medium text-gray-700">Passenger {passengerIndex + 1}</h6>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 ">
-                      <div className="relative">
-                        <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
-                          title
-                        </label>
-                        <select
-                          value={passenger.title}
-                          onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'title', e.target.value)}
-                          className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                        >
-                          <option value="">Select Title</option>
-                          {TITLES.map(title => (
-                            <option key={title} value={title}>{title}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="relative">
-                        <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
-                          full_name
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Full Name"
-                          value={passenger.full_name}
-                          onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'full_name', e.target.value)}
-                          onFocus={() => {
-                            const dropdownKey = `${bookingId}-${legIndex}-${passengerIndex}`;
-                            const filledPassengers = getFilledPassengers(formData);
-                            if (filledPassengers.length > 0) {
-                              setShowPassengerDropdown(prev => ({
-                                ...prev,
-                                [dropdownKey]: true
-                              }));
-                            }
-                          }}
-                          onBlur={() => {
-                            const dropdownKey = `${bookingId}-${legIndex}-${passengerIndex}`;
-                            setTimeout(() => {
-                              setShowPassengerDropdown(prev => ({
-                                ...prev,
-                                [dropdownKey]: false
-                              }));
-                            }, 150); // slight delay to allow click selection
-                          }}
-                          className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                        />
-
-                        {/* Dropdown for existing passengers */}
-                        {showPassengerDropdown[`${bookingId}-${legIndex}-${passengerIndex}`] && (
-                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
-                            {getFilledPassengers(formData)
-                              .filter(p => !(p.legIndex === legIndex && p.passengerIndex === passengerIndex))
-                              .map((filledPassenger, index) => (
-                                <div
-                                  key={index}
-                                  className="p-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                                  onClick={() => copyPassengerData(bookingId, legIndex, passengerIndex, filledPassenger)}
-                                >
-                                  <div className="text-sm font-medium text-gray-800">
-                                    {filledPassenger.displayName}
-                                  </div>
-                                  <div className="text-xs text-gray-500">
-                                    {filledPassenger.nationality} • {filledPassenger.document_type}
-                                  </div>
-                                </div>
+                    <div className="space-y-4">
+                      {/* Basic Information Section */}
+                      <div className="bg-white p-4 rounded-lg border">
+                        <h6 className="font-semibold text-gray-800 mb-3">Basic Information</h6>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          {/* Title field */}
+                          <div className="relative">
+                            <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 font-medium">
+                              Title
+                            </label>
+                            <select
+                              value={passenger.title}
+                              onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'title', e.target.value)}
+                              className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                            >
+                              <option value="">Select Title</option>
+                              {TITLES.map(title => (
+                                <option key={title} value={title}>{title}</option>
                               ))}
-                            {getFilledPassengers(formData)
-                              .filter(p => !(p.legIndex === legIndex && p.passengerIndex === passengerIndex))
-                              .length === 0 && (
-                                <div className="p-2 text-sm text-gray-500 text-center">
-                                  No filled passengers found
+                            </select>
+                          </div>
+
+                          {/* Designation field (simple input) */}
+                          <div className="relative">
+                            <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 font-medium">
+                              Designation
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Designation"
+                              value={passenger.designation}
+                              onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'designation', e.target.value)}
+                              className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                            />
+                          </div>
+
+                          {/* Full name field */}
+                          <div className="relative">
+                            <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 font-medium">
+                              Full Name
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Full Name"
+                              value={passenger.full_name}
+                              onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'full_name', e.target.value)}
+                              onFocus={() => {
+                                const dropdownKey = `${bookingId}-${legIndex}-${passengerIndex}`;
+                                const filledPassengers = getFilledPassengers(formData);
+                                if (filledPassengers.length > 0) {
+                                  setShowPassengerDropdown(prev => ({
+                                    ...prev,
+                                    [dropdownKey]: true
+                                  }));
+                                }
+                              }}
+                              onBlur={() => {
+                                const dropdownKey = `${bookingId}-${legIndex}-${passengerIndex}`;
+                                setTimeout(() => {
+                                  setShowPassengerDropdown(prev => ({
+                                    ...prev,
+                                    [dropdownKey]: false
+                                  }));
+                                }, 150);
+                              }}
+                              className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                            />
+
+                            {/* Dropdown for existing passengers */}
+                            {showPassengerDropdown[`${bookingId}-${legIndex}-${passengerIndex}`] && (
+                              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                                {getFilledPassengers(formData)
+                                  .filter(p => !(p.legIndex === legIndex && p.passengerIndex === passengerIndex))
+                                  .map((filledPassenger, index) => (
+                                    <div
+                                      key={index}
+                                      className="p-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                                      onClick={() => copyPassengerData(bookingId, legIndex, passengerIndex, filledPassenger)}
+                                    >
+                                      <div className="text-sm font-medium text-gray-800">
+                                        {filledPassenger.displayName}
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        {filledPassenger.nationality} • {filledPassenger.document_types?.join(', ')}
+                                      </div>
+                                    </div>
+                                  ))}
+                                {getFilledPassengers(formData)
+                                  .filter(p => !(p.legIndex === legIndex && p.passengerIndex === passengerIndex))
+                                  .length === 0 && (
+                                    <div className="p-2 text-sm text-gray-500 text-center">
+                                      No filled passengers found
+                                    </div>
+                                  )}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Gender field */}
+                          <div className="relative">
+                            <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 font-medium">
+                              Gender
+                            </label>
+                            <select
+                              value={passenger.gender}
+                              onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'gender', e.target.value)}
+                              className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                            >
+                              <option value="">Select Gender</option>
+                              {GENDERS.map(gender => (
+                                <option key={gender} value={gender}>{gender}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* Date of birth field */}
+                          <div className="relative">
+                            <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 font-medium">
+                              Date of Birth
+                            </label>
+                            <input
+                              type="date"
+                              value={passenger.date_of_birth}
+                              onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'date_of_birth', e.target.value)}
+                              className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                            />
+                          </div>
+
+                          {/* Actual age field */}
+                          <div className="relative">
+                            <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 font-medium">
+                              Actual Age
+                            </label>
+                            <input
+                              type="text"
+                              value={calculateActualAge(passenger.date_of_birth)}
+                              readOnly
+                              className="p-2 border border-gray-300 rounded-md bg-gray-100 w-full"
+                            />
+                          </div>
+
+                          {/* Nationality field */}
+                          <div className="relative">
+                            <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 font-medium">
+                              Nationality
+                            </label>
+                            <select
+                              value={passenger.nationality}
+                              onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'nationality', e.target.value)}
+                              className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                            >
+                              <option value="">Select Nationality</option>
+                              {NATIONALITIES.map(country => (
+                                <option key={country} value={country}>{country}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Document Types Section */}
+                      <div className="bg-white p-4 rounded-lg border">
+                        <h6 className="font-semibold text-gray-800 mb-3">Document Types</h6>
+
+                        {/* Document type checkboxes */}
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Select Document Types (Multiple selection allowed)
+                          </label>
+                          <div className="flex flex-wrap gap-4">
+                            {DOCUMENT_TYPES.map(docType => (
+                              <label key={docType} className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  checked={passenger.document_types?.includes(docType) || false}
+                                  onChange={(e) => updateDocumentTypes(bookingId, legIndex, passengerIndex, docType, e.target.checked)}
+                                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span className="text-sm text-gray-700">{docType}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Conditional document fields based on selection */}
+                        {passenger.document_types?.includes('Passport') && (
+                          <div className="bg-blue-50 p-4 rounded-lg mb-4">
+                            <h6 className="font-medium text-blue-800 mb-3 block">Passport Details</h6>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                              <div className="relative">
+                                <label className="absolute -top-2 left-3 bg-blue-50 px-1 text-xs text-gray-500 font-medium">
+                                  Passport Number
+                                </label>
+                                <input
+                                  type="text"
+                                  placeholder="Passport Number"
+                                  value={passenger.passport_details?.passport_number || ''}
+                                  onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'passport_details', 'passport_number', e.target.value)}
+                                  className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                                />
+                              </div>
+                              <div className="relative">
+                                <label className="absolute -top-2 left-3 bg-blue-50 px-1 text-xs text-gray-500 font-medium">
+                                  Passport Expiry
+                                </label>
+                                <input
+                                  type="date"
+                                  value={passenger.passport_details?.passport_expiry || ''}
+                                  onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'passport_details', 'passport_expiry', e.target.value)}
+                                  className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Visa Required Radio Buttons */}
+                            <div className="mb-4">
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Visa Required?
+                              </label>
+                              <div className="flex gap-4">
+                                <label className="flex items-center space-x-2">
+                                  <input
+                                    type="radio"
+                                    name={`visa_required_${bookingId}_${legIndex}_${passengerIndex}`}
+                                    value="true"
+                                    checked={passenger.passport_details?.visa_required === true}
+                                    onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'passport_details', 'visa_required', true)}
+                                    className="text-blue-600 focus:ring-blue-500"
+                                  />
+                                  <span className="text-sm text-gray-700">Yes</span>
+                                </label>
+                                <label className="flex items-center space-x-2">
+                                  <input
+                                    type="radio"
+                                    name={`visa_required_${bookingId}_${legIndex}_${passengerIndex}`}
+                                    value="false"
+                                    checked={passenger.passport_details?.visa_required === false}
+                                    onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'passport_details', 'visa_required', false)}
+                                    className="text-blue-600 focus:ring-blue-500"
+                                  />
+                                  <span className="text-sm text-gray-700">No</span>
+                                </label>
+                              </div>
+                            </div>
+
+                            {/* Conditional fields based on visa required */}
+                            {passenger.passport_details?.visa_required === true && (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                                <div className="relative">
+                                  <label className="absolute -top-2 left-3 bg-blue-50 px-1 text-xs text-gray-500 font-medium">
+                                    Visa Number
+                                  </label>
+                                  <input
+                                    type="text"
+                                    placeholder="Visa Number"
+                                    value={passenger.passport_details?.visa_number || ''}
+                                    onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'passport_details', 'visa_number', e.target.value)}
+                                    className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                                  />
+                                </div>
+                                <div className="relative">
+                                  <label className="absolute -top-2 left-3 bg-blue-50 px-1 text-xs text-gray-500 font-medium">
+                                    Visa Expiry Date
+                                  </label>
+                                  <input
+                                    type="date"
+                                    value={passenger.passport_details?.visa_expiry || ''}
+                                    onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'passport_details', 'visa_expiry', e.target.value)}
+                                    className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            {passenger.passport_details?.visa_required === false && (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                                <div className="relative">
+                                  <label className="absolute -top-2 left-3 bg-blue-50 px-1 text-xs text-gray-500 font-medium">
+                                    On Arrival
+                                  </label>
+                                  <input
+                                    type="text"
+                                    placeholder="On Arrival Details"
+                                    value={passenger.passport_details?.on_arrival || ''}
+                                    onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'passport_details', 'on_arrival', e.target.value)}
+                                    className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                                  />
+                                </div>
+                                <div className="relative">
+                                  <label className="absolute -top-2 left-3 bg-blue-50 px-1 text-xs text-gray-500 font-medium">
+                                    Name of Country Visa
+                                  </label>
+                                  <input
+                                    type="text"
+                                    placeholder="Country Name"
+                                    value={passenger.passport_details?.visa_country_name || ''}
+                                    onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'passport_details', 'visa_country_name', e.target.value)}
+                                    className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Special Document Section */}
+                            <div className="mb-4">
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Special Document?
+                              </label>
+                              <div className="flex gap-4 mb-3">
+                                <label className="flex items-center space-x-2">
+                                  <input
+                                    type="radio"
+                                    name={`special_document_${bookingId}_${legIndex}_${passengerIndex}`}
+                                    value="true"
+                                    checked={passenger.special_document === true}
+                                    onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'special_document', true)}
+                                    className="text-blue-600 focus:ring-blue-500"
+                                  />
+                                  <span className="text-sm text-gray-700">Yes</span>
+                                </label>
+                                <label className="flex items-center space-x-2">
+                                  <input
+                                    type="radio"
+                                    name={`special_document_${bookingId}_${legIndex}_${passengerIndex}`}
+                                    value="false"
+                                    checked={passenger.special_document === false}
+                                    onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'special_document', false)}
+                                    className="text-blue-600 focus:ring-blue-500"
+                                  />
+                                  <span className="text-sm text-gray-700">No</span>
+                                </label>
+                              </div>
+
+                              {passenger.special_document === true && (
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                  <div className="relative">
+                                    <label className="absolute -top-2 left-3 bg-blue-50 px-1 text-xs text-gray-500 font-medium">
+                                      Document Name
+                                    </label>
+                                    <input
+                                      type="text"
+                                      placeholder="Document Name"
+                                      value={passenger.special_document_details?.document_name || ''}
+                                      onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'special_document_details', 'document_name', e.target.value)}
+                                      className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                                    />
+                                  </div>
+                                  <div className="relative">
+                                    <label className="absolute -top-2 left-3 bg-blue-50 px-1 text-xs text-gray-500 font-medium">
+                                      Document Number
+                                    </label>
+                                    <input
+                                      type="text"
+                                      placeholder="Document Number"
+                                      value={passenger.special_document_details?.document_number || ''}
+                                      onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'special_document_details', 'document_number', e.target.value)}
+                                      className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                                    />
+                                  </div>
+                                  <div className="relative">
+                                    <label className="absolute -top-2 left-3 bg-blue-50 px-1 text-xs text-gray-500 font-medium">
+                                      Document Expiry
+                                    </label>
+                                    <input
+                                      type="date"
+                                      value={passenger.special_document_details?.document_expiry || ''}
+                                      onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'special_document_details', 'document_expiry', e.target.value)}
+                                      className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                                    />
+                                  </div>
                                 </div>
                               )}
+                            </div>
+
+                            {/* Visa Waiver Program Section */}
+                            <div className="mb-4">
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Visa Waiver Program?
+                              </label>
+                              <div className="flex gap-4 mb-3">
+                                <label className="flex items-center space-x-2">
+                                  <input
+                                    type="radio"
+                                    name={`visa_waiver_${bookingId}_${legIndex}_${passengerIndex}`}
+                                    value="true"
+                                    checked={passenger.visa_waiver_program === true}
+                                    onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'visa_waiver_program', true)}
+                                    className="text-blue-600 focus:ring-blue-500"
+                                  />
+                                  <span className="text-sm text-gray-700">Yes</span>
+                                </label>
+                                <label className="flex items-center space-x-2">
+                                  <input
+                                    type="radio"
+                                    name={`visa_waiver_${bookingId}_${legIndex}_${passengerIndex}`}
+                                    value="false"
+                                    checked={passenger.visa_waiver_program === false}
+                                    onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'visa_waiver_program', false)}
+                                    className="text-blue-600 focus:ring-blue-500"
+                                  />
+                                  <span className="text-sm text-gray-700">No</span>
+                                </label>
+                              </div>
+
+                              {passenger.visa_waiver_program === true && (
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                  <div className="relative">
+                                    <label className="absolute -top-2 left-3 bg-blue-50 px-1 text-xs text-gray-500 font-medium">
+                                      Document Name
+                                    </label>
+                                    <input
+                                      type="text"
+                                      placeholder="Document Name"
+                                      value={passenger.visa_waiver_details?.document_name || ''}
+                                      onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'visa_waiver_details', 'document_name', e.target.value)}
+                                      className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                                    />
+                                  </div>
+                                  <div className="relative">
+                                    <label className="absolute -top-2 left-3 bg-blue-50 px-1 text-xs text-gray-500 font-medium">
+                                      Document Number
+                                    </label>
+                                    <input
+                                      type="text"
+                                      placeholder="Document Number"
+                                      value={passenger.visa_waiver_details?.document_number || ''}
+                                      onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'visa_waiver_details', 'document_number', e.target.value)}
+                                      className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                                    />
+                                  </div>
+                                  <div className="relative">
+                                    <label className="absolute -top-2 left-3 bg-blue-50 px-1 text-xs text-gray-500 font-medium">
+                                      Expiry Date
+                                    </label>
+                                    <input
+                                      type="date"
+                                      value={passenger.visa_waiver_details?.expiry_date || ''}
+                                      onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'visa_waiver_details', 'expiry_date', e.target.value)}
+                                      className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {passenger.document_types?.includes('Driving License') && (
+                          <div className="bg-green-50 p-4 rounded-lg mb-4">
+                            <h6 className="font-medium text-green-800 mb-3 block">Driving License Details</h6>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div className="relative">
+                                <label className="absolute -top-2 left-3 bg-green-50 px-1 text-xs text-gray-500 font-medium">
+                                  License Number
+                                </label>
+                                <input
+                                  type="text"
+                                  placeholder="License Number"
+                                  value={passenger.driving_license_details?.license_number || ''}
+                                  onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'driving_license_details', 'license_number', e.target.value)}
+                                  className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 w-full"
+                                />
+                              </div>
+                              <div className="relative">
+                                <label className="absolute -top-2 left-3 bg-green-50 px-1 text-xs text-gray-500 font-medium">
+                                  Expiry Date
+                                </label>
+                                <input
+                                  type="date"
+                                  value={passenger.driving_license_details?.expiry_date || ''}
+                                  onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'driving_license_details', 'expiry_date', e.target.value)}
+                                  className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 w-full"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {passenger.document_types?.includes('Resident Card') && (
+                          <div className="bg-purple-50 p-4 rounded-lg mb-4">
+                            <h6 className="font-medium text-purple-800 mb-3 block">Resident Card Details</h6>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div className="relative">
+                                <label className="absolute -top-2 left-3 bg-purple-50 px-1 text-xs text-gray-500 font-medium">
+                                  Card Number
+                                </label>
+                                <input
+                                  type="text"
+                                  placeholder="Card Number"
+                                  value={passenger.resident_card_details?.card_number || ''}
+                                  onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'resident_card_details', 'card_number', e.target.value)}
+                                  className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
+                                />
+                              </div>
+                              <div className="relative">
+                                <label className="absolute -top-2 left-3 bg-purple-50 px-1 text-xs text-gray-500 font-medium">
+                                  Expiry Date
+                                </label>
+                                <input
+                                  type="date"
+                                  value={passenger.resident_card_details?.expiry_date || ''}
+                                  onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'resident_card_details', 'expiry_date', e.target.value)}
+                                  className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {passenger.document_types?.includes('Other Documents') && (
+                          <div className="bg-yellow-50 p-4 rounded-lg mb-4">
+                            <h6 className="font-medium text-yellow-800 mb-3 block">Other Document Details</h6>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div className="relative">
+                                <label className="absolute -top-2 left-3 bg-yellow-50 px-1 text-xs text-gray-500 font-medium">
+                                  Name of Document
+                                </label>
+                                <input
+                                  type="text"
+                                  placeholder="Name of Document"
+                                  value={passenger.other_document_details?.document_name || ''}
+                                  onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'other_document_details', 'document_name', e.target.value)}
+                                  className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 w-full"
+                                />
+                              </div>
+                              <div className="relative">
+                                <label className="absolute -top-2 left-3 bg-yellow-50 px-1 text-xs text-gray-500 font-medium">
+                                  Document Number
+                                </label>
+                                <input
+                                  type="text"
+                                  placeholder="Document Number"
+                                  value={passenger.other_document_details?.document_number || ''}
+                                  onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'other_document_details', 'document_number', e.target.value)}
+                                  className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 w-full"
+                                />
+                              </div>
+                              <div className="relative">
+                                <label className="absolute -top-2 left-3 bg-yellow-50 px-1 text-xs text-gray-500 font-medium">
+                                  Date of Issue
+                                </label>
+                                <input
+                                  type="date"
+                                  value={passenger.other_document_details?.date_of_issue || ''}
+                                  onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'other_document_details', 'date_of_issue', e.target.value)}
+                                  className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 w-full"
+                                />
+                              </div>
+                              <div className="relative">
+                                <label className="absolute -top-2 left-3 bg-yellow-50 px-1 text-xs text-gray-500 font-medium">
+                                  Validity Date
+                                </label>
+                                <input
+                                  type="date"
+                                  value={passenger.other_document_details?.validity_date || ''}
+                                  onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'other_document_details', 'validity_date', e.target.value)}
+                                  className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 w-full"
+                                />
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>
 
-                      <div className="relative">
-                        <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
-                          gender
-                        </label>
-                        <select
-                          value={passenger.gender}
-                          onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'gender', e.target.value)}
-                          className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                        >
-                          <option value="">Select Gender</option>
-                          {GENDERS.map(gender => (
-                            <option key={gender} value={gender}>{gender}</option>
-                          ))}
-                        </select>
+                      {/* Contact Information Section */}
+                      <div className="bg-white p-4 rounded-lg border">
+                        <h6 className="font-semibold text-gray-800 mb-3">Contact Information</h6>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                          <div className="relative">
+                            <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 font-medium">
+                              Email Address
+                            </label>
+                            <input
+                              type="email"
+                              placeholder="Email Address"
+                              value={passenger.email}
+                              onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'email', e.target.value)}
+                              className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                            />
+                          </div>
+                          <div className="relative">
+                            <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 font-medium">
+                              Mobile Number / WhatsApp Number
+                            </label>
+                            <input
+                              type="tel"
+                              placeholder="Mobile / WhatsApp Number"
+                              value={passenger.contact_number}
+                              onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'contact_number', e.target.value)}
+                              className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="mb-3">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Residential Address (for communication or gifts)
+                          </label>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div className="relative md:col-span-2">
+                              <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 font-medium">
+                                Address
+                              </label>
+                              <textarea
+                                placeholder="Full Address"
+                                value={passenger.residential_address?.address || ''}
+                                onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'residential_address', 'address', e.target.value)}
+                                className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full h-20 resize-none"
+                              />
+                            </div>
+                            <div className="space-y-3">
+                              <div className="relative">
+                                <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 font-medium">
+                                  City
+                                </label>
+                                <input
+                                  type="text"
+                                  placeholder="City"
+                                  value={passenger.residential_address?.city || ''}
+                                  onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'residential_address', 'city', e.target.value)}
+                                  className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                                />
+                              </div>
+                              <div className="relative">
+                                <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 font-medium">
+                                  Country
+                                </label>
+                                <select
+                                  value={passenger.residential_address?.country || ''}
+                                  onChange={(e) => updateNestedField(bookingId, legIndex, passengerIndex, 'residential_address', 'country', e.target.value)}
+                                  className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                                >
+                                  <option value="">Select Country</option>
+                                  {COUNTRIES.map(country => (
+                                    <option key={country} value={country}>{country}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="relative">
-                        <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
-                          date_of_birth
-                        </label>
-                        <input
-                          type="date"
-                          value={passenger.date_of_birth}
-                          onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'date_of_birth', e.target.value)}
-                          className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                        />
-                      </div>
-                      {/* Actual Age */}
-                      <div className="relative">
-                        <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
-                          Actual Age
-                        </label>
-                        <input
-                          type="text"
-                          value={calculateActualAge(passenger.date_of_birth)}
-                          readOnly
-                          className="p-2 border border-gray-300 rounded-md bg-gray-100 w-full"
-                        />
-                      </div>
+                      {/* Travel Preferences Section */}
+                      <div className="bg-white p-4 rounded-lg border">
+                        <h6 className="font-semibold text-gray-800 mb-3">Travel Preferences</h6>
 
-                      <div className="relative">
-                        <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
-                          nationality
-                        </label>
-                        <select
-                          value={passenger.nationality}
-                          onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'nationality', e.target.value)}
-                          className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                        >
-                          <option value="">Select Nationality</option>
-                          {NATIONALITIES.map(nat => (
-                            <option key={nat} value={nat}>{nat}</option>
-                          ))}
-                        </select>
-                      </div>
+                        {/* Meal preferences (multiple checkboxes) */}
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Meal Preferences (Multiple selection allowed)
+                          </label>
+                          <div className="flex flex-wrap gap-4">
+                            {MEAL_PREFERENCES.map(mealPref => (
+                              <label key={mealPref} className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  checked={passenger.meal_preferences?.includes(mealPref) || false}
+                                  onChange={(e) => updateMealPreferences(bookingId, legIndex, passengerIndex, mealPref, e.target.checked)}
+                                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span className="text-sm text-gray-700">{mealPref}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
 
-                      <div className="relative">
-                        <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
-                          contact_number
-                        </label>
-                        <input
-                          type="tel"
-                          placeholder="Contact Number"
-                          value={passenger.contact_number}
-                          onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'contact_number', e.target.value)}
-                          className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                        />
-                      </div>
+                        {/* Seat preference */}
+                        <div className="mb-4">
+                          <div className="relative">
+                            <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 font-medium">
+                              Seat Preference
+                            </label>
+                            <select
+                              value={passenger.seat_preference || ''}
+                              onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'seat_preference', e.target.value)}
+                              className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                            >
+                              <option value="">Select Seat Preference</option>
+                              {SEAT_PREFERENCES.map(seatPref => (
+                                <option key={seatPref} value={seatPref}>{seatPref}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
 
-                      <div className="relative">
-                        <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
-                          email
-                        </label>
-                        <input
-                          type="email"
-                          placeholder="Email"
-                          value={passenger.email}
-                          onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'email', e.target.value)}
-                          className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                        />
-                      </div>
-                      {/* Visa Issued By */}
-                      <div className="relative">
-                        <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
-                          visa_issued_by
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Visa Issued By"
-                          value={passenger.visa_issued_by}
-                          onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'visa_issued_by', e.target.value)}
-                          className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                        />
-                      </div>
-
-                      {/* Visa Waiver (VVIP) */}
-                      <div className="relative">
-                        <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
-                          visa_waiver_vvip
-                        </label>
-                        <select
-                          value={passenger.visa_waiver_vvip}
-                          onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'visa_waiver_vvip', e.target.value)}
-                          className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                        >
-                          <option value="">Select</option>
-                          <option value="Yes">Yes</option>
-                          <option value="No">No</option>
-                        </select>
-                      </div>
-
-                      {/* Diplomatic */}
-                      <div className="relative">
-                        <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
-                          diplomatic
-                        </label>
-                        <select
-                          value={passenger.diplomatic}
-                          onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'diplomatic', e.target.value)}
-                          className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                        >
-                          <option value="">Select</option>
-                          <option value="Yes">Yes</option>
-                          <option value="No">No</option>
-                        </select>
-                      </div>
-
-                      <div className="relative">
-                        <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
-                          document_type
-                        </label>
-                        <select
-                          value={passenger.document_type}
-                          onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'document_type', e.target.value)}
-                          className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                        >
-                          <option value="">Select Document Type</option>
-                          {DOCUMENT_TYPES.map(doc => (
-                            <option key={doc} value={doc.toLowerCase()}>{doc}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="relative">
-                        <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
-                          document_number
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Document Number"
-                          value={passenger.document_number}
-                          onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'document_number', e.target.value)}
-                          className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                        />
-                      </div>
-
-                      <div className="relative">
-                        <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
-                          document_expiry
-                        </label>
-                        <input
-                          type="date"
-                          value={passenger.document_expiry}
-                          onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'document_expiry', e.target.value)}
-                          className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                        />
-                      </div>
-
-                      <div className="relative">
-                        <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
-                          visa_number
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Visa Number"
-                          value={passenger.visa_number}
-                          onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'visa_number', e.target.value)}
-                          className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                        />
-                      </div>
-
-                      <div className="relative">
-                        <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
-                          visa_expiry
-                        </label>
-                        <input
-                          type="date"
-                          value={passenger.visa_expiry}
-                          onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'visa_expiry', e.target.value)}
-                          className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                        />
-                      </div>
-
-                      <div className="relative">
-                        <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
-                          meal_preference
-                        </label>
-                        <select
-                          value={passenger.meal_preference}
-                          onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'meal_preference', e.target.value)}
-                          className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                        >
-                          <option value="">Select Meal Preference</option>
-                          {MEAL_PREFERENCES.map(meal => (
-                            <option key={meal} value={meal}>{meal}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="relative">
-                        <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
-                          seat_preference
-                        </label>
-                        <select
-                          value={passenger.seat_preference}
-                          onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'seat_preference', e.target.value)}
-                          className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                        >
-                          <option value="">Select Seat Preference</option>
-                          {SEAT_PREFERENCES.map(seat => (
-                            <option key={seat} value={seat}>{seat}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="relative">
-                        <label className="absolute -top-2 left-3 bg-gray-50 px-1 text-xs text-gray-500 font-medium">
-                          special_assistance
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Special Assistance"
-                          value={passenger.special_assistance}
-                          onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'special_assistance', e.target.value)}
-                          className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                        />
+                        {/* Special assistance */}
+                        <div className="mb-4">
+                          <div className="relative">
+                            <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-gray-500 font-medium">
+                              Special Assistance Required
+                            </label>
+                            <select
+                              value={passenger.special_assistance || ''}
+                              onChange={(e) => updatePassengerField(bookingId, legIndex, passengerIndex, 'special_assistance', e.target.value)}
+                              className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                            >
+                              <option value="">Select Option</option>
+                              <option value="Yes">Yes</option>
+                              <option value="No">No</option>
+                            </select>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -957,9 +1471,9 @@ const TravelHistory = () => {
       }}
     >
       <div className="absolute inset-0 bg-black/40 z-10" />
-      <div className="absolute w-full top-0 left-0 z-40">
+      {/* <div className="absolute w-full top-0 left-0 z-40">
         <NavBar />
-      </div>
+      </div> */}
 
       <div className="relative z-30 min-h-screen overflow-auto pt-28 pb-8 px-4">
         <div className="max-w-4xl mx-auto">
@@ -1001,7 +1515,8 @@ const TravelHistory = () => {
                     <div className="flex flex-col items-end gap-2">
                       <div className="text-right">
                         <p className="text-sm font-semibold text-gray-700">
-                          Amount Paid ({booking.currency})
+                          {/* Amount Paid ({booking.currency}) */}
+                          Amount Paid (USD)
                         </p>
                         <p className="text-2xl text-blue-600 font-bold">
                           {booking.amount_paid}
@@ -1062,7 +1577,7 @@ const TravelHistory = () => {
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <p className="text-sm text-gray-600">Booking ID</p>
-                            <p className="font-medium text-gray-800 text-xs">
+                            <p className="font-medium text-gray-800 text-sm">
                               {booking._id}
                             </p>
                           </div>

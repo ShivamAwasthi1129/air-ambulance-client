@@ -21,9 +21,9 @@ const SegmentSchema = new mongoose.Schema({
 });
 
 const UserInfoSchema = new mongoose.Schema({
-  email: { type: String, required: true },
-  name: { type: String, required: true },
-  phone: { type: String, required: true },
+  email: { type: String },
+  name: { type: String },
+  phone: { type: String },
   ip: { type: String, required: true },
   city: { type: String, required: true },
   region: { type: String, required: true },

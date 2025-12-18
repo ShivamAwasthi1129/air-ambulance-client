@@ -1,9 +1,10 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { FaEye, FaEyeSlash, FaSpinner, FaCheckCircle, FaWhatsapp, FaPhoneAlt } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaSpinner, FaCheckCircle, FaWhatsapp, FaPhoneAlt, FaBars, FaTimes } from "react-icons/fa";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import LoginModal from "./LoginModal";
 
 const NavBar = () => {
   // ----------------------------------------------------------------
@@ -27,10 +28,17 @@ const NavBar = () => {
   const dropdownRef = useRef(null);
   const [countries, setCountries] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState("worldwide");
+
+  // Set selectedCountry from sessionStorage on mount to sync dropdown with URL country
+  useEffect(() => {
+    const storedCountry = sessionStorage.getItem("country_name") || "worldwide";
+    setSelectedCountry(storedCountry);
+  }, []);
   const [countryPhones, setCountryPhones] = useState([]);
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
   const [isVerifying, setIsVerifying] = useState(false);
   const [userExists, setUserExists] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // fetch full list on mount
   useEffect(() => {
@@ -178,7 +186,7 @@ const NavBar = () => {
         setEmail("");
         setFetchedName("");
         setUserExists(false);
-        toast.error("User doesn't exist. Please use search bar.");
+        toast.error("User doesn't exist. with such mobile number or email. Please fill the search query form for search result and Sign up.");
       }
     } catch (err) {
       console.error("Error fetching user data:", err);
@@ -186,7 +194,7 @@ const NavBar = () => {
       setEmail("");
       setFetchedName("");
       setUserExists(false);
-      toast.error("User doesn't exist. Please use search bar.");
+      toast.error("User doesn't exist. with such mobile number or email. Please fill the search query form for search result and Sign up.");
     }
   };
 
@@ -498,11 +506,11 @@ const NavBar = () => {
     window.location.reload();
   };
   return (
-    <div className="z-20">
+    <div className="z-50 relative w-full top-0">
 
 
       {/* Rotating Message Stripe */}
-      <div className="bg-[#0883bb] text-white text-sm overflow-hidden whitespace-nowrap z-10">
+      <div className="bg-[#0883bb] text-white text-sm overflow-hidden whitespace-nowrap">
         <div className="hidden md:flex bg-customBlue py-1 overflow-hidden">
           <div className="animate-marquee">
             <p className="inline-block text-white text-sm md:text-base font-normal">
@@ -513,7 +521,7 @@ const NavBar = () => {
       </div>
       {/* Main Navigation */}
       <nav className=" bg-gradient-to-r from-[#f0f4f8] via-[#e6f2ff] to-[#fff0e6] shadow-lg z-20 ">
-        <div className="container mx-auto p-2 flex items-center justify-around">
+        <div className="container mx-auto p-2 flex items-center justify-between sm:w-[80%] lgw-full">
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <img
@@ -524,14 +532,18 @@ const NavBar = () => {
           </Link>
 
           {/* Contact and Dropdown Section */}
-          <div className="flex items-center space-x-6">
+          <div className="hidden md:flex items-center space-x-6">
             {/* Country Dropdown */}
             <select
               value={selectedCountry}
               onChange={(e) => {
-                setSelectedCountry(e.target.value);
-                sessionStorage.setItem("country_name", e.target.value); 
+                const country = e.target.value;
+                setSelectedCountry(country);
+                sessionStorage.setItem("country_name", country);
                 window.dispatchEvent(new Event("countryNameChanged"));
+                if (country !== "worldwide") {
+                  window.open(`/${country.toLowerCase()}`, "_blank");
+                }
               }}
               className="rounded-lg px-3 py-2 text-sm border-2 border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-blue-300 transition-all duration-300"
             >
@@ -569,7 +581,7 @@ const NavBar = () => {
 
           </div>
           {/* User Login/Profile Dropdown */}
-          <div className="relative" ref={dropdownRef}>
+          <div className="relative hidden md:block" ref={dropdownRef}>
             {user ? (
               <>
                 <div
@@ -615,16 +627,24 @@ const NavBar = () => {
               </button>
             )}
           </div>
+          {/* Mobile hamburger */}
+          <button
+            aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+            className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-800 hover:text-blue-600 hover:bg-white/60 focus:outline-none"
+            onClick={() => setIsMobileMenuOpen((o) => !o)}
+          >
+            {isMobileMenuOpen ? <FaTimes size={22} /> : <FaBars size={22} />}
+          </button>
         </div>
         {/* Navigation Links */}
-        <div className="border-t-4 border-[#0883bb] bg-gradient-to-r from-[#f0f8ff] via-[#e6f2ff] to-[#f0f0f0] text-gray-800 py-3 shadow-md">
+        <div className="hidden md:block border-t-4 border-[#0883bb] bg-gradient-to-r from-[#f0f8ff] via-[#e6f2ff] to-[#f0f0f0] text-gray-800 py-3 shadow-md">
           <div className="container mx-auto px-4">
             <div className="flex justify-center items-center space-x-10">
               {[
                 { name: 'HOME', route: '/' },
-                { name: 'ABOUT', route: '/' },
-                { name: 'AIRCRAFTS', route: '/' },
-                { name: 'GET IN TOUCH', route: '/' },
+                { name: 'ABOUT', route: '/aboutUs' },
+                // { name: 'AIRCRAFTS', route: '/' },
+                { name: 'GET IN TOUCH', route: '/getInTouch' },
                 { name: 'TERMS & CONDITIONS', route: '/termsAndCondition' },
               ].map((item, index) => (
                 <React.Fragment key={item.name}>
@@ -665,218 +685,145 @@ const NavBar = () => {
         </div>
       </nav>
 
-      {/* Login Modal */}
-      {isLoginModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl w-96 relative overflow-hidden">
-            {/* Gradient header */}
-            <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6 text-white">
-              <h2 className="text-2xl font-bold text-center">Welcome Back</h2>
-              <p className="text-center text-blue-100 mt-1">Sign in to your account</p>
+      {/* Mobile slide-out menu */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          <div className="absolute right-0 top-0 h-full w-80 max-w-[85%] bg-white shadow-2xl p-5 overflow-y-auto">
+            {/* User Section */}
+            <div className="mb-6">
+              {user ? (
+                <div>
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-200 to-blue-400 rounded-full flex items-center justify-center shadow-md">
+                      <span className="text-white font-bold text-lg">{user.email?.charAt(0).toUpperCase()}</span>
+                    </div>
+                    <span className="text-gray-800 font-semibold text-base">{user.email}</span>
+                  </div>
+
+                  {/* User menu options */}
+                  <div className="space-y-2 mb-4">
+                    <Link
+                      href="/profile"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block w-full px-3 py-2 rounded-lg text-gray-800 font-medium hover:bg-blue-50"
+                    >
+                      User Profile
+                    </Link>
+                    <Link
+                      href="/travelHistory"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block w-full px-3 py-2 rounded-lg text-gray-800 font-medium hover:bg-green-50"
+                    >
+                      Travel History
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-3 py-2 rounded-lg text-red-600 font-medium hover:bg-red-50"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    setIsLoginModalOpen(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full px-4 py-2 rounded-xl text-white font-bold bg-gradient-to-r from-blue-500 to-purple-600"
+                >
+                  Login
+                </button>
+              )}
             </div>
 
-            <div className="p-6">
-              {/* Close modal */}
-              <button
-                onClick={() => {
-                  setIsLoginModalOpen(false);
-                  setIdentifier("");
-                  setEmail("");
-                  setPhoneNumber("");
-                  setPassword("");
-                  setFetchedName("");
-                  setOtpDigits(['', '', '', '', '', '']);
-                  setEnteredOtp("");
-                  setIsOtpMode(true);
-                  setOtpSendStatus("idle");
-                  setUserExists(false);
+            {/* Country selector */}
+            <div className="mb-5">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+              <select
+                value={selectedCountry}
+                onChange={(e) => {
+                  const country = e.target.value;
+                  setSelectedCountry(country);
+                  sessionStorage.setItem("country_name", country);
+                  window.dispatchEvent(new Event("countryNameChanged"));
+                  if (country !== "worldwide") {
+                    window.open(`/${country.toLowerCase()}`, "_blank");
+                  }
                 }}
-                className="absolute top-4 right-4 text-white hover:text-gray-200 text-2xl font-bold transition-colors duration-200"
-                aria-label="Close login modal"
+                className="w-full rounded-lg px-3 py-2 text-sm border-2 border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
               >
-                &times;
-              </button>
+                <option value="worldwide">Worldwide</option>
+                {countries.map((c) => (
+                  <option key={c._id} value={c.country}>
+                    {c.country
+                      .split("-")
+                      .map((w) => w[0].toUpperCase() + w.slice(1))
+                      .join(" ")}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-              {/* Toggle between OTP and Password modes */}
-              <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
-                <button
-                  onClick={() => {
-                    setIsOtpMode(true);
-                    setOtpSendStatus("idle");
-                    setOtpDigits(['', '', '', '', '', '']);
-                  }}
-                  className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-200 ${isOtpMode
-                    ? "bg-white text-blue-600 shadow-sm"
-                    : "text-gray-600 hover:text-gray-800"
-                    }`}
+            {/* Contact numbers */}
+            <div className="mb-6 space-y-3">
+              {countryPhones.map((num, idx) => (
+                <a
+                  key={`${num}-${idx}`}
+                  href={idx === 0 ? `tel:${num}` : `https://wa.me/${num.replace(/^\+/, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center text-gray-800"
                 >
-                  OTP Login
-                </button>
-                <button
-                  onClick={() => {
-                    setIsOtpMode(false);
-                    setOtpSendStatus("idle");
-                  }}
-                  className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-200 ${!isOtpMode
-                    ? "bg-white text-blue-600 shadow-sm"
-                    : "text-gray-600 hover:text-gray-800"
-                    }`}
+                  {idx === 0 ? (
+                    <FaPhoneAlt className="mr-3 text-gray-600" />
+                  ) : (
+                    <FaWhatsapp className="mr-3 text-green-600" />
+                  )}
+                  <span className="font-medium">{num}</span>
+                </a>
+              ))}
+            </div>
+
+            {/* Nav links */}
+            <div className="space-y-2">
+              {[
+                { name: 'HOME', route: '/' },
+                { name: 'ABOUT', route: '/aboutUs' },
+                { name: 'GET IN TOUCH', route: '/getInTouch' },
+                { name: 'TERMS & CONDITIONS', route: '/termsAndCondition' },
+              ].map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.route}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block w-full px-3 py-3 rounded-lg text-gray-800 font-semibold hover:bg-gray-100"
                 >
-                  Password Login
-                </button>
-              </div>
-
-              {/* Identifier field */}
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-medium mb-2">
-                  Phone or Email
-                </label>
-                <input
-                  type="text"
-                  placeholder="Enter phone or email"
-                  value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
-                  onBlur={handleFetchUserData}
-                  className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors duration-200"
-                />
-              </div>
-
-              {/* Fetched email (read-only) */}
-              {email && (
-                <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-medium mb-2">
-                    Email
-                  </label>
-                  <input
-                    type="text"
-                    value={email}
-                    readOnly
-                    className="w-full p-3 border-2 border-gray-200 rounded-lg bg-gray-50"
-                  />
-                </div>
-              )}
-
-              {/* Fetched phone (read-only) */}
-              {phoneNumber && (
-                <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-medium mb-2">
-                    Phone Number
-                  </label>
-                  <input
-                    type="text"
-                    value={phoneNumber}
-                    readOnly
-                    className="w-full p-3 border-2 border-gray-200 rounded-lg bg-gray-50"
-                  />
-                </div>
-              )}
-
-              {/* OTP LOGIN SECTION */}
-              {isOtpMode && (
-                <>
-                  {/* Send OTP button - only show if user exists */}
-                  {userExists && (
-                    <button
-                      onClick={handleSendOtp}
-                      className={`w-full py-3 rounded-lg font-medium mb-4 flex items-center justify-center transition-all duration-200 ${otpSendStatus === "sending" || otpSendStatus === "sent"
-                        ? "bg-gray-400 cursor-not-allowed"
-                        : "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-md hover:shadow-lg"
-                        }`}
-                      disabled={otpSendStatus === "sending" || otpSendStatus === "sent"}
-                    >
-                      {otpSendStatus === "sending" ? (
-                        <>
-                          <FaSpinner className="animate-spin mr-2" />
-                          Sending OTP...
-                        </>
-                      ) : otpSendStatus === "sent" ? (
-                        <>
-                          OTP Sent
-                          <FaCheckCircle className="ml-2 text-green-400" />
-                        </>
-                      ) : (
-                        "Send OTP"
-                      )}
-                    </button>
-                  )}
-
-                  {/* OTP Input Fields - 6 digit boxes */}
-                  {otpSendStatus === "sent" && (
-                    <div className="mb-6">
-                      <label className="block text-gray-700 text-sm font-medium mb-3 text-center">
-                        Enter 6-digit OTP
-                      </label>
-                      <div className="flex justify-center space-x-3">
-                        {otpDigits.map((digit, index) => (
-                          <input
-                            key={index}
-                            id={`otp-${index}`}
-                            type="text"
-                            maxLength="1"
-                            value={digit}
-                            onChange={(e) => handleOtpChange(index, e.target.value)}
-                            onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                            className="w-12 h-12 text-center text-xl font-bold border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors duration-200"
-                          />
-                        ))}
-                      </div>
-                      {isVerifying && (
-                        <div className="flex items-center justify-center mt-4">
-                          <FaSpinner className="animate-spin mr-2 text-blue-500" />
-                          <span className="text-blue-500 font-medium">Verifying OTP...</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* PASSWORD LOGIN SECTION */}
-              {!isOtpMode && (
-                <>
-                  <div className="mb-6 relative">
-                    <label className="block text-gray-700 text-sm font-medium mb-2">
-                      Password
-                    </label>
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors duration-200 pr-12"
-                    />
-                    <div
-                      className="absolute right-3 top-10 cursor-pointer text-gray-500 hover:text-gray-700"
-                      onClick={() => setShowPassword((prev) => !prev)}
-                    >
-                      {showPassword ? <FaEye size={20} /> : <FaEyeSlash size={20} />}
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleLoginClick}
-                    className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex justify-center items-center"
-                    disabled={isLoggingIn}
-                  >
-                    {isLoggingIn ? (
-                      <>
-                        <FaSpinner className="animate-spin mr-2" />
-                        Logging in...
-                      </>
-                    ) : (
-                      "Login"
-                    )}
-                  </button>
-                </>
-              )}
+                  {item.name}
+                </Link>
+              ))}
             </div>
           </div>
         </div>
       )}
-
-
+      
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onLoginSuccess={() => {
+          setIsLoginModalOpen(false);
+          window.location.reload();
+        }}
+        source="navbar"  
+      />
       {/* Toast notifications */}
       <ToastContainer
-        autoClose={4000}
+        autoClose={12000}
         hideProgressBar={false}
         newestOnTop={false}
         closeOnClick

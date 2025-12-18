@@ -8,8 +8,16 @@ import { BsExclamationTriangle } from "react-icons/bs";
 const FilterAndFleetListing = ({ refreshKey }) => {
   const [searchData, setSearchData] = useState(null);
   const [segmentStates, setSegmentStates] = useState([]);
+  const [queryId, setQueryId] = useState("N/A");
   const [currentTripIndex, setCurrentTripIndex] = useState(0);
   const [selectedFleets, setSelectedFleets] = useState([]);
+
+  useEffect(() => {
+    const storedQueryId = sessionStorage.getItem("queryId");
+    if (storedQueryId) {
+      setQueryId(storedQueryId);
+    }
+  }, [refreshKey]); // Will run when refreshKey changes (i.e., when search is clicked)
   useEffect(() => {
     try {
       const sessionData = JSON.parse(sessionStorage.getItem("searchData"));
@@ -60,13 +68,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
     // lat/lng object
     return encodeURIComponent(JSON.stringify(place));
   }
-  /**
-   * Build every Rapido request (and its label) for ONE segment.
-   * • Airport → Airport  → keep user-chosen flightTypes.
-   * • Any route touching coords → force flightType=Helicopter.
-   * • Coordinate part of label =  "lat,lng-(address)"  if address exists,
-   *   otherwise just "lat,lng".
-   */
+
   function buildRapidoUrls(seg) {
     /* helpers */
     const stripCode = (s) => s.replace(/\s*\(.*?\)\s*/, "").trim();
@@ -161,6 +163,77 @@ const FilterAndFleetListing = ({ refreshKey }) => {
   }
 
 
+  // Static fallback fleets when API returns no results
+  const buildStaticFleets = (seg, labels) => {
+    const base = [
+      {
+        _id: "static-1",
+        totalPrice: "USD 12,500",
+        flightTime: "2h 30m",
+        logo: "https://imgak.mmtcdn.com/flights/assets/media/dt/common/icons/GF.png",
+        fleetDetails: {
+          selectedModel: "Cessna Citation XLS",
+          engineType: "Turbofan",
+          flightType: "Jet",
+          registrationNo: "N123AB",
+          seatCapacity: 8,
+          luggage: 6,
+          maxSpeed: 430,
+          cabinHeight: 5.7,
+        },
+        additionalAmenities: {
+          "Power Supply 110V": { value: "available" },
+          "Lounge Access": { value: "available" },
+          "Airport Pickup": { value: "available" },
+        },
+        aircraftGallery: {
+          interior: { view1: "https://images.unsplash.com/photo-1529079017828-5250f6d38f74?w=800" },
+          exterior: { view1: "https://images.unsplash.com/photo-1518306727298-4c17e1bf694b?w=800" },
+          cockpit: { view1: "https://images.unsplash.com/photo-1536863634761-3b1b8b6f9f49?w=800" },
+        },
+      },
+      {
+        _id: "static-2",
+        totalPrice: "USD 18,900",
+        flightTime: "3h 10m",
+        logo: "https://imgak.mmtcdn.com/flights/assets/media/dt/common/icons/GF.png",
+        fleetDetails: {
+          selectedModel: "Pilatus PC-12",
+          engineType: "Turboprop",
+          flightType: "Propeller",
+          registrationNo: "N987ZX",
+          seatCapacity: 6,
+          luggage: 5,
+          maxSpeed: 290,
+          cabinHeight: 4.9,
+        },
+        additionalAmenities: {
+          "Cafe": { value: "available" },
+          "Air Hostess / Escorts": { value: "available" },
+          "Power Supply 110V": { value: "available" },
+        },
+        aircraftGallery: {
+          interior: { view1: "https://images.unsplash.com/photo-1527334130710-33d86f0f41db?w=800" },
+          exterior: { view1: "https://images.unsplash.com/photo-1545117316-910a27b498b4?w=800" },
+          cockpit: { view1: "https://images.unsplash.com/photo-1520975867597-3c6ad158b08b?w=800" },
+        },
+      },
+    ];
+    const expanded = [];
+    labels.forEach((label, idx) => {
+      base.forEach((b, j) => {
+        const clone = {
+          ...b,
+          _id: `${b._id}-${idx}-${j}`,
+          _sourceLabel: label,
+          _numericPrice: parseInt(b.totalPrice.replace(/\D/g, ""), 10) || 0,
+        };
+        expanded.push(clone);
+      });
+    });
+    return expanded;
+  };
+
   // Fetch data for each segment
   const fetchSegmentFleets = async (segmentIndex) => {
     const seg = searchData.segments[segmentIndex];
@@ -225,14 +298,49 @@ const FilterAndFleetListing = ({ refreshKey }) => {
         return copy;
       });
     } catch (err) {
+      const staticFleets = buildStaticFleets(seg, urlObjs.map((o) => o.label));
+
+      const prices = staticFleets.map((f) => f._numericPrice);
+      const [minP, maxP] = prices.length
+        ? [Math.min(...prices), Math.max(...prices)]
+        : [0, 0];
+
+      const flightTimes = staticFleets.map((f) => {
+        const timeStr = f.flightTime || "0h 0m";
+        const hours = parseInt(timeStr.match(/(\d+)h/)?.[1] || "0");
+        const minutes = parseInt(timeStr.match(/(\d+)m/)?.[1] || "0");
+        return hours * 60 + minutes;
+      });
+      const [minFT, maxFT] = flightTimes.length
+        ? [Math.min(...flightTimes), Math.max(...flightTimes)]
+        : [0, 0];
+
+      const maxSpeeds = staticFleets.map((f) =>
+        parseInt(f.fleetDetails?.maxSpeed || "0")
+      );
+      const [minMS, maxMS] = maxSpeeds.length
+        ? [Math.min(...maxSpeeds), Math.max(...maxSpeeds)]
+        : [0, 0];
+
       setSegmentStates((prev) => {
         const copy = [...prev];
         copy[segmentIndex] = {
           ...copy[segmentIndex],
-          fleetData: [],
-          filteredData: [],
+          fleetData: staticFleets,
+          filteredData: staticFleets,
+          minPrice: minP,
+          maxPrice: maxP,
+          priceRange: maxP,
+          minFlightTime: minFT,
+          maxFlightTime: maxFT,
+          flightTimeRange: maxFT,
+          minMaxSpeed: minMS,
+          maxMaxSpeed: maxMS,
+          maxSpeedRange: maxMS,
+          addOnServices: [],
           loading: false,
-          noData: true,
+          noData: false,
+          isFallback: true,
         };
         return copy;
       });
@@ -253,7 +361,8 @@ const FilterAndFleetListing = ({ refreshKey }) => {
       const updatedStates = [...prev];
       const currentSegment = updatedStates[segmentIndex];
       const { fleetData } = currentSegment;
-      const { selectedTypes, selectedAmenities, priceRange, flightTimeRange, maxSpeedRange } = newStates;
+      const merged = { ...currentSegment, ...newStates };
+      const { selectedTypes, selectedAmenities, priceRange, flightTimeRange, maxSpeedRange } = merged;
 
 
       const newFiltered = fleetData.filter((flight) => {
@@ -283,7 +392,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
 
       updatedStates[segmentIndex] = {
         ...currentSegment,
-        ...newStates,
+        ...merged,
         filteredData: newFiltered,
       };
       return updatedStates;
@@ -364,6 +473,8 @@ const FilterAndFleetListing = ({ refreshKey }) => {
     addOnServices = [],
   } = currentSegmentState;
 
+  const slidersDisabled = !!currentSegmentState.isFallback;
+
   // Combine flight types from API data + user-chosen
   const allFlightTypes = useMemo(() => {
     // From the API results
@@ -419,6 +530,8 @@ const FilterAndFleetListing = ({ refreshKey }) => {
       selectedTypes: updated,
       selectedAmenities,
       priceRange,
+      flightTimeRange,
+      maxSpeedRange,
     });
   };
 
@@ -430,6 +543,8 @@ const FilterAndFleetListing = ({ refreshKey }) => {
       selectedTypes,
       selectedAmenities: updated,
       priceRange,
+      flightTimeRange,
+      maxSpeedRange,
     });
   };
 
@@ -438,6 +553,8 @@ const FilterAndFleetListing = ({ refreshKey }) => {
       selectedTypes,
       selectedAmenities,
       priceRange: Number(val),
+      flightTimeRange,
+      maxSpeedRange,
     });
   };
   const onFlightTimeChange = (val) => {
@@ -503,9 +620,9 @@ const FilterAndFleetListing = ({ refreshKey }) => {
         <h1 className="text-2xl font-bold text-center text-white">
           ✈️ Select Your Dream Fleet ✈️
         </h1>
-        <div className="flex mt-2">
+        <div className="flex flex-col md:flex-row mt-2 gap-4 md:gap-0">
           {/* Selected Fleets */}
-          <div className="bg-white p-5 border border-blue-100 rounded-lg shadow-sm w-[35%]">
+          <div className="bg-white p-5 border border-blue-100 rounded-lg shadow-sm w-full md:w-[35%]">
             <h2 className="text-xl font-bold mb-4 text-gray-800">Selected Fleets</h2>
             {selectedFleets.map((fleet, idx) =>
               fleet ? (
@@ -531,12 +648,12 @@ const FilterAndFleetListing = ({ refreshKey }) => {
           </div>
 
           {/* Summary / Buttons */}
-          <div className="bg-white p-5 border border-blue-100 rounded-lg shadow-sm w-full ml-4">
+          <div className="bg-white p-5 border border-blue-100 rounded-lg shadow-sm w-full md:ml-4">
             {/* ONE-WAY */}
             {!isMultiCity && (
               <div>
-                <div className="flex items-center"><h3 className="text-lg font-bold text-blue-600 mb-2">Oneway Trip</h3><span className="ml-2 font-bold">SR.No: 635865</span></div>
-              
+                <div className="flex items-center"><h3 className="text-lg font-bold text-blue-600 mb-2">Oneway Trip</h3><span className="ml-2 font-bold">SR.No: {queryId}</span></div>
+
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-gray-700 mb-2 flex items-center">
                     {searchData.segments[0]?.from} -----
@@ -545,24 +662,26 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                     </span>
                     ----- {searchData.segments[0]?.to}
                   </p>
-                  <button
-                    onClick={() =>
-                      handleFleetSelection(0, segmentStates[0]?.filteredData?.[0] || null)
-                    }
-                    disabled={
-                      !!selectedFleets[0] ||
-                      segmentStates[0]?.filteredData?.length === 0
-                    }
-                    className={`py-2 px-4 rounded-md shadow-md text-sm font-medium
-                      focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition-all
-                      ${!!selectedFleets[0]
-                        ? "bg-gray-400 text-white cursor-not-allowed"
-                        : "bg-blue-600 hover:bg-blue-500 text-white"
+                  {!segmentStates[0]?.isFallback && (
+                    <button
+                      onClick={() =>
+                        handleFleetSelection(0, segmentStates[0]?.filteredData?.[0] || null)
                       }
-                    `}
-                  >
-                    {selectedFleets[0] ? "Fleet Selected" : "Select Fleet"}
-                  </button>
+                      disabled={
+                        !!selectedFleets[0] ||
+                        segmentStates[0]?.filteredData?.length === 0
+                      }
+                      className={`py-2 px-4 rounded-md shadow-md text-sm font-medium
+                        focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition-all
+                        ${!!selectedFleets[0]
+                          ? "bg-gray-400 text-white cursor-not-allowed"
+                          : "bg-blue-600 hover:bg-blue-500 text-white"
+                        }
+                      `}
+                    >
+                      {selectedFleets[0] ? "Fleet Selected" : "Select Fleet"}
+                    </button>
+                  )}
 
                   {selectedFleets[0] && (
                     <Link href={"/finalEnquiry"}>
@@ -585,6 +704,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
               <div>
                 <h3 className="text-lg font-bold text-blue-600 mb-2">
                   Multicity Trip - Step {currentTripIndex + 1} of {tripCount}
+                  <span className="ml-2 font-bold">SR.No: {queryId}</span>
                 </h3>
                 <p className="text-sm text-gray-700 mb-2 flex items-center">
                   {searchData.segments[currentTripIndex]?.from} -----
@@ -637,20 +757,20 @@ const FilterAndFleetListing = ({ refreshKey }) => {
       </div>
 
       {/* Bottom Section: Filters + Fleet Listing (for current trip/segment) */}
-      <div className="flex w-full ">
+      <div className="flex flex-col md:flex-row w-full gap-4">
         {/* Filter Section */}
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
-          className="w-[25%] p-6 bg-white px-10 mr-4 border border-blue-100 rounded-xl"
+          className="w-full md:w-[20%] p-6 bg-white md:px-10 md:mr-4 mb-4 md:mb-0 border border-blue-100 rounded-xl"
         >
           <div className="flex items-center justify-between mb-6 border-b pb-2">
             <motion.h2
               initial={{ y: -10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.5 }}
-              className="text-2xl font-bold text-gray-800"
+              className="text-xl font-bold text-gray-800"
             >
               <p>Filter Options</p>
               {isMultiCity && ` Trip ${currentTripIndex + 1}`}
@@ -681,6 +801,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                       checked={selectedTypes.includes(type)}
                       onChange={() => onToggleType(type)}
                       className="h-4 w-4 text-blue-500 border-gray-300 rounded focus:ring-blue-400"
+                      disabled={!!currentSegmentState.isFallback}
                     />
                     <span className="text-sm text-gray-600">
                       {type} ({count})
@@ -690,27 +811,44 @@ const FilterAndFleetListing = ({ refreshKey }) => {
               })}
             </div>
           </div>
+          {/* Flight Time Range */}
+          <div className="mb-6">
+            <div className="mb-2 leading-tight">
+              <span className="block text-gray-700 font-semibold text-sm">Flight Time Range</span>
+              <span className="block text-blue-600 font-semibold text-sm break-words">
+                {Math.floor(minFlightTime / 60)}h {minFlightTime % 60}m - {Math.floor(flightTimeRange / 60)}h {flightTimeRange % 60}m
+              </span>
+            </div>
+            <input
+              type="range"
+              min={minFlightTime}
+              max={maxFlightTime}
+              value={flightTimeRange}
+              onChange={(e) => onFlightTimeChange(e.target.value)}
+              disabled={slidersDisabled}
+              className={`w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all ${slidersDisabled ? "opacity-60 cursor-not-allowed" : ""}`}
+              style={{
+                background: `linear-gradient(to right, #3b82f6 ${((flightTimeRange - minFlightTime) / (maxFlightTime - minFlightTime)) * 100}%, #e5e7eb ${((flightTimeRange - minFlightTime) / (maxFlightTime - minFlightTime)) * 100}%)`,
+              }}
+            />
+          </div>
 
           {/* Price Range */}
           <div className="mb-6">
-            <p className="font-semibold text-gray-700 mb-3">
-              Price Range:{" "}
-              <span className="text-blue-600 font-bold">
-                ${minPrice.toLocaleString()}
+            <div className="mb-2 leading-tight">
+              <span className="block text-gray-700 font-semibold text-sm">Price Range</span>
+              <span className="block text-blue-600 font-semibold text-sm break-words">
+                ${minPrice.toLocaleString()} - ${priceRange.toLocaleString()}
               </span>
-              {" - "}
-              <span className="text-blue-600 font-bold">
-                ${priceRange.toLocaleString()}
-              </span>
-            </p>
+            </div>
             <input
               type="range"
               min={minPrice}
               max={maxPrice}
               value={priceRange}
               onChange={(e) => onPriceChange(e.target.value)}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer
-                 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+              disabled={slidersDisabled}
+              className={`w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all ${slidersDisabled ? "opacity-60 cursor-not-allowed" : ""}`}
               style={{
                 background: `linear-gradient(to right, #3b82f6 ${((priceRange - minPrice) / (maxPrice - minPrice)) * 100
                   }%, #e5e7eb ${((priceRange - minPrice) / (maxPrice - minPrice)) * 100
@@ -723,52 +861,24 @@ const FilterAndFleetListing = ({ refreshKey }) => {
               </div>
             )}
           </div>
-          {/* Flight Time Range */}
-          <div className="mb-6">
-            <p className="font-semibold text-gray-700 mb-3">
-              Flight Time Range:{" "}
-              <span className="text-blue-600 font-bold">
-                {Math.floor(minFlightTime / 60)}h {minFlightTime % 60}m
-              </span>
-              {" - "}
-              <span className="text-blue-600 font-bold">
-                {Math.floor(flightTimeRange / 60)}h {flightTimeRange % 60}m
-              </span>
-            </p>
-            <input
-              type="range"
-              min={minFlightTime}
-              max={maxFlightTime}
-              value={flightTimeRange}
-              onChange={(e) => onFlightTimeChange(e.target.value)}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer
-       focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
-              style={{
-                background: `linear-gradient(to right, #3b82f6 ${((flightTimeRange - minFlightTime) / (maxFlightTime - minFlightTime)) * 100}%, #e5e7eb ${((flightTimeRange - minFlightTime) / (maxFlightTime - minFlightTime)) * 100}%)`,
-              }}
-            />
-          </div>
+
 
           {/* Max Speed Range */}
           <div className="mb-6">
-            <p className="font-semibold text-gray-700 mb-3">
-              Max Speed Range:{" "}
-              <span className="text-blue-600 font-bold">
-                {minMaxSpeed} km
+            <div className="mb-2 leading-tight">
+              <span className="block text-gray-700 font-semibold text-sm">Max Speed Range</span>
+              <span className="block text-blue-600 font-semibold text-sm break-words">
+                {minMaxSpeed} km - {maxSpeedRange} km
               </span>
-              {" - "}
-              <span className="text-blue-600 font-bold">
-                {maxSpeedRange} km
-              </span>
-            </p>
+            </div>
             <input
               type="range"
               min={minMaxSpeed}
               max={maxMaxSpeed}
               value={maxSpeedRange}
               onChange={(e) => onMaxSpeedChange(e.target.value)}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer
-       focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+              disabled={slidersDisabled}
+              className={`w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all ${slidersDisabled ? "opacity-60 cursor-not-allowed" : ""}`}
               style={{
                 background: `linear-gradient(to right, #3b82f6 ${((maxSpeedRange - minMaxSpeed) / (maxMaxSpeed - minMaxSpeed)) * 100}%, #e5e7eb ${((maxSpeedRange - minMaxSpeed) / (maxMaxSpeed - minMaxSpeed)) * 100}%)`,
               }}
@@ -788,9 +898,10 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                   >
                     <input
                       type="checkbox"
-                      checked={checked}
+                      checked={selectedAmenities.includes(amenity)}
                       onChange={() => onToggleAmenity(amenity)}
                       className="h-4 w-4 text-blue-500 border-gray-300 rounded focus:ring-blue-400"
+                      disabled={!!currentSegmentState.isFallback}
                     />
                     <span className="text-sm text-gray-600">{amenity}</span>
                   </label>
@@ -836,6 +947,7 @@ const FilterAndFleetListing = ({ refreshKey }) => {
                     isMultiCity={isMultiCity}
                     addOnServices={addOnServices}
                     segment={searchData.segments[segmentIndex]}
+                    readOnly={!!currentSegmentState.isFallback}
                     label={label}
                   />
                 )}

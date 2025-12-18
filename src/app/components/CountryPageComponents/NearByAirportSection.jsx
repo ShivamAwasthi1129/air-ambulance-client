@@ -10,7 +10,7 @@ export default function NearByAirportsSection() {
       setLoading(true);
       setError(null);
       const response = await fetch(
-        `https://ow91reoh80.execute-api.ap-south-1.amazonaws.com/air/station?location=${country}`
+        `https://ow91reoh80.execute-api.ap-south-1.amazonaws.com/air/station?query=${country}`
       );
       
       if (!response.ok) {

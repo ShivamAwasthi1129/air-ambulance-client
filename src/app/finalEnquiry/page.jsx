@@ -5,9 +5,7 @@ import "jspdf-autotable";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Banner } from "../components/Banner";
-import { Bottom } from "../components/Bottom";
 import PaymentModal from "../components/PaymentModal";
-import NavBar from "../components/Navbar";
 import BankingPartnersModal from "../components/BankingPartnerModal";
 import SelectedFleetCard from "../components/SelectedFleetCard";
 // Helper: format to US dollars, e.g. `$ 650,000`
@@ -570,7 +568,7 @@ const FinalEnquiryPage = () => {
             "url('https://img.freepik.com/free-photo/airplane-runway-airport-sunset-travel-concept_587448-8154.jpg?w=1380')",
         }}
       >
-        <NavBar />
+        {/* <NavBar /> */}
       </div>
       <Banner />
       {/* trips and price calculation section */}
@@ -680,7 +678,7 @@ const FinalEnquiryPage = () => {
         estimatedCost={estimatedCost}
       />
       <BankingPartnersModal open={open} height="90vh" onClose={() => setOpen(false)} />
-      <Bottom />
+      {/* <Bottom /> */}
       {/* React-Toastify container */}
       <ToastContainer
         autoClose={5000}

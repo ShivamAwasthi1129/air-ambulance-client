@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 
+const FALLBACK_SRC = "https://www.charterflightsaviation.com/images/logo.png";
+
 const extractAllGalleryImages = (aircraftGallery) => {
   if (!aircraftGallery) return [];
   const images = [];
@@ -9,12 +11,11 @@ const extractAllGalleryImages = (aircraftGallery) => {
     const sectionObj = aircraftGallery[section];
     if (typeof sectionObj === "object" && sectionObj !== null) {
       Object.keys(sectionObj).forEach((view) => {
-        if (
-          view !== "_id" &&
-          sectionObj[view] &&
-          typeof sectionObj[view] === "string"
-        ) {
-          images.push(sectionObj[view]);
+        if (view !== "_id") {
+          const val = sectionObj[view];
+          if (typeof val === "string" && val.trim()) {
+            images.push(val);
+          }
         }
       });
     }
@@ -23,10 +24,10 @@ const extractAllGalleryImages = (aircraftGallery) => {
 };
 
 const ImageSlider = ({ aircraftGallery, onExperience }) => {
-  const images = useMemo(
-    () => extractAllGalleryImages(aircraftGallery),
-    [aircraftGallery]
-  );
+  const images = useMemo(() => {
+    const list = extractAllGalleryImages(aircraftGallery);
+    return list.length ? list : [FALLBACK_SRC];
+  }, [aircraftGallery]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -56,15 +57,19 @@ const ImageSlider = ({ aircraftGallery, onExperience }) => {
 
   if (!images.length) {
     return (
-      <div className="w-full h-64 bg-gray-200 flex items-center justify-center">
-        <span className="text-gray-500">No image available</span>
+      <div className="w-full h-64 overflow-hidden rounded-3xl bg-gray-100">
+        <img
+          src={FALLBACK_SRC}
+          alt="Fallback"
+          className="w-full h-full object-contain"
+        />
       </div>
     );
   }
 
   return (
     <div
-      className="relative w-full h-[250px] md:h-[300px] overflow-hidden rounded-3xl"
+      className="relative w-full h-full min-h-[250px] overflow-hidden rounded-3xl"
       onClick={onExperience}
     >
       {/* Slider images */}
@@ -77,7 +82,18 @@ const ImageSlider = ({ aircraftGallery, onExperience }) => {
             key={idx}
             src={src}
             alt={`Aircraft ${idx}`}
-            className="w-full h-full object-cover flex-shrink-0"
+            onError={(e) => {
+              if (e.currentTarget.src !== FALLBACK_SRC) {
+                e.currentTarget.src = FALLBACK_SRC;
+                e.currentTarget.style.objectFit = "contain";
+                e.currentTarget.style.objectPosition = "center";
+                e.currentTarget.style.background = "white";
+              }
+            }}
+            className={`w-full h-full flex-shrink-0 ${
+              src === FALLBACK_SRC ? "object-contain bg-white" : "object-cover"
+            }`}
+            style={{ objectPosition: "center" }}
           />
         ))}
       </div>

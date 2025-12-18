@@ -14,7 +14,7 @@ import HeroAviationSection from './CountryPageComponents/HeroAviationSection';
 const CountryPage = ({ apiData }) => {
   if (!apiData) return <div>Failed to load data.</div>
   return (
-    <div className='max-w-[110rem] mx-auto'>
+    <div className='sm:max-w-[110rem] w-full mx-auto'>
       <HeroAviationSection data={apiData} />
       <AircraftListingSection data={apiData} />  
       <FlyPrivateSection data={apiData}/>

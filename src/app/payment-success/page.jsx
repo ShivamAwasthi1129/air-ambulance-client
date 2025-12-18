@@ -72,6 +72,25 @@ function PaymentSuccessContent() {
     return new Date(dateStr).toDateString();
   };
 
+  // Currency formatters (scoped to this page only)
+  const formatUSD = (value) => {
+    const num = Number(value);
+    if (!isFinite(num)) return "0";
+    return new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(num);
+  };
+
+  const formatINR = (value) => {
+    const num = Number(value);
+    if (!isFinite(num)) return "0";
+    return new Intl.NumberFormat("en-IN", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(num);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-r from-green-400 to-blue-500 relative">
       {/* Background + Navbar */}
@@ -83,10 +102,10 @@ function PaymentSuccessContent() {
           zIndex: 20,
         }}
       >
-        <NavBar />
+        {/* <NavBar /> */}
       </div>
       {/* Main Content Container */}
-      <div className="relative z-10 pt-28 pb-10 max-w-6xl mx-auto px-4 ">
+      <div className="relative z-10 pt-6 pb-10 max-w-6xl mx-auto px-4 ">
         {loading ? (
           // Show skeleton loader while fetching
           <div className="bg-white p-6 rounded-md shadow-xl">
@@ -99,7 +118,7 @@ function PaymentSuccessContent() {
           </div>
         ) : bookingData ? (
           // Show booking info if available
-          <div className="bg-white p-6 md:p-8 rounded-md shadow-xl mt-20">
+          <div className="bg-white p-6 md:p-8 rounded-md shadow-xl mt-12">
             {/* Header / Confirmation Row */}
             <div className="flex items-center space-x-4">
               <AiOutlineCheckCircle
@@ -219,13 +238,14 @@ function PaymentSuccessContent() {
                   <div className="flex justify-between py-1 text-sm border-b border-gray-200">
                     <span>Amount Paid</span>
                     <span>
-                      {bookingData.currency} {bookingData.amount_paid}
+                      {/* {bookingData.currency} {bookingData.amount_paid} */}
+                      USD {formatUSD(bookingData.amount_paid)}
                     </span>
                   </div>
                   <div className="flex justify-between py-1 text-sm border-b border-gray-200">
                     <span>Total Amount</span>
                     <span>
-                      {bookingData.currency} {Math.trunc(bookingData.total_amount)}
+                      INR {formatINR(Math.trunc(bookingData.total_amount))}
                     </span>
                   </div>
                   <div className="flex justify-between py-1 text-sm">
@@ -306,19 +326,19 @@ function PaymentSuccessContent() {
                 For any changes to your itinerary, please get in touch with our
                 support team.
               </p>
-              <div className="mt-4 flex justify-center space-x-4">
+              {/* <div className="mt-4 flex justify-center space-x-4">
                 <button className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded-full transition">
                   Download Invoice
                 </button>
                 <button className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded-full transition">
                   Share Itinerary
                 </button>
-              </div>
+              </div> */}
             </div>
           </div>
         ) : null /* No fallback UI if there's no error & no bookingData */}
       </div>
-      <Bottom />
+      {/* <Bottom /> */}
     </div>
   );
 }
