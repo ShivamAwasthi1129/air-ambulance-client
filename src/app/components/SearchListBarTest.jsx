@@ -1,8 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
-import DeleteIcon from "@mui/icons-material/Delete";
 import FilterAndFleetListing from "../components/FilterAndFleetListing";
 import UserInfoModal from "../components/UserInfoModal";
 import Link from "next/link";
@@ -13,7 +11,8 @@ import GoogleMapModal from "./GoogleMapModal";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { FaMapLocationDot } from "react-icons/fa6";
-import { FaPlane, FaCalendarAlt, FaUsers, FaSearch, FaMapMarkerAlt, FaExchangeAlt, FaPlus, FaTrash } from "react-icons/fa";
+import { FaPlane, FaCalendarAlt, FaUsers, FaSearch, FaMapMarkerAlt, FaExchangeAlt, FaPlus, FaTrash, FaHelicopter } from "react-icons/fa";
+import { MdFlight, MdLocalHospital } from "react-icons/md";
 import LoginModal from './LoginModal';
 
 export const SearchBar = () => {
@@ -588,48 +587,47 @@ export const SearchBar = () => {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
-          className="absolute left-0 mt-2 w-full max-h-64 overflow-y-auto bg-white shadow-2xl rounded-2xl z-50 border border-gray-100"
+          className="absolute left-0 top-full mt-1 w-full max-h-72 overflow-y-auto bg-white shadow-xl rounded-lg z-50 border border-gray-200"
         >
           {isLoadingNearbyAirports ? (
-            <div className="p-6 flex items-center justify-center">
-              <div className="w-5 h-5 border-2 border-[#d4af37] border-t-transparent rounded-full animate-spin mr-3"></div>
-              <span className="text-gray-600">Finding nearby airports...</span>
+            <div className="p-4 flex items-center justify-center">
+              <div className="premium-loader mr-3"></div>
+              <span className="text-gray-500 text-sm">Finding nearby airports...</span>
             </div>
           ) : airports.length > 0 ? (
             airports.map((airport, i) => (
-              <motion.div
+              <div
                 key={airport.id ?? `airport-${field}-${segmentIndex}-${i}`}
-                whileHover={{ backgroundColor: "rgba(212, 175, 55, 0.1)" }}
                 onClick={() => handleSelectAirport(airport, segmentIndex, field)}
-                className="p-4 cursor-pointer border-b border-gray-50 last:border-b-0"
+                className="p-3 cursor-pointer hover:bg-[#e8f4ff] transition-colors border-b border-gray-100 last:border-b-0"
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-[#0a1628] to-[#1e4976] flex items-center justify-center flex-shrink-0">
-                    <FaPlane className="text-[#d4af37] text-sm" />
+                  <div className="w-10 h-10 rounded-lg bg-[#e8f4ff] flex items-center justify-center flex-shrink-0">
+                    <FaPlane className="text-[#008cff]" />
                   </div>
-                  <div className="flex-1">
-                    <div className="font-semibold text-[#0a1628]">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-[#1a1a1a] truncate">
                       {airport.city}, {airport.country}
                     </div>
-                    <div className="text-sm text-gray-500 mt-0.5">
+                    <div className="text-sm text-gray-500 truncate">
                       {airport.name}
                     </div>
                     <div className="flex gap-2 mt-1">
-                      <span className="text-xs bg-[#d4af37]/20 text-[#0a1628] px-2 py-0.5 rounded-full font-medium">
+                      <span className="text-xs bg-[#008cff] text-white px-2 py-0.5 rounded font-medium">
                         {airport.iata_code || "N/A"}
                       </span>
-                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
                         {airport.icao_code || "N/A"}
                       </span>
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))
           ) : hasSearched ? (
-            <div className="p-6 text-center text-gray-500">
-              <FaPlane className="text-3xl text-gray-300 mx-auto mb-2" />
-              No airports found
+            <div className="p-6 text-center text-gray-400">
+              <FaPlane className="text-3xl mx-auto mb-2 opacity-30" />
+              <p>No airports found</p>
             </div>
           ) : null}
         </motion.div>
@@ -652,24 +650,73 @@ export const SearchBar = () => {
         />
       )}
 
-      <div className="w-full flex flex-col items-center relative px-4">
-        {/* Main Search Container */}
+      <div className="w-full flex flex-col items-center relative">
+        {/* MMT Style Search Widget */}
         <motion.div
           ref={containerRef}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-5xl"
+          transition={{ duration: 0.4 }}
+          className="w-full max-w-6xl search-widget"
         >
-          {/* Glass Card Container */}
-          <div className="relative bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
-            {/* Gold Top Accent */}
-            <div className="h-1 bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#d4af37]" />
+          {/* Service Type Tabs */}
+          <div className="flex items-center border-b border-gray-200 overflow-x-auto">
+            {[
+              { type: "jet", label: "Private Jet", icon: <MdFlight className="text-2xl" /> },
+              { type: "heli", label: "Helicopter", icon: <FaHelicopter className="text-xl" /> },
+              { type: "ambulance", label: "Air Ambulance", icon: <MdLocalHospital className="text-2xl" /> },
+            ].map((service) => (
+              <div
+                key={service.type}
+                onClick={() => {
+                  const newType = service.type === "jet" ? "Private Jet" : service.type === "heli" ? "Helicopter" : "Air Ambulance";
+                  handleSegmentChange(0, "flightTypes", [newType]);
+                }}
+                className={`search-tab ${segments[0].flightTypes?.includes(service.type === "jet" ? "Private Jet" : service.type === "heli" ? "Helicopter" : "Air Ambulance") ? "active" : ""}`}
+              >
+                {service.icon}
+                <span className="whitespace-nowrap">{service.label}</span>
+              </div>
+            ))}
+          </div>
 
-            <div className="p-4 md:p-6">
-              {/* Flight Type Icons - Only for One Way */}
-              {tripType === "oneway" && (
-                <div className="mb-4">
+          <div className="p-6">
+            {/* Trip Type Toggle */}
+            <div className="flex items-center gap-4 mb-6">
+              <label className="trip-type-btn cursor-pointer">
+                <input
+                  type="radio"
+                  name="tripType"
+                  checked={tripType === "oneway"}
+                  onChange={() => handleTripTypeChange("oneway")}
+                  className="hidden"
+                />
+                <span className={`w-4 h-4 rounded-full border-2 ${tripType === "oneway" ? "border-[#008cff] bg-[#008cff]" : "border-gray-300"} flex items-center justify-center`}>
+                  {tripType === "oneway" && <span className="w-2 h-2 bg-white rounded-full" />}
+                </span>
+                <span className={tripType === "oneway" ? "text-[#008cff] font-semibold" : "text-gray-600"}>One Way</span>
+              </label>
+
+              <label className="trip-type-btn cursor-pointer">
+                <input
+                  type="radio"
+                  name="tripType"
+                  checked={tripType === "multicity"}
+                  onChange={() => handleTripTypeChange("multicity")}
+                  className="hidden"
+                />
+                <span className={`w-4 h-4 rounded-full border-2 ${tripType === "multicity" ? "border-[#008cff] bg-[#008cff]" : "border-gray-300"} flex items-center justify-center`}>
+                  {tripType === "multicity" && <span className="w-2 h-2 bg-white rounded-full" />}
+                </span>
+                <span className={tripType === "multicity" ? "text-[#008cff] font-semibold" : "text-gray-600"}>Multi City</span>
+              </label>
+            </div>
+
+            {/* One Way Search Fields */}
+            {tripType === "oneway" && (
+              <>
+                {/* Flight Type Icons */}
+                <div className="mb-6">
                   <Icondiv
                     flightTypes={segments[0].flightTypes}
                     setFlightTypes={(updatedFlightTypes) =>
@@ -677,48 +724,20 @@ export const SearchBar = () => {
                     }
                   />
                 </div>
-              )}
 
-              {/* Trip Type Selector */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="inline-flex bg-gray-100 p-1 rounded-full">
-                  {[
-                    { type: "oneway", label: "One Way", icon: "→" },
-                    { type: "multicity", label: "Multi City", icon: "⟷" },
-                  ].map((option) => (
-                    <button
-                      key={option.type}
-                      onClick={() => handleTripTypeChange(option.type)}
-                      className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 flex items-center gap-2 ${
-                        tripType === option.type
-                          ? "bg-[#0a1628] text-white shadow-md"
-                          : "text-gray-600 hover:text-[#0a1628]"
-                      }`}
-                    >
-                      <span>{option.icon}</span>
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* One Way Search Fields */}
-              {tripType === "oneway" && (
-                <div className="space-y-4">
-                  {/* Main Fields Row */}
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                {/* Main Search Row */}
+                <div className="flex flex-col lg:flex-row gap-4 items-stretch">
+                  {/* From & To Container */}
+                  <div className="flex-1 flex flex-col md:flex-row relative">
                     {/* FROM */}
-                    <div className="md:col-span-4 relative">
-                      <label className="flex items-center gap-2 text-xs font-semibold text-gray-600 mb-1.5">
-                        <FaMapMarkerAlt className="text-[#d4af37] text-xs" />
-                        From
-                      </label>
-                      <div className="relative">
+                    <div className="flex-1 relative">
+                      <div className="search-field h-full">
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">From</label>
                         <input
                           type="text"
-                          className="w-full px-3 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-[#d4af37] focus:bg-white transition-all text-[#0a1628] font-medium text-sm"
+                          className="w-full text-lg font-bold text-[#1a1a1a] bg-transparent outline-none placeholder:text-gray-300 truncate"
                           value={segments[0].from}
-                          placeholder="Departure airport..."
+                          placeholder="Enter city or airport"
                           onFocus={() => {
                             setFocusedSegmentIndex(0);
                             setFocusedField("from");
@@ -730,49 +749,42 @@ export const SearchBar = () => {
                             setSearchQuery(e.target.value);
                           }}
                         />
+                        {segments[0].fromCity && (
+                          <p className="text-sm text-gray-500 truncate">{segments[0].fromCity}</p>
+                        )}
                         {segmentHasHeli(segments[0]) && (
                           <button
                             type="button"
                             onClick={() => setMapModal({ open: true, segIdx: 0, field: "from" })}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#d4af37] hover:text-[#b87333] transition-colors"
+                            className="absolute right-4 top-4 text-[#008cff] hover:text-[#0057a8] transition-colors"
                           >
-                            <FaMapLocationDot size={22} />
+                            <FaMapLocationDot size={20} />
                           </button>
                         )}
                       </div>
-                      {segments[0].fromLoc && (
-                        <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                          <FaMapMarkerAlt className="text-[#d4af37]" />
-                          {segments[0].fromLoc.lat.toFixed(2)}, {segments[0].fromLoc.lng.toFixed(2)}
-                        </p>
-                      )}
                       <AirportDropdown segmentIndex={0} field="from" />
                     </div>
 
                     {/* Swap Button */}
-                    <div className="hidden md:flex md:col-span-1 justify-center pb-2">
-                      <motion.button
+                    <div className="hidden md:block relative">
+                      <button
                         onClick={() => handleSwap(0)}
-                        whileHover={{ scale: 1.1, rotate: 180 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="w-10 h-10 bg-gradient-to-r from-[#d4af37] to-[#f4d03f] rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition-shadow"
+                        className="swap-btn"
+                        aria-label="Swap locations"
                       >
-                        <FaExchangeAlt className="text-[#0a1628] text-sm" />
-                      </motion.button>
+                        <FaExchangeAlt className="text-[#008cff]" />
+                      </button>
                     </div>
 
                     {/* TO */}
-                    <div className="md:col-span-4 relative">
-                      <label className="flex items-center gap-2 text-xs font-semibold text-gray-600 mb-1.5">
-                        <FaMapMarkerAlt className="text-[#d4af37] text-xs" />
-                        To
-                      </label>
-                      <div className="relative">
+                    <div className="flex-1 relative">
+                      <div className="search-field h-full">
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">To</label>
                         <input
                           type="text"
-                          className="w-full px-3 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-[#d4af37] focus:bg-white transition-all text-[#0a1628] font-medium text-sm"
+                          className="w-full text-lg font-bold text-[#1a1a1a] bg-transparent outline-none placeholder:text-gray-300 truncate"
                           value={segments[0].to}
-                          placeholder="Destination airport..."
+                          placeholder="Enter city or airport"
                           onFocus={() => {
                             setFocusedSegmentIndex(0);
                             setFocusedField("to");
@@ -784,31 +796,27 @@ export const SearchBar = () => {
                             setSearchQuery(e.target.value);
                           }}
                         />
+                        {segments[0].toCity && (
+                          <p className="text-sm text-gray-500 truncate">{segments[0].toCity}</p>
+                        )}
                         {segmentHasHeli(segments[0]) && (
                           <button
                             type="button"
                             onClick={() => setMapModal({ open: true, segIdx: 0, field: "to" })}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#d4af37] hover:text-[#b87333] transition-colors"
+                            className="absolute right-4 top-4 text-[#008cff] hover:text-[#0057a8] transition-colors"
                           >
-                            <FaMapLocationDot size={22} />
+                            <FaMapLocationDot size={20} />
                           </button>
                         )}
                       </div>
-                      {segments[0].toLoc && (
-                        <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                          <FaMapMarkerAlt className="text-[#d4af37]" />
-                          {segments[0].toLoc.lat.toFixed(2)}, {segments[0].toLoc.lng.toFixed(2)}
-                        </p>
-                      )}
                       <AirportDropdown segmentIndex={0} field="to" />
                     </div>
+                  </div>
 
-                    {/* Date & Time */}
-                    <div className="md:col-span-2">
-                      <label className="flex items-center gap-2 text-xs font-semibold text-gray-600 mb-1.5">
-                        <FaCalendarAlt className="text-[#d4af37] text-xs" />
-                        Departure
-                      </label>
+                  {/* Date */}
+                  <div className="w-full lg:w-44">
+                    <div className="search-field h-full">
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Departure</label>
                       <input
                         type="datetime-local"
                         value={`${segments[0].departureDate}T${segments[0].departureTime || "08:00"}`}
@@ -825,23 +833,22 @@ export const SearchBar = () => {
                           }
                         }}
                         min={`${new Date().toISOString().split("T")[0]}T00:00`}
-                        className="w-full px-3 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-[#d4af37] focus:bg-white transition-all text-[#0a1628] font-medium text-sm"
+                        className="w-full text-lg font-bold text-[#1a1a1a] bg-transparent outline-none"
                       />
                     </div>
+                  </div>
 
-                    {/* Passengers */}
-                    <div className="md:col-span-1">
-                      <label className="flex items-center gap-2 text-xs font-semibold text-gray-600 mb-1.5">
-                        <FaUsers className="text-[#d4af37] text-xs" />
-                        Seats
-                      </label>
+                  {/* Passengers */}
+                  <div className="w-full lg:w-32">
+                    <div className="search-field h-full">
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Travellers</label>
                       <select
                         value={segments[0].passengers}
                         onChange={(e) => handleSegmentChange(0, "passengers", e.target.value)}
-                        className="w-full px-3 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-[#d4af37] focus:bg-white transition-all text-[#0a1628] font-medium text-sm appearance-none cursor-pointer"
+                        className="w-full text-lg font-bold text-[#1a1a1a] bg-transparent outline-none cursor-pointer"
                       >
                         {[...Array(32).keys()].map((num) => (
-                          <option key={num + 1} value={num + 1}>{num + 1}</option>
+                          <option key={num + 1} value={num + 1}>{num + 1} Pax</option>
                         ))}
                         <option value="33">33+</option>
                         <option value="45">45+</option>
@@ -851,134 +858,109 @@ export const SearchBar = () => {
                     </div>
                   </div>
                 </div>
-              )}
+              </>
+            )}
 
-              {/* Multi-City View */}
-              {tripType === "multicity" && (
-                <>
-                  {isMultiCityCollapsed ? (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="p-6 rounded-2xl bg-gradient-to-r from-[#0a1628] to-[#1e4976] cursor-pointer"
-                      onClick={() => setIsMultiCityCollapsed(false)}
-                    >
-                      <div className="flex items-center justify-between text-white">
-                        <div className="flex items-center gap-3">
-                          <FaPlane className="text-[#d4af37]" />
-                          <span className="font-semibold">Multi-City Trip</span>
-                          <span className="bg-[#d4af37] text-[#0a1628] px-2 py-0.5 rounded-full text-xs font-bold">
-                            {segments.length} Flights
-                          </span>
-                        </div>
-                        <span className="text-[#d4af37] text-sm">Click to expand</span>
+            {/* Multi-City View */}
+            {tripType === "multicity" && (
+              <>
+                {isMultiCityCollapsed ? (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="p-4 rounded-xl bg-[#e8f4ff] cursor-pointer border-2 border-[#008cff] border-dashed"
+                    onClick={() => setIsMultiCityCollapsed(false)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <FaPlane className="text-[#008cff]" />
+                        <span className="font-semibold text-[#008cff]">Multi-City Trip</span>
+                        <span className="bg-[#008cff] text-white px-2 py-0.5 rounded text-xs font-bold">
+                          {segments.length} Flights
+                        </span>
                       </div>
-                    </motion.div>
-                  ) : (
-                    <div className="space-y-6">
-                      {segments.map((segment, index) => (
-                        <motion.div
-                          key={index}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          className="relative bg-gray-50 rounded-2xl p-6 border-2 border-gray-200"
-                        >
-                          {/* Trip Badge */}
-                          <div className="absolute -left-3 top-6 bg-gradient-to-r from-[#d4af37] to-[#f4d03f] text-[#0a1628] px-4 py-1 rounded-r-full font-bold text-sm shadow-lg">
-                            Flight {index + 1}
+                      <span className="text-[#008cff] text-sm font-medium">Click to expand →</span>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <div className="space-y-4">
+                    {segments.map((segment, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="relative bg-[#f8f8f8] rounded-xl p-5"
+                      >
+                        {/* Flight Badge */}
+                        <div className="absolute -top-3 left-4 bg-[#008cff] text-white px-3 py-1 rounded-full text-xs font-bold">
+                          Flight {index + 1}
+                        </div>
+
+                        {/* Icon div for each segment */}
+                        <div className="mb-4 mt-2">
+                          <Icondiv
+                            flightTypes={segment.flightTypes}
+                            setFlightTypes={(updatedFlightTypes) =>
+                              handleSegmentChange(index, "flightTypes", updatedFlightTypes)
+                            }
+                          />
+                        </div>
+
+                        {/* Fields */}
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                          {/* FROM */}
+                          <div className="md:col-span-4 relative">
+                            <div className="search-field bg-white">
+                              <label className="text-xs font-bold text-gray-400 uppercase">From</label>
+                              <input
+                                type="text"
+                                className="w-full font-semibold text-[#1a1a1a] bg-transparent outline-none"
+                                value={segment.from}
+                                placeholder="Enter city..."
+                                onFocus={() => {
+                                  setFocusedSegmentIndex(index);
+                                  setFocusedField("from");
+                                  setShowDropdown(true);
+                                  setSearchQuery(segment.from || "");
+                                }}
+                                onChange={(e) => {
+                                  handleSegmentChange(index, "from", e.target.value);
+                                  setSearchQuery(e.target.value);
+                                }}
+                              />
+                            </div>
+                            <AirportDropdown segmentIndex={index} field="from" />
                           </div>
 
-                          {/* Icon div for each segment */}
-                          <div className="mb-6 mt-4">
-                            <Icondiv
-                              flightTypes={segment.flightTypes}
-                              setFlightTypes={(updatedFlightTypes) =>
-                                handleSegmentChange(index, "flightTypes", updatedFlightTypes)
-                              }
-                            />
+                          {/* TO */}
+                          <div className="md:col-span-4 relative">
+                            <div className="search-field bg-white">
+                              <label className="text-xs font-bold text-gray-400 uppercase">To</label>
+                              <input
+                                type="text"
+                                className="w-full font-semibold text-[#1a1a1a] bg-transparent outline-none"
+                                value={segment.to}
+                                placeholder="Enter city..."
+                                onFocus={() => {
+                                  setFocusedSegmentIndex(index);
+                                  setFocusedField("to");
+                                  setShowDropdown(true);
+                                  setSearchQuery(segment.to || "");
+                                }}
+                                onChange={(e) => {
+                                  handleSegmentChange(index, "to", e.target.value);
+                                  setSearchQuery(e.target.value);
+                                }}
+                              />
+                            </div>
+                            <AirportDropdown segmentIndex={index} field="to" />
                           </div>
 
-                          {/* Fields Grid */}
-                          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                            {/* FROM */}
-                            <div className="md:col-span-4 relative">
-                              <label className="flex items-center gap-2 text-sm font-semibold text-[#0a1628] mb-2">
-                                <FaMapMarkerAlt className="text-[#d4af37]" />
-                                From
-                              </label>
-                              <div className="relative">
-                                <input
-                                  type="text"
-                                  className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#d4af37] transition-all text-[#0a1628] font-medium"
-                                  value={segment.from}
-                                  placeholder="Departure airport..."
-                                  onFocus={() => {
-                                    setFocusedSegmentIndex(index);
-                                    setFocusedField("from");
-                                    setShowDropdown(true);
-                                    setSearchQuery(segment.from || "");
-                                  }}
-                                  onChange={(e) => {
-                                    handleSegmentChange(index, "from", e.target.value);
-                                    setSearchQuery(e.target.value);
-                                  }}
-                                />
-                                {segmentHasHeli(segment) && (
-                                  <button
-                                    type="button"
-                                    onClick={() => setMapModal({ open: true, segIdx: index, field: "from" })}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#d4af37]"
-                                  >
-                                    <FaMapLocationDot size={20} />
-                                  </button>
-                                )}
-                              </div>
-                              <AirportDropdown segmentIndex={index} field="from" />
-                            </div>
-
-                            {/* TO */}
-                            <div className="md:col-span-4 relative">
-                              <label className="flex items-center gap-2 text-sm font-semibold text-[#0a1628] mb-2">
-                                <FaMapMarkerAlt className="text-[#d4af37]" />
-                                To
-                              </label>
-                              <div className="relative">
-                                <input
-                                  type="text"
-                                  className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#d4af37] transition-all text-[#0a1628] font-medium"
-                                  value={segment.to}
-                                  placeholder="Destination airport..."
-                                  onFocus={() => {
-                                    setFocusedSegmentIndex(index);
-                                    setFocusedField("to");
-                                    setShowDropdown(true);
-                                    setSearchQuery(segment.to || "");
-                                  }}
-                                  onChange={(e) => {
-                                    handleSegmentChange(index, "to", e.target.value);
-                                    setSearchQuery(e.target.value);
-                                  }}
-                                />
-                                {segmentHasHeli(segment) && (
-                                  <button
-                                    type="button"
-                                    onClick={() => setMapModal({ open: true, segIdx: index, field: "to" })}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#d4af37]"
-                                  >
-                                    <FaMapLocationDot size={20} />
-                                  </button>
-                                )}
-                              </div>
-                              <AirportDropdown segmentIndex={index} field="to" />
-                            </div>
-
-                            {/* Date & Time */}
-                            <div className="md:col-span-2">
-                              <label className="flex items-center gap-2 text-sm font-semibold text-[#0a1628] mb-2">
-                                <FaCalendarAlt className="text-[#d4af37]" />
-                                Depart
-                              </label>
+                          {/* Date */}
+                          <div className="md:col-span-2">
+                            <div className="search-field bg-white">
+                              <label className="text-xs font-bold text-gray-400 uppercase">Date</label>
                               <input
                                 type="datetime-local"
                                 value={`${segment.departureDate}T${segment.departureTime || "08:00"}`}
@@ -995,166 +977,161 @@ export const SearchBar = () => {
                                   }
                                 }}
                                 min={`${new Date().toISOString().split("T")[0]}T00:00`}
-                                className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#d4af37] transition-all text-[#0a1628] font-medium"
+                                className="w-full font-semibold text-[#1a1a1a] bg-transparent outline-none text-sm"
                               />
                             </div>
+                          </div>
 
-                            {/* Seats */}
-                            <div className="md:col-span-1">
-                              <label className="flex items-center gap-2 text-sm font-semibold text-[#0a1628] mb-2">
-                                <FaUsers className="text-[#d4af37]" />
-                                Seats
-                              </label>
+                          {/* Pax */}
+                          <div className="md:col-span-1">
+                            <div className="search-field bg-white">
+                              <label className="text-xs font-bold text-gray-400 uppercase">Pax</label>
                               <select
                                 value={segment.passengers}
                                 onChange={(e) => handleSegmentChange(index, "passengers", e.target.value)}
-                                className="w-full px-3 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#d4af37] transition-all text-[#0a1628] font-medium"
+                                className="w-full font-semibold text-[#1a1a1a] bg-transparent outline-none"
                               >
                                 {[...Array(32).keys()].map((num) => (
                                   <option key={num + 1} value={num + 1}>{num + 1}</option>
                                 ))}
-                                <option value="33+">33+</option>
                               </select>
                             </div>
-
-                            {/* Remove Button */}
-                            {segments.length > 1 && (
-                              <div className="md:col-span-1 flex justify-center">
-                                <motion.button
-                                  onClick={() => handleRemoveCity(index)}
-                                  whileHover={{ scale: 1.1 }}
-                                  whileTap={{ scale: 0.95 }}
-                                  className="w-10 h-10 bg-red-500 hover:bg-red-600 text-white rounded-xl flex items-center justify-center shadow-lg transition-colors"
-                                >
-                                  <FaTrash className="text-sm" />
-                                </motion.button>
-                              </div>
-                            )}
                           </div>
 
-                          {/* Add Flight Button - Only on last segment */}
-                          {index === segments.length - 1 && (
-                            <motion.button
-                              onClick={handleAddCity}
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                              className="mt-4 w-full py-3 border-2 border-dashed border-[#d4af37] rounded-xl text-[#d4af37] font-semibold hover:bg-[#d4af37]/10 transition-colors flex items-center justify-center gap-2"
-                            >
-                              <FaPlus />
-                              Add Another Flight
-                            </motion.button>
+                          {/* Remove Button */}
+                          {segments.length > 1 && (
+                            <div className="md:col-span-1 flex justify-center">
+                              <button
+                                onClick={() => handleRemoveCity(index)}
+                                className="w-10 h-10 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center transition-colors"
+                              >
+                                <FaTrash className="text-sm" />
+                              </button>
+                            </div>
                           )}
-                        </motion.div>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
+                        </div>
 
-              {/* User Info Fields - Only if not verified */}
-              {!isVerified && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200"
-                >
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-                    {/* Email */}
-                    <div>
-                      <label className="text-xs font-semibold text-gray-600 mb-1 block">Email*</label>
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="your@email.com"
-                        className={`w-full px-3 py-2.5 bg-white border rounded-lg focus:outline-none focus:border-[#d4af37] transition-all text-sm ${
-                          emailError ? "border-red-400" : "border-gray-200"
-                        }`}
-                      />
-                    </div>
-
-                    {/* Phone */}
-                    <div>
-                      <label className="text-xs font-semibold text-gray-600 mb-1 block">Phone*</label>
-                      <PhoneInput
-                        value={phone}
-                        onChange={setPhone}
-                        defaultCountry="IN"
-                        international
-                        countryCallingCodeEditable={false}
-                        className={`phone-input-compact w-full px-3 py-2.5 bg-white border rounded-lg focus:outline-none text-sm ${
-                          phoneError ? "border-red-400" : "border-gray-200"
-                        }`}
-                      />
-                    </div>
-
-                    {/* Name */}
-                    <div>
-                      <label className="text-xs font-semibold text-gray-600 mb-1 block">Name*</label>
-                      <input
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="Your Name"
-                        className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-[#d4af37] transition-all text-sm"
-                      />
-                    </div>
-
-                    {/* Terms */}
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id="policyCheck"
-                        checked={agreedToPolicy}
-                        onChange={(e) => setAgreedToPolicy(e.target.checked)}
-                        className="w-4 h-4 rounded border-gray-300 text-[#d4af37] focus:ring-[#d4af37]"
-                      />
-                      <label htmlFor="policyCheck" className="text-xs text-gray-600 cursor-pointer">
-                        I agree to{" "}
-                        <Link href="/termsAndCondition" className="text-[#d4af37] font-semibold hover:underline">
-                          T&C
-                        </Link>
-                      </label>
-                    </div>
+                        {/* Add Flight Button - Only on last segment */}
+                        {index === segments.length - 1 && (
+                          <button
+                            onClick={handleAddCity}
+                            className="mt-4 w-full py-3 border-2 border-dashed border-[#008cff] rounded-lg text-[#008cff] font-semibold hover:bg-[#e8f4ff] transition-colors flex items-center justify-center gap-2"
+                          >
+                            <FaPlus />
+                            Add Another Flight
+                          </button>
+                        )}
+                      </motion.div>
+                    ))}
                   </div>
-                </motion.div>
+                )}
+              </>
+            )}
+
+            {/* User Info Fields - Only if not verified */}
+            {!isVerified && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-6 pt-6 border-t border-gray-200"
+              >
+                <p className="text-sm font-semibold text-gray-600 mb-4">Enter your details to continue</p>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  {/* Name */}
+                  <div>
+                    <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Name *</label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Your Name"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#008cff] transition-colors"
+                    />
+                  </div>
+
+                  {/* Email */}
+                  <div>
+                    <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Email *</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="your@email.com"
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none transition-colors ${
+                        emailError ? "border-red-400 focus:border-red-400" : "border-gray-200 focus:border-[#008cff]"
+                      }`}
+                    />
+                    {emailError && <p className="text-red-500 text-xs mt-1">{emailError}</p>}
+                  </div>
+
+                  {/* Phone */}
+                  <div>
+                    <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Phone *</label>
+                    <PhoneInput
+                      value={phone}
+                      onChange={setPhone}
+                      defaultCountry="IN"
+                      international
+                      countryCallingCodeEditable={false}
+                      className={`phone-input-mmt w-full px-4 py-3 border rounded-lg focus:outline-none ${
+                        phoneError ? "border-red-400" : "border-gray-200"
+                      }`}
+                    />
+                    {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
+                  </div>
+
+                  {/* Terms */}
+                  <div className="flex items-center gap-3 pt-6">
+                    <input
+                      type="checkbox"
+                      id="policyCheck"
+                      checked={agreedToPolicy}
+                      onChange={(e) => setAgreedToPolicy(e.target.checked)}
+                      className="w-5 h-5 rounded border-gray-300 text-[#008cff] focus:ring-[#008cff] cursor-pointer"
+                    />
+                    <label htmlFor="policyCheck" className="text-sm text-gray-600 cursor-pointer">
+                      I agree to{" "}
+                      <Link href="/termsAndCondition" className="text-[#008cff] font-semibold hover:underline">
+                        T&C
+                      </Link>
+                    </label>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Search Button */}
+            <div className="mt-6 flex justify-center items-center gap-4">
+              {showTroubleSigningIn && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLoginModalOpen(true);
+                    setShowTroubleSigningIn(false);
+                  }}
+                  className="text-[#008cff] hover:underline text-sm font-medium"
+                >
+                  Trouble signing in?
+                </button>
               )}
 
-              {/* Search Button */}
-              <div className="mt-4 flex justify-end items-center gap-4">
-                {showTroubleSigningIn && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsLoginModalOpen(true);
-                      setShowTroubleSigningIn(false);
-                    }}
-                    className="text-[#d4af37] hover:text-[#b87333] underline text-sm font-medium transition-colors"
-                  >
-                    Trouble signing in?
-                  </button>
+              <button
+                onClick={handleSearch}
+                disabled={isLoading}
+                className="btn-orange flex items-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Searching...
+                  </>
+                ) : (
+                  <>
+                    <FaSearch />
+                    SEARCH
+                  </>
                 )}
-
-                <motion.button
-                  onClick={handleSearch}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  disabled={isLoading}
-                  className="relative px-8 py-3 bg-gradient-to-r from-[#d4af37] to-[#f4d03f] text-[#0a1628] rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed overflow-hidden group"
-                >
-                  {isLoading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-[#0a1628] border-t-transparent rounded-full animate-spin" />
-                      Searching...
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <FaSearch className="text-sm" />
-                      Search
-                    </div>
-                  )}
-                </motion.button>
-              </div>
+              </button>
             </div>
           </div>
         </motion.div>
@@ -1187,20 +1164,6 @@ export const SearchBar = () => {
         onClose={() => setMapModal({ open: false, segIdx: null, field: null })}
         onSave={(coords, address) => handleSaveCoords(coords, address, mapModal.segIdx, mapModal.field)}
       />
-
-      {/* Custom Phone Input Styles */}
-      <style jsx global>{`
-        .phone-input-compact .PhoneInputInput {
-          border: none !important;
-          outline: none !important;
-          background: transparent !important;
-          font-size: 0.875rem;
-          width: 100%;
-        }
-        .phone-input-compact .PhoneInputCountry {
-          margin-right: 0.25rem;
-        }
-      `}</style>
     </>
   );
 };

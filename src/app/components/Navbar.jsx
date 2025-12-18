@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { FaWhatsapp, FaPhoneAlt, FaBars, FaTimes, FaPlane, FaUser, FaSignOutAlt, FaHistory, FaChevronDown, FaGlobe } from "react-icons/fa";
+import { FaWhatsapp, FaPhoneAlt, FaBars, FaTimes, FaPlane, FaUser, FaSignOutAlt, FaHistory, FaChevronDown, FaGlobe, FaHelicopter, FaAmbulance } from "react-icons/fa";
+import { MdFlight, MdLocalOffer } from "react-icons/md";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import LoginModal from "./LoginModal";
@@ -135,93 +136,125 @@ const NavBar = () => {
   };
 
   const navLinks = [
-    { name: 'HOME', route: '/' },
-    { name: 'ABOUT', route: '/aboutUs' },
-    { name: 'GET IN TOUCH', route: '/getInTouch' },
-    { name: 'TERMS & CONDITIONS', route: '/termsAndCondition' },
+    { name: 'Home', route: '/' },
+    { name: 'About Us', route: '/aboutUs' },
+    { name: 'Contact', route: '/getInTouch' },
+    { name: 'T&C', route: '/termsAndCondition' },
   ];
 
   return (
     <div className="z-50 relative w-full">
-      {/* Top Announcement Bar */}
-      <div className="bg-[#0a1628] text-white overflow-hidden">
-        <div className="flex items-center justify-center py-2 px-4">
-          <div className="animate-marquee whitespace-nowrap">
-            <span className="inline-flex items-center gap-2 text-sm">
-              <span className="text-[#d4af37]">✈️</span>
-              2025 Updates in Charter Flights Aviation: Embarking on global journeys 24/7. 
-              Introducing secure and fastest private jets, business jets, and helicopters.
-              <span className="text-[#d4af37] ml-4">|</span>
-              <span className="ml-4">📞 24/7 Support Available</span>
-              <span className="text-[#d4af37] ml-4">|</span>
-              <span className="ml-4">🌍 Worldwide Coverage</span>
-            </span>
+      {/* Top Bar - MMT Style */}
+      <div className="bg-[#051423] text-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-between py-2 text-sm">
+            {/* Left - Offers */}
+            <div className="hidden md:flex items-center gap-6">
+              <span className="flex items-center gap-1 text-xs text-white/80">
+                <MdLocalOffer className="text-[#ff6b00]" />
+                Exclusive Deals Available!
+              </span>
+            </div>
+
+            {/* Right - Contact & Country */}
+            <div className="flex items-center gap-4 ml-auto">
+              {/* Country Selector */}
+              <div className="hidden md:flex items-center gap-1 text-xs">
+                <FaGlobe className="text-white/70" />
+                <select
+                  value={selectedCountry}
+                  onChange={(e) => {
+                    const country = e.target.value;
+                    setSelectedCountry(country);
+                    sessionStorage.setItem("country_name", country);
+                    window.dispatchEvent(new Event("countryNameChanged"));
+                    if (country !== "worldwide") {
+                      window.open(`/${country.toLowerCase()}`, "_blank");
+                    }
+                  }}
+                  className="bg-transparent text-white/90 text-xs focus:outline-none cursor-pointer"
+                >
+                  <option value="worldwide" className="text-gray-800">Worldwide</option>
+                  {countries.map((c) => (
+                    <option key={c._id} value={c.country} className="text-gray-800">
+                      {c.country.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ")}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Contact Numbers */}
+              {countryPhones.slice(0, 2).map((num, idx) => (
+                <a
+                  key={`${num}-${idx}`}
+                  href={idx === 0 ? `tel:${num}` : `https://wa.me/${num.replace(/^\+/, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hidden sm:flex items-center gap-1 text-xs text-white/80 hover:text-white transition-colors"
+                >
+                  {idx === 0 ? <FaPhoneAlt className="text-[10px]" /> : <FaWhatsapp className="text-green-400" />}
+                  <span>{num}</span>
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main Navigation */}
-      <nav className="bg-white shadow-lg border-b-4 border-[#d4af37]">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
+      <nav className="bg-white shadow-md">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-between py-3">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-12 h-12 bg-gradient-to-r from-[#0a1628] to-[#1e4976] rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-                <FaPlane className="text-[#d4af37] text-xl" />
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="w-10 h-10 bg-[#008cff] rounded-lg flex items-center justify-center">
+                <FaPlane className="text-white text-lg" />
               </div>
-              <div className="hidden sm:block">
-                <h1 className="text-lg font-bold text-[#0a1628] leading-tight">Charter Flights</h1>
-                <p className="text-xs text-gray-500">Aviation®</p>
+              <div>
+                <h1 className="text-lg font-bold text-[#1a1a1a] leading-tight">Charter<span className="text-[#008cff]">Flights</span></h1>
+                <p className="text-[10px] text-gray-500 -mt-1">Aviation®</p>
               </div>
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center gap-6">
-              {/* Country Selector */}
-              <div className="relative">
-                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer hover:border-[#d4af37] transition-colors">
-                  <FaGlobe className="text-[#d4af37]" />
-                  <select
-                    value={selectedCountry}
-                    onChange={(e) => {
-                      const country = e.target.value;
-                      setSelectedCountry(country);
-                      sessionStorage.setItem("country_name", country);
-                      window.dispatchEvent(new Event("countryNameChanged"));
-                      if (country !== "worldwide") {
-                        window.open(`/${country.toLowerCase()}`, "_blank");
-                      }
-                    }}
-                    className="bg-transparent text-sm font-medium text-[#0a1628] focus:outline-none cursor-pointer"
-                  >
-                    <option value="worldwide">Worldwide</option>
-                    {countries.map((c) => (
-                      <option key={c._id} value={c.country}>
-                        {c.country.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ")}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+            <div className="hidden lg:flex items-center gap-8">
+              {navLinks.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.route}
+                  className="text-sm font-semibold text-gray-600 hover:text-[#008cff] transition-colors"
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </div>
 
-              {/* Contact Numbers */}
-              <div className="flex items-center gap-4">
-                {countryPhones.map((num, idx) => (
-                  <a
-                    key={`${num}-${idx}`}
-                    href={idx === 0 ? `tel:${num}` : `https://wa.me/${num.replace(/^\+/, "")}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-300 ${
-                      idx === 0 
-                        ? "bg-[#0a1628] text-white hover:bg-[#1e4976]" 
-                        : "bg-green-500 text-white hover:bg-green-600"
-                    }`}
-                  >
-                    {idx === 0 ? <FaPhoneAlt /> : <FaWhatsapp />}
-                    <span className="hidden xl:inline">{num}</span>
-                  </a>
-                ))}
+            {/* Right Section */}
+            <div className="hidden lg:flex items-center gap-4">
+              {/* Services Dropdown */}
+              <div className="relative group">
+                <button className="flex items-center gap-1 text-sm font-semibold text-gray-600 hover:text-[#008cff] transition-colors py-2">
+                  Services <FaChevronDown className="text-[10px]" />
+                </button>
+                <div className="absolute top-full right-0 mt-1 w-56 bg-white rounded-lg shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <div className="p-2">
+                    {[
+                      { icon: <MdFlight className="text-[#008cff]" />, label: "Private Jets", desc: "Luxury air travel" },
+                      { icon: <FaHelicopter className="text-[#ff6b00]" />, label: "Helicopters", desc: "Point to point" },
+                      { icon: <FaAmbulance className="text-[#eb2026]" />, label: "Air Ambulance", desc: "Emergency services" },
+                    ].map((service, idx) => (
+                      <div key={idx} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                        <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-lg">
+                          {service.icon}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-[#1a1a1a]">{service.label}</p>
+                          <p className="text-xs text-gray-500">{service.desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {/* User Section */}
@@ -230,38 +263,38 @@ const NavBar = () => {
                   <>
                     <button
                       onClick={() => setIsDropdownOpen((prev) => !prev)}
-                      className="flex items-center gap-3 px-4 py-2 rounded-xl bg-gradient-to-r from-[#0a1628] to-[#1e4976] text-white hover:shadow-lg transition-all"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
                     >
-                      <div className="w-8 h-8 bg-[#d4af37] rounded-full flex items-center justify-center font-bold">
+                      <div className="w-8 h-8 bg-[#008cff] rounded-full flex items-center justify-center text-white font-bold text-sm">
                         {user.email?.charAt(0).toUpperCase()}
                       </div>
-                      <span className="hidden xl:inline text-sm font-medium max-w-[120px] truncate">
-                        {user.email}
+                      <span className="text-sm font-medium text-gray-700 max-w-[100px] truncate hidden xl:inline">
+                        {user.email?.split("@")[0]}
                       </span>
-                      <FaChevronDown className={`text-xs transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
+                      <FaChevronDown className={`text-[10px] text-gray-400 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
                     </button>
 
                     {isDropdownOpen && (
-                      <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-50 overflow-hidden">
-                        <div className="px-4 py-3 bg-gradient-to-r from-[#0a1628] to-[#1e4976] text-white mb-2">
-                          <p className="text-xs text-white/70">Signed in as</p>
-                          <p className="font-medium text-sm truncate">{user.email}</p>
+                      <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-slideDown">
+                        <div className="px-4 py-3 border-b border-gray-100">
+                          <p className="text-xs text-gray-400">Signed in as</p>
+                          <p className="font-semibold text-sm text-[#1a1a1a] truncate">{user.email}</p>
                         </div>
                         <Link href="/profile" className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
-                          <FaUser className="text-[#d4af37]" />
-                          <span className="font-medium text-gray-700">Profile</span>
+                          <FaUser className="text-[#008cff]" />
+                          <span className="font-medium text-gray-700 text-sm">My Profile</span>
                         </Link>
                         <Link href="/travelHistory" className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
-                          <FaHistory className="text-[#d4af37]" />
-                          <span className="font-medium text-gray-700">Travel History</span>
+                          <FaHistory className="text-[#008cff]" />
+                          <span className="font-medium text-gray-700 text-sm">My Trips</span>
                         </Link>
                         <div className="border-t border-gray-100 mt-2 pt-2">
                           <button
                             onClick={handleLogout}
-                            className="flex items-center gap-3 px-4 py-3 w-full text-left hover:bg-red-50 transition-colors text-red-600"
+                            className="flex items-center gap-3 px-4 py-3 w-full text-left hover:bg-red-50 transition-colors text-red-500"
                           >
                             <FaSignOutAlt />
-                            <span className="font-medium">Logout</span>
+                            <span className="font-medium text-sm">Logout</span>
                           </button>
                         </div>
                       </div>
@@ -270,7 +303,7 @@ const NavBar = () => {
                 ) : (
                   <button
                     onClick={() => setIsLoginModalOpen(true)}
-                    className="px-6 py-2.5 rounded-xl font-bold bg-gradient-to-r from-[#d4af37] to-[#f4d03f] text-[#0a1628] hover:shadow-lg transition-all duration-300"
+                    className="px-5 py-2.5 rounded-lg font-bold text-sm bg-gradient-to-r from-[#008cff] to-[#0057a8] text-white hover:shadow-lg transition-all"
                   >
                     Login
                   </button>
@@ -281,25 +314,11 @@ const NavBar = () => {
             {/* Mobile Menu Button */}
             <button
               aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
-              className="lg:hidden p-2 rounded-xl bg-gray-100 text-[#0a1628] hover:bg-[#d4af37] hover:text-white transition-colors"
+              className="lg:hidden p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-[#008cff] hover:text-white transition-colors"
               onClick={() => setIsMobileMenuOpen((o) => !o)}
             >
               {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
             </button>
-          </div>
-
-          {/* Desktop Nav Links */}
-          <div className="hidden lg:flex items-center justify-center gap-8 mt-4 pt-4 border-t border-gray-100">
-            {navLinks.map((item, index) => (
-              <Link
-                key={item.name}
-                href={item.route}
-                className="relative text-sm font-semibold text-gray-600 hover:text-[#0a1628] transition-colors group py-2"
-              >
-                {item.name}
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#d4af37] group-hover:w-full transition-all duration-300" />
-              </Link>
-            ))}
           </div>
         </div>
       </nav>
@@ -308,17 +327,17 @@ const NavBar = () => {
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/50" onClick={() => setIsMobileMenuOpen(false)} />
-          <div className="absolute right-0 top-0 h-full w-80 max-w-[85%] bg-white shadow-2xl overflow-y-auto">
+          <div className="absolute right-0 top-0 h-full w-80 max-w-[85%] bg-white shadow-2xl overflow-y-auto animate-slideDown">
             {/* Mobile Menu Header */}
-            <div className="bg-gradient-to-r from-[#0a1628] to-[#1e4976] p-6">
+            <div className="bg-gradient-to-r from-[#051423] to-[#15457b] p-5">
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <FaPlane className="text-[#d4af37] text-2xl" />
-                  <span className="text-white font-bold">Charter Flights</span>
+                <div className="flex items-center gap-2">
+                  <FaPlane className="text-white text-xl" />
+                  <span className="text-white font-bold">CharterFlights</span>
                 </div>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 rounded-xl bg-white/10 text-white"
+                  className="p-2 rounded-lg bg-white/10 text-white"
                 >
                   <FaTimes />
                 </button>
@@ -326,7 +345,7 @@ const NavBar = () => {
               
               {user ? (
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#d4af37] rounded-full flex items-center justify-center font-bold text-[#0a1628]">
+                  <div className="w-10 h-10 bg-[#008cff] rounded-full flex items-center justify-center font-bold text-white">
                     {user.email?.charAt(0).toUpperCase()}
                   </div>
                   <div>
@@ -340,7 +359,7 @@ const NavBar = () => {
                     setIsLoginModalOpen(true);
                     setIsMobileMenuOpen(false);
                   }}
-                  className="w-full py-3 rounded-xl font-bold bg-[#d4af37] text-[#0a1628]"
+                  className="w-full py-3 rounded-lg font-bold bg-[#ff6b00] text-white"
                 >
                   Login / Sign Up
                 </button>
@@ -348,29 +367,29 @@ const NavBar = () => {
             </div>
 
             {/* Mobile Menu Content */}
-            <div className="p-6 space-y-6">
+            <div className="p-5 space-y-6">
               {/* User Links (if logged in) */}
               {user && (
                 <div className="space-y-2 pb-4 border-b border-gray-100">
                   <Link
                     href="/profile"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-gray-50"
+                    className="flex items-center gap-3 p-3 rounded-lg bg-gray-50"
                   >
-                    <FaUser className="text-[#d4af37]" />
-                    <span className="font-medium">Profile</span>
+                    <FaUser className="text-[#008cff]" />
+                    <span className="font-medium">My Profile</span>
                   </Link>
                   <Link
                     href="/travelHistory"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-gray-50"
+                    className="flex items-center gap-3 p-3 rounded-lg bg-gray-50"
                   >
-                    <FaHistory className="text-[#d4af37]" />
-                    <span className="font-medium">Travel History</span>
+                    <FaHistory className="text-[#008cff]" />
+                    <span className="font-medium">My Trips</span>
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-red-50 text-red-600 w-full"
+                    className="flex items-center gap-3 p-3 rounded-lg bg-red-50 text-red-500 w-full"
                   >
                     <FaSignOutAlt />
                     <span className="font-medium">Logout</span>
@@ -380,7 +399,7 @@ const NavBar = () => {
 
               {/* Country Selector */}
               <div>
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Select Region</label>
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Select Region</label>
                 <select
                   value={selectedCountry}
                   onChange={(e) => {
@@ -392,7 +411,7 @@ const NavBar = () => {
                       window.open(`/${country.toLowerCase()}`, "_blank");
                     }
                   }}
-                  className="w-full mt-2 p-3 rounded-xl border-2 border-gray-200 focus:border-[#d4af37] focus:outline-none"
+                  className="w-full mt-2 p-3 rounded-lg border border-gray-200 focus:border-[#008cff] focus:outline-none"
                 >
                   <option value="worldwide">Worldwide</option>
                   {countries.map((c) => (
@@ -404,16 +423,16 @@ const NavBar = () => {
               </div>
 
               {/* Contact */}
-              <div className="space-y-3">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Contact Us</label>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Contact Us</label>
                 {countryPhones.map((num, idx) => (
                   <a
                     key={`${num}-${idx}`}
                     href={idx === 0 ? `tel:${num}` : `https://wa.me/${num.replace(/^\+/, "")}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`flex items-center gap-3 p-3 rounded-xl font-medium ${
-                      idx === 0 ? "bg-[#0a1628] text-white" : "bg-green-500 text-white"
+                    className={`flex items-center gap-3 p-3 rounded-lg font-medium ${
+                      idx === 0 ? "bg-[#008cff] text-white" : "bg-green-500 text-white"
                     }`}
                   >
                     {idx === 0 ? <FaPhoneAlt /> : <FaWhatsapp />}
@@ -423,13 +442,13 @@ const NavBar = () => {
               </div>
 
               {/* Navigation Links */}
-              <div className="space-y-2 pt-4 border-t border-gray-100">
+              <div className="space-y-1 pt-4 border-t border-gray-100">
                 {navLinks.map((item) => (
                   <Link
                     key={item.name}
                     href={item.route}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="block p-3 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+                    className="block p-3 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     {item.name}
                   </Link>

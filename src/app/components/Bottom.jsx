@@ -5,9 +5,8 @@ import YouTubeIcon from "@mui/icons-material/YouTube";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import PinterestIcon from "@mui/icons-material/Pinterest";
 import InstagramIcon from "@mui/icons-material/Instagram";
-import GoogleIcon from "@mui/icons-material/Google";
 import Link from "next/link";
-import { FaPlane, FaPhone, FaEnvelope, FaMapMarkerAlt, FaArrowRight } from "react-icons/fa";
+import { FaPlane, FaPhone, FaEnvelope, FaMapMarkerAlt, FaArrowRight, FaWhatsapp, FaShieldAlt, FaHeadset, FaGlobe } from "react-icons/fa";
 
 export const Bottom = () => {
   const [countries, setCountries] = useState([]);
@@ -70,227 +69,210 @@ export const Bottom = () => {
   }, [showDropdown]);
 
   const socialLinks = [
-    { icon: FacebookIcon, href: "https://www.facebook.com/charterflight/", label: "Facebook" },
-    { icon: YouTubeIcon, href: "https://www.youtube.com/@CharterflightsAviation/featured", label: "YouTube" },
-    { icon: LinkedInIcon, href: "https://www.linkedin.com/company/charter-flights-aviation/", label: "LinkedIn" },
-    { icon: InstagramIcon, href: "https://www.instagram.com/charterflightsaviation/", label: "Instagram" },
-    { icon: PinterestIcon, href: "https://in.pinterest.com/charterflightsa/", label: "Pinterest" },
+    { icon: FacebookIcon, href: "https://www.facebook.com/charterflight/", label: "Facebook", color: "#1877f2" },
+    { icon: YouTubeIcon, href: "https://www.youtube.com/@CharterflightsAviation/featured", label: "YouTube", color: "#ff0000" },
+    { icon: LinkedInIcon, href: "https://www.linkedin.com/company/charter-flights-aviation/", label: "LinkedIn", color: "#0077b5" },
+    { icon: InstagramIcon, href: "https://www.instagram.com/charterflightsaviation/", label: "Instagram", color: "#e4405f" },
+    { icon: PinterestIcon, href: "https://in.pinterest.com/charterflightsa/", label: "Pinterest", color: "#bd081c" },
+  ];
+
+  const quickLinks = [
+    { name: "Private Jets", url: "#" },
+    { name: "Helicopters", url: "#" },
+    { name: "Air Ambulance", url: "#" },
+    { name: "Charter Flights", url: "#" },
+    { name: "Empty Leg Flights", url: "#" },
+  ];
+
+  const companyLinks = [
+    { name: "About Us", url: "/aboutUs" },
+    { name: "Contact Us", url: "/getInTouch" },
+    { name: "Terms & Conditions", url: "/termsAndCondition" },
+    { name: "Privacy Policy", url: "#" },
+    { name: "Careers", url: "#" },
   ];
 
   return (
-    <footer className="relative bg-[#0a1628] text-white overflow-hidden">
-      {/* Top Gradient Line */}
-      <div className="h-1 bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#d4af37]" />
-
-      {/* Background Decorations */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#d4af37]/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#1e4976]/20 rounded-full blur-3xl" />
-
-      <div className="relative max-w-7xl mx-auto px-6 py-16">
-        {/* Top Section - Logo & Newsletter */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 pb-12 border-b border-white/10">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-r from-[#d4af37] to-[#f4d03f] flex items-center justify-center">
-              <FaPlane className="text-[#0a1628] text-2xl" />
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold">Charter Flights Aviation®</h3>
-              <p className="text-white/60 text-sm">Your Ultimate Private Jet Solution</p>
-            </div>
-          </div>
-
-          {/* Newsletter */}
-          <div className="w-full lg:w-auto">
-            <p className="text-white/80 mb-3 text-sm">Subscribe for exclusive offers & updates</p>
-            <div className="flex gap-2">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 lg:w-72 px-5 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:border-[#d4af37] transition-colors"
-              />
-              <button className="px-6 py-3 bg-gradient-to-r from-[#d4af37] to-[#f4d03f] text-[#0a1628] font-bold rounded-xl hover:shadow-lg hover:shadow-[#d4af37]/30 transition-all">
-                Subscribe
-              </button>
-            </div>
+    <footer className="bg-[#051423] text-white">
+      {/* Trust Banner */}
+      <div className="bg-[#0a2540] border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {[
+              { icon: <FaPlane className="text-[#008cff]" />, title: "500+ Aircraft", desc: "Worldwide fleet" },
+              { icon: <FaShieldAlt className="text-[#4caf50]" />, title: "100% Safe", desc: "Certified operations" },
+              { icon: <FaHeadset className="text-[#ff6b00]" />, title: "24/7 Support", desc: "Always available" },
+              { icon: <FaGlobe className="text-[#9c27b0]" />, title: "50+ Countries", desc: "Global coverage" },
+            ].map((item, idx) => (
+              <div key={idx} className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center text-xl">
+                  {item.icon}
+                </div>
+                <div>
+                  <p className="font-bold text-sm">{item.title}</p>
+                  <p className="text-xs text-white/60">{item.desc}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
+      </div>
 
-        {/* Main Footer Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 py-12">
+      <div className="max-w-7xl mx-auto px-4 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Column 1 - About */}
-          <div>
-            <h4 className="text-lg font-bold mb-6 flex items-center gap-2">
-              <span className="w-8 h-0.5 bg-[#d4af37]" />
-              About Us
-            </h4>
-            <p className="text-white/70 text-sm leading-relaxed mb-6">
+          <div className="lg:col-span-2">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-10 h-10 bg-[#008cff] rounded-lg flex items-center justify-center">
+                <FaPlane className="text-white text-lg" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold">Charter<span className="text-[#008cff]">Flights</span></h3>
+                <p className="text-[10px] text-white/50">Aviation®</p>
+              </div>
+            </div>
+            <p className="text-sm text-white/70 leading-relaxed mb-6 max-w-sm">
               Charter Flights Aviation® (CFA) is a global leader in private jet charters, 
-              business jets, luxury air travel, helicopter services, and air ambulance services. 
-              Experience premium aviation with unmatched comfort and safety.
+              business jets, luxury air travel, helicopter services, and air ambulance services.
             </p>
             
             {/* Country Selector */}
-            <div className="relative" ref={selectRef}>
-              <label className="text-xs text-[#d4af37] font-semibold mb-2 block">
-                Select Your Region
+            <div className="mb-6" ref={selectRef}>
+              <label className="text-xs text-white/50 font-semibold mb-2 block uppercase tracking-wider">
+                Select Region
               </label>
               <select
                 value={selectedCountry}
                 onChange={(e) => setSelectedCountry(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white focus:outline-none focus:border-[#d4af37] transition-colors appearance-none cursor-pointer"
+                className="w-full max-w-xs px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:border-[#008cff] transition-colors text-sm"
               >
-                <option value="Worldwide" className="bg-[#0a1628]">Worldwide</option>
+                <option value="Worldwide" className="bg-[#051423]">Worldwide</option>
                 {countries.map((c) => (
-                  <option key={c._id} value={c.country} className="bg-[#0a1628]">
-                    {c.country
-                      .split("-")
-                      .map((w) => w[0].toUpperCase() + w.slice(1))
-                      .join(" ")}
+                  <option key={c._id} value={c.country} className="bg-[#051423]">
+                    {c.country.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ")}
                   </option>
                 ))}
               </select>
             </div>
+
+            {/* Social Icons */}
+            <div className="flex gap-2">
+              {socialLinks.map((social, idx) => (
+                <Link
+                  key={idx}
+                  href={social.href}
+                  target="_blank"
+                  className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                  aria-label={social.label}
+                  style={{ '--hover-color': social.color }}
+                >
+                  <social.icon fontSize="small" />
+                </Link>
+              ))}
+            </div>
           </div>
 
-          {/* Column 2 - Quick Links */}
+          {/* Column 2 - Services */}
           <div>
-            <h4 className="text-lg font-bold mb-6 flex items-center gap-2">
-              <span className="w-8 h-0.5 bg-[#d4af37]" />
-              Quick Links
-            </h4>
-            <ul className="space-y-3">
-              {(footerLinks.length > 0
-                ? footerLinks.map((link) => ({ name: link.name, url: link.url }))
-                : [
-                    { name: "Private Jets", url: "#" },
-                    { name: "Helicopters", url: "#" },
-                    { name: "Air Ambulance", url: "#" },
-                    { name: "Charter Flights", url: "#" },
-                    { name: "Empty Leg Flights", url: "#" },
-                    { name: "About Us", url: "/aboutUs" },
-                  ]
-              ).map((link, idx) => (
+            <h4 className="text-sm font-bold mb-4 uppercase tracking-wider">Services</h4>
+            <ul className="space-y-2">
+              {(footerLinks.length > 0 ? footerLinks.map((link) => ({ name: link.name, url: link.url })) : quickLinks)
+                .map((link, idx) => (
                 <li key={idx}>
                   <a
                     href={link.url}
                     target={link.url.startsWith("http") ? "_blank" : "_self"}
                     rel="noopener noreferrer"
-                    className="text-white/70 hover:text-[#d4af37] transition-colors flex items-center gap-2 group"
+                    className="text-sm text-white/70 hover:text-[#008cff] transition-colors"
                   >
-                    <FaArrowRight className="text-xs text-[#d4af37] opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <span>{link.name}</span>
+                    {link.name}
                   </a>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Column 3 - Contact */}
+          {/* Column 3 - Company */}
           <div>
-            <h4 className="text-lg font-bold mb-6 flex items-center gap-2">
-              <span className="w-8 h-0.5 bg-[#d4af37]" />
-              Contact Us
-            </h4>
-            <ul className="space-y-4">
-              <li className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
-                  <FaEnvelope className="text-[#d4af37]" />
-                </div>
-                <div>
-                  <p className="text-xs text-white/50 mb-1">Email Us</p>
-                  <a href="mailto:charterflights@charterflightsaviation.com" className="text-white/80 hover:text-[#d4af37] transition-colors text-sm">
-                    charterflights@charterflightsaviation.com
-                  </a>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
-                  <FaPhone className="text-[#d4af37]" />
-                </div>
-                <div>
-                  <p className="text-xs text-white/50 mb-1">24/7 Support</p>
-                  <p className="text-white/80 text-sm">Available Worldwide</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
-                  <FaMapMarkerAlt className="text-[#d4af37]" />
-                </div>
-                <div>
-                  <p className="text-xs text-white/50 mb-1">Headquarters</p>
-                  <p className="text-white/80 text-sm">Global Operations</p>
-                </div>
-              </li>
+            <h4 className="text-sm font-bold mb-4 uppercase tracking-wider">Company</h4>
+            <ul className="space-y-2">
+              {companyLinks.map((link, idx) => (
+                <li key={idx}>
+                  <Link
+                    href={link.url}
+                    className="text-sm text-white/70 hover:text-[#008cff] transition-colors"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Column 4 - Social & App */}
+          {/* Column 4 - Contact */}
           <div>
-            <h4 className="text-lg font-bold mb-6 flex items-center gap-2">
-              <span className="w-8 h-0.5 bg-[#d4af37]" />
-              Connect With Us
-            </h4>
-            
-            {/* Social Icons */}
-            <div className="flex gap-3 mb-8">
-              {socialLinks.map((social, idx) => (
-                <Link
-                  key={idx}
-                  href={social.href}
-                  target="_blank"
-                  className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center hover:bg-[#d4af37] hover:text-[#0a1628] transition-all duration-300 group"
-                  aria-label={social.label}
-                >
-                  <social.icon fontSize="small" className="group-hover:scale-110 transition-transform" />
-                </Link>
-              ))}
+            <h4 className="text-sm font-bold mb-4 uppercase tracking-wider">Contact</h4>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <FaEnvelope className="text-[#008cff] mt-1 flex-shrink-0" />
+                <div>
+                  <p className="text-xs text-white/50 mb-0.5">Email</p>
+                  <a href="mailto:charterflights@charterflightsaviation.com" className="text-sm text-white/80 hover:text-[#008cff] transition-colors break-all">
+                    charterflights@charterflightsaviation.com
+                  </a>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <FaPhone className="text-[#008cff] mt-1 flex-shrink-0" />
+                <div>
+                  <p className="text-xs text-white/50 mb-0.5">Phone</p>
+                  <p className="text-sm text-white/80">24/7 Support Available</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <FaWhatsapp className="text-green-400 mt-1 flex-shrink-0" />
+                <div>
+                  <p className="text-xs text-white/50 mb-0.5">WhatsApp</p>
+                  <p className="text-sm text-white/80">Chat with us anytime</p>
+                </div>
+              </div>
             </div>
 
-            {/* Payment Methods */}
-            <p className="text-xs text-white/50 mb-3">Accepted Payment Methods</p>
-            <div className="flex gap-3 mb-6">
-              {["Visa", "Mastercard", "Amex", "Discover"].map((card, idx) => (
-                <div key={idx} className="px-3 py-2 bg-white rounded-lg">
-                  <span className="text-xs font-bold text-[#0a1628]">{card}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* App Downloads */}
-            <div className="space-y-2">
-              <a href="#" className="flex items-center gap-3 px-4 py-3 bg-white/10 rounded-xl hover:bg-white/20 transition-colors">
-                <span className="text-2xl">🍎</span>
-                <div>
-                  <p className="text-xs text-white/50">Download on</p>
-                  <p className="font-semibold text-sm">App Store</p>
-                </div>
-              </a>
-              <a href="#" className="flex items-center gap-3 px-4 py-3 bg-white/10 rounded-xl hover:bg-white/20 transition-colors">
-                <span className="text-2xl">🤖</span>
-                <div>
-                  <p className="text-xs text-white/50">Get it on</p>
-                  <p className="font-semibold text-sm">Google Play</p>
-                </div>
-              </a>
+            {/* Newsletter */}
+            <div className="mt-6">
+              <p className="text-xs text-white/50 mb-2 uppercase tracking-wider">Newsletter</p>
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  placeholder="Your email"
+                  className="flex-1 px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/30 focus:outline-none focus:border-[#008cff] text-sm"
+                />
+                <button className="px-4 py-2 bg-[#008cff] text-white rounded-lg text-sm font-semibold hover:bg-[#0057a8] transition-colors">
+                  →
+                </button>
+              </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Bottom Bar */}
-        <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-white/50 text-sm text-center md:text-left">
-            © 2025 Charter Flights Aviation®. All rights reserved.
-          </p>
-          <div className="flex gap-6 text-sm">
-            <Link href="/termsAndCondition" className="text-white/50 hover:text-[#d4af37] transition-colors">
-              Terms & Conditions
-            </Link>
-            <Link href="#" className="text-white/50 hover:text-[#d4af37] transition-colors">
-              Privacy Policy
-            </Link>
-            <Link href="#" className="text-white/50 hover:text-[#d4af37] transition-colors">
-              Cookies
-            </Link>
+      {/* Bottom Bar */}
+      <div className="border-t border-white/10">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
+            <p className="text-white/50 text-center md:text-left">
+              © 2025 Charter Flights Aviation®. All rights reserved.
+            </p>
+            <div className="flex items-center gap-4">
+              <span className="text-white/50">Made with ❤️ for global travelers</span>
+              <div className="flex gap-3">
+                {["Visa", "MC", "Amex"].map((card, idx) => (
+                  <div key={idx} className="px-2 py-1 bg-white/10 rounded text-[10px] font-medium text-white/70">
+                    {card}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>

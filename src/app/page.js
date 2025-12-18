@@ -4,48 +4,21 @@ import NavBar from "./components/Navbar";
 import { SearchBar } from "./components/SearchListBarTest";
 import { Bottom } from "./components/Bottom";
 import CountryPage from "./components/CountryPage";
-import SkeletonLoader from "./components/SkeletalLoader";
-import { FaPlane, FaShieldAlt, FaClock, FaGlobe, FaStar, FaQuoteLeft } from "react-icons/fa";
-import { motion } from "framer-motion";
+import { FaPlane, FaShieldAlt, FaClock, FaGlobe, FaStar, FaHeadset, FaCheckCircle, FaPercent, FaArrowRight } from "react-icons/fa";
+import { MdFlightTakeoff, MdLocalOffer } from "react-icons/md";
 
 const Home = () => {
   const [apiData, setApiData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [countryName, setCountryName] = useState("WorldWide");
-  const [currentTime, setCurrentTime] = useState("");
-  const [greeting, setGreeting] = useState("");
   const [userName, setUserName] = useState("");
 
-  // Get user name and personalized greeting
   useEffect(() => {
-    const updateGreeting = () => {
-      const hour = new Date().getHours();
-      if (hour < 12) setGreeting("Good Morning");
-      else if (hour < 17) setGreeting("Good Afternoon");
-      else setGreeting("Good Evening");
-    };
-
-    const updateTime = () => {
-      setCurrentTime(
-        new Date().toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        })
-      );
-    };
-
-    // Check for logged in user
     const loginData = sessionStorage.getItem("loginData");
     if (loginData) {
       const parsed = JSON.parse(loginData);
       setUserName(parsed.name || parsed.email?.split("@")[0] || "");
     }
-
-    updateGreeting();
-    updateTime();
-    const interval = setInterval(updateTime, 60000);
-    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -80,10 +53,10 @@ const Home = () => {
 
   if (loading)
     return (
-      <div className="min-h-screen bg-[#0a1628] flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <div className="premium-loader mx-auto mb-4"></div>
-          <p className="text-[#d4af37] text-lg font-medium">Loading your journey...</p>
+          <p className="text-[#008cff] text-lg font-semibold">Loading flights...</p>
         </div>
       </div>
     );
@@ -92,211 +65,258 @@ const Home = () => {
 
   const heroData = apiData[0].hero;
 
-  const stats = [
-    { number: "500+", label: "Aircraft Fleet", icon: FaPlane },
-    { number: "50+", label: "Countries", icon: FaGlobe },
-    { number: "24/7", label: "Support", icon: FaClock },
-    { number: "100%", label: "Safety Record", icon: FaShieldAlt },
+  const offers = [
+    {
+      title: "CHARTER DEAL",
+      discount: "UP TO 20% OFF",
+      desc: "On Private Jet Bookings",
+      code: "JETFLY20",
+      bg: "from-[#051423] to-[#15457b]",
+      validTill: "31 Dec 2025"
+    },
+    {
+      title: "HELICOPTER",
+      discount: "FLAT ₹50,000 OFF",
+      desc: "On Heli Taxi Services",
+      code: "HELI50K",
+      bg: "from-[#ff6b00] to-[#ff8f00]",
+      validTill: "15 Jan 2026"
+    },
+    {
+      title: "AIR AMBULANCE",
+      discount: "PRIORITY BOOKING",
+      desc: "24/7 Emergency Service",
+      code: "EMERGENCY",
+      bg: "from-[#eb2026] to-[#ff4444]",
+      validTill: "Always"
+    },
+    {
+      title: "GROUP CHARTER",
+      discount: "15% OFF",
+      desc: "For 10+ Passengers",
+      code: "GROUP15",
+      bg: "from-[#2e7d32] to-[#4caf50]",
+      validTill: "28 Feb 2026"
+    }
+  ];
+
+  const popularDestinations = [
+    { name: "Dubai", image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400", flights: "500+ flights" },
+    { name: "Singapore", image: "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=400", flights: "320+ flights" },
+    { name: "London", image: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=400", flights: "450+ flights" },
+    { name: "New York", image: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=400", flights: "380+ flights" },
+    { name: "Paris", image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400", flights: "290+ flights" },
+    { name: "Tokyo", image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400", flights: "210+ flights" },
+  ];
+
+  const trustBadges = [
+    { icon: "✈️", title: "500+ Aircraft", desc: "Verified fleet worldwide", color: "bg-blue-50" },
+    { icon: "🛡️", title: "100% Safe", desc: "All safety certified", color: "bg-green-50" },
+    { icon: "⏰", title: "24/7 Support", desc: "Round the clock service", color: "bg-orange-50" },
+    { icon: "💰", title: "Best Prices", desc: "Price match guarantee", color: "bg-purple-50" },
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0a1628]">
+    <div className="flex flex-col min-h-screen bg-[#f4f4f4]">
       {/* Hero Section */}
-      <section className="relative min-h-screen overflow-hidden">
-        {/* Background Image with Overlay */}
+      <section className="hero-section relative">
+        <div className="hero-pattern" />
+        
+        {/* Background Image */}
         <div className="absolute inset-0">
           <img
             src={heroData.image}
             alt="Private charter plane"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover opacity-30"
           />
-          <div className="absolute inset-0 hero-gradient" />
-          
-          {/* Animated Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628] via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#051423]/95 to-[#15457b]/90" />
         </div>
 
-        {/* Floating Decorative Elements */}
-        <div className="absolute top-20 right-10 w-64 h-64 rounded-full bg-[#d4af37]/10 blur-3xl animate-float" />
-        <div className="absolute bottom-40 left-10 w-96 h-96 rounded-full bg-[#1e4976]/30 blur-3xl animate-float delay-300" />
-
-        {/* Content Container */}
-        <div className="relative z-10 container mx-auto px-6 pt-32 pb-20">
-          {/* Personalized Greeting */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-8"
-          >
-            <div className="inline-flex items-center gap-3 glass-card px-5 py-3 mb-6">
-              <span className="text-[#d4af37] text-sm font-medium">{currentTime}</span>
-              <span className="w-1 h-1 bg-[#d4af37] rounded-full" />
-              <span className="text-white/80 text-sm">
-                {greeting}{userName ? `, ${userName}` : ""}! ✨
+        <div className="relative z-10 container mx-auto px-4 pt-8 pb-32">
+          {/* Welcome Message */}
+          {userName && (
+            <div className="mb-6 animate-fadeIn">
+              <span className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-white text-sm">
+                <span>👋</span>
+                Welcome back, <span className="font-semibold">{userName}</span>!
               </span>
             </div>
-          </motion.div>
+          )}
 
-          {/* Main Hero Content */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="max-w-4xl"
-          >
-            {/* Tagline */}
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-px w-12 bg-gradient-to-r from-[#d4af37] to-transparent" />
-              <span className="text-[#d4af37] text-sm uppercase tracking-[0.3em] font-semibold">
-                Premium Aviation Services
-              </span>
-            </div>
-
-            {/* Main Title */}
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 leading-tight">
-              Private Jets in
+          {/* Hero Content */}
+          <div className="max-w-3xl animate-slideUp">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight">
+              Book Private Jets &
+              <br />
+              <span className="text-[#008cff]">Charter Flights</span>
             </h1>
-
-            {/* Animated Country Name */}
-            <div className="relative inline-block mb-8">
-              <h2 className="text-6xl md:text-7xl lg:text-8xl font-black tracking-tight">
-                <span className="gradient-text-gold capitalize">{countryName}</span>
-              </h2>
-              <div className="absolute -bottom-2 left-0 w-full h-1 bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-transparent rounded-full" />
-            </div>
-
-            {/* Subtitle */}
-            <p className="text-xl md:text-2xl text-white/70 font-light max-w-2xl mb-10 leading-relaxed">
-              Experience unparalleled luxury. Book private jets, helicopters & air ambulance services with world-class comfort.
+            <p className="text-xl text-white/80 mb-6">
+              {countryName !== "WorldWide" 
+                ? `Premium aviation services in ${countryName}. Private jets, helicopters & air ambulance.`
+                : "Luxury air travel worldwide. Private jets, helicopters & emergency air ambulance services."
+              }
             </p>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-wrap gap-4 mb-16">
-              <button className="btn-gold flex items-center gap-2 text-lg animate-pulse-glow">
-                <FaPlane className="text-sm" />
-                Book Now
-              </button>
-              <button className="px-8 py-3 rounded-full border-2 border-white/30 text-white font-semibold hover:bg-white/10 hover:border-[#d4af37] transition-all duration-300">
-                Explore Fleet
-              </button>
-            </div>
-          </motion.div>
-
-          {/* Stats Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-4xl"
-          >
-            {stats.map((stat, index) => (
-              <div
-                key={index}
-                className="stat-card group cursor-pointer"
-              >
-                <stat.icon className="text-[#d4af37] text-2xl mb-3 mx-auto group-hover:scale-110 transition-transform" />
-                <h3 className="text-3xl md:text-4xl font-bold text-white mb-1">{stat.number}</h3>
-                <p className="text-white/60 text-sm">{stat.label}</p>
+            {/* Quick Stats */}
+            <div className="flex flex-wrap gap-6 text-white/90">
+              <div className="flex items-center gap-2">
+                <FaCheckCircle className="text-[#4caf50]" />
+                <span className="text-sm">Instant Confirmation</span>
               </div>
-            ))}
-          </motion.div>
-        </div>
-
-        {/* Search Bar Section */}
-        <div className="relative z-20 -mt-10">
-          <SearchBar />
-        </div>
-
-        {/* Scroll Indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1, duration: 0.5 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
-        >
-          <span className="text-white/50 text-xs uppercase tracking-widest">Scroll to explore</span>
-          <div className="w-6 h-10 rounded-full border-2 border-white/30 flex justify-center pt-2">
-            <motion.div
-              animate={{ y: [0, 12, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              className="w-1.5 h-3 bg-[#d4af37] rounded-full"
-            />
+              <div className="flex items-center gap-2">
+                <FaCheckCircle className="text-[#4caf50]" />
+                <span className="text-sm">No Hidden Charges</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <FaCheckCircle className="text-[#4caf50]" />
+                <span className="text-sm">24/7 Customer Support</span>
+              </div>
+            </div>
           </div>
-        </motion.div>
+        </div>
       </section>
 
-      {/* Trust Badges Section */}
-      <section className="relative z-10 bg-gradient-to-b from-[#0a1628] to-white py-20">
-        <div className="container mx-auto px-6">
-          {/* Trust Banner */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="glass-card-dark p-8 md:p-12 mb-16"
-          >
-            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-              <div className="text-center md:text-left">
-                <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">
-                  Trusted by <span className="gradient-text-gold">10,000+</span> Travelers
-                </h3>
-                <p className="text-white/60">Join the elite who choose excellence in aviation</p>
-              </div>
-              
-              <div className="flex items-center gap-6">
-                <div className="flex -space-x-3">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div
-                      key={i}
-                      className="w-12 h-12 rounded-full bg-gradient-to-br from-[#d4af37] to-[#b87333] border-2 border-[#0a1628] flex items-center justify-center text-white font-bold"
-                    >
-                      {String.fromCharCode(64 + i)}
-                    </div>
-                  ))}
-                </div>
-                <div className="flex items-center gap-1">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <FaStar key={i} className="text-[#d4af37] text-lg" />
-                  ))}
-                  <span className="text-white ml-2 font-semibold">4.9/5</span>
-                </div>
+      {/* Search Widget */}
+      <div className="container mx-auto px-4">
+        <SearchBar />
+      </div>
+
+      {/* Offers Section */}
+      <section className="container mx-auto px-4 py-12">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="section-title flex items-center gap-2">
+              <MdLocalOffer className="text-[#ff6b00]" />
+              Exclusive Offers
+            </h2>
+            <p className="section-subtitle">Grab the best deals on charter flights</p>
+          </div>
+          <button className="text-[#008cff] font-semibold text-sm hover:underline flex items-center gap-1">
+            View All <FaArrowRight className="text-xs" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {offers.map((offer, index) => (
+            <div 
+              key={index}
+              className={`offer-card bg-gradient-to-br ${offer.bg} p-5 text-white hover-scale cursor-pointer`}
+            >
+              <span className="text-xs font-semibold bg-white/20 px-2 py-1 rounded">
+                {offer.title}
+              </span>
+              <h3 className="text-2xl font-bold mt-3 mb-1">{offer.discount}</h3>
+              <p className="text-white/80 text-sm mb-3">{offer.desc}</p>
+              <div className="flex items-center justify-between">
+                <span className="text-xs bg-white/20 px-2 py-1 rounded font-mono">
+                  {offer.code}
+                </span>
+                <span className="text-xs text-white/60">Valid till {offer.validTill}</span>
               </div>
             </div>
-          </motion.div>
+          ))}
+        </div>
+      </section>
 
-          {/* Quick Features */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Trust Badges */}
+      <section className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {trustBadges.map((badge, index) => (
+            <div key={index} className="trust-badge">
+              <div className={`icon ${badge.color}`}>
+                {badge.icon}
+              </div>
+              <div>
+                <h4 className="font-bold text-[#1a1a1a]">{badge.title}</h4>
+                <p className="text-xs text-[#9b9b9b]">{badge.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Popular Destinations */}
+      <section className="container mx-auto px-4 py-12">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="section-title">Popular Destinations</h2>
+            <p className="section-subtitle">Top cities for private charter flights</p>
+          </div>
+          <button className="text-[#008cff] font-semibold text-sm hover:underline flex items-center gap-1">
+            Explore All <FaArrowRight className="text-xs" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {popularDestinations.map((dest, index) => (
+            <div key={index} className="destination-card card-elevated">
+              <img src={dest.image} alt={dest.name} />
+              <div className="overlay">
+                <h3 className="font-bold text-lg">{dest.name}</h3>
+                <p className="text-xs text-white/70">{dest.flights}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Why Choose Us */}
+      <section className="bg-white py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="section-title">Why Choose Charter Flights Aviation?</h2>
+            <p className="section-subtitle">Experience premium air travel like never before</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               {
-                icon: "✈️",
-                title: "Instant Booking",
-                desc: "Book your private jet in under 5 minutes with our streamlined process",
+                icon: <FaPlane className="text-3xl text-[#008cff]" />,
+                title: "500+ Aircraft",
+                desc: "Access to the largest fleet of private jets, helicopters and air ambulances worldwide"
               },
               {
-                icon: "🛡️",
-                title: "Verified Aircraft",
-                desc: "Every aircraft in our fleet meets the highest safety standards",
+                icon: <FaHeadset className="text-3xl text-[#ff6b00]" />,
+                title: "24/7 Support",
+                desc: "Round-the-clock customer service to assist you at every step of your journey"
               },
               {
-                icon: "💎",
-                title: "VIP Experience",
-                desc: "Personalized service from booking to landing, tailored just for you",
+                icon: <FaShieldAlt className="text-3xl text-[#4caf50]" />,
+                title: "Safety First",
+                desc: "All aircraft are fully certified and meet the highest safety standards"
               },
+              {
+                icon: <FaPercent className="text-3xl text-[#9c27b0]" />,
+                title: "Best Prices",
+                desc: "Competitive pricing with no hidden charges. Price match guarantee available"
+              }
             ].map((feature, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                className="feature-card gold-border text-center"
-              >
-                <div className="text-5xl mb-4">{feature.icon}</div>
-                <h4 className="text-xl font-bold text-[#0a1628] mb-2">{feature.title}</h4>
-                <p className="text-gray-600">{feature.desc}</p>
-              </motion.div>
+              <div key={index} className="text-center p-6 card-elevated">
+                <div className="icon-circle mx-auto mb-4" style={{ background: '#f5f5f5' }}>
+                  {feature.icon}
+                </div>
+                <h3 className="font-bold text-lg mb-2 text-[#1a1a1a]">{feature.title}</h3>
+                <p className="text-sm text-[#9b9b9b]">{feature.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Banner */}
+      <section className="bg-gradient-to-r from-[#051423] to-[#15457b] py-12">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center text-white">
+            {[
+              { number: "50+", label: "Countries Served" },
+              { number: "10K+", label: "Happy Travelers" },
+              { number: "500+", label: "Aircraft Fleet" },
+              { number: "24/7", label: "Support Available" }
+            ].map((stat, index) => (
+              <div key={index} className="animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
+                <h3 className="text-4xl md:text-5xl font-bold mb-2">{stat.number}</h3>
+                <p className="text-white/70 text-sm">{stat.label}</p>
+              </div>
             ))}
           </div>
         </div>
@@ -309,6 +329,17 @@ const Home = () => {
       <footer className="relative bottom-0 mt-auto">
         <Bottom />
       </footer>
+
+      {/* WhatsApp Float Button */}
+      <a 
+        href="https://wa.me/919999999999" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="whatsapp-float"
+        aria-label="Chat on WhatsApp"
+      >
+        💬
+      </a>
     </div>
   );
 };
