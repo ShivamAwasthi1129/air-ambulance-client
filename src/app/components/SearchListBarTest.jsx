@@ -656,20 +656,20 @@ export const SearchBar = () => {
         {/* Main Search Container */}
         <motion.div
           ref={containerRef}
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="w-full max-w-6xl"
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-5xl"
         >
           {/* Glass Card Container */}
-          <div className="relative bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+          <div className="relative bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
             {/* Gold Top Accent */}
-            <div className="h-1.5 bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#d4af37]" />
+            <div className="h-1 bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#d4af37]" />
 
-            <div className="p-6 md:p-8">
+            <div className="p-4 md:p-6">
               {/* Flight Type Icons - Only for One Way */}
               {tripType === "oneway" && (
-                <div className="mb-6">
+                <div className="mb-4">
                   <Icondiv
                     flightTypes={segments[0].flightTypes}
                     setFlightTypes={(updatedFlightTypes) =>
@@ -680,7 +680,7 @@ export const SearchBar = () => {
               )}
 
               {/* Trip Type Selector */}
-              <div className="flex items-center gap-4 mb-8">
+              <div className="flex items-center gap-3 mb-4">
                 <div className="inline-flex bg-gray-100 p-1 rounded-full">
                   {[
                     { type: "oneway", label: "One Way", icon: "→" },
@@ -689,9 +689,9 @@ export const SearchBar = () => {
                     <button
                       key={option.type}
                       onClick={() => handleTripTypeChange(option.type)}
-                      className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 flex items-center gap-2 ${
+                      className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 flex items-center gap-2 ${
                         tripType === option.type
-                          ? "bg-[#0a1628] text-white shadow-lg"
+                          ? "bg-[#0a1628] text-white shadow-md"
                           : "text-gray-600 hover:text-[#0a1628]"
                       }`}
                     >
@@ -704,19 +704,19 @@ export const SearchBar = () => {
 
               {/* One Way Search Fields */}
               {tripType === "oneway" && (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {/* Main Fields Row */}
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
                     {/* FROM */}
                     <div className="md:col-span-4 relative">
-                      <label className="flex items-center gap-2 text-sm font-semibold text-[#0a1628] mb-2">
-                        <FaMapMarkerAlt className="text-[#d4af37]" />
+                      <label className="flex items-center gap-2 text-xs font-semibold text-gray-600 mb-1.5">
+                        <FaMapMarkerAlt className="text-[#d4af37] text-xs" />
                         From
                       </label>
                       <div className="relative">
                         <input
                           type="text"
-                          className="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#d4af37] focus:bg-white transition-all text-[#0a1628] font-medium"
+                          className="w-full px-3 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-[#d4af37] focus:bg-white transition-all text-[#0a1628] font-medium text-sm"
                           value={segments[0].from}
                           placeholder="Departure airport..."
                           onFocus={() => {
@@ -750,27 +750,27 @@ export const SearchBar = () => {
                     </div>
 
                     {/* Swap Button */}
-                    <div className="hidden md:flex md:col-span-1 justify-center pb-4">
+                    <div className="hidden md:flex md:col-span-1 justify-center pb-2">
                       <motion.button
                         onClick={() => handleSwap(0)}
                         whileHover={{ scale: 1.1, rotate: 180 }}
                         whileTap={{ scale: 0.95 }}
-                        className="w-12 h-12 bg-gradient-to-r from-[#d4af37] to-[#f4d03f] rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow"
+                        className="w-10 h-10 bg-gradient-to-r from-[#d4af37] to-[#f4d03f] rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition-shadow"
                       >
-                        <FaExchangeAlt className="text-[#0a1628]" />
+                        <FaExchangeAlt className="text-[#0a1628] text-sm" />
                       </motion.button>
                     </div>
 
                     {/* TO */}
                     <div className="md:col-span-4 relative">
-                      <label className="flex items-center gap-2 text-sm font-semibold text-[#0a1628] mb-2">
-                        <FaMapMarkerAlt className="text-[#d4af37]" />
+                      <label className="flex items-center gap-2 text-xs font-semibold text-gray-600 mb-1.5">
+                        <FaMapMarkerAlt className="text-[#d4af37] text-xs" />
                         To
                       </label>
                       <div className="relative">
                         <input
                           type="text"
-                          className="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#d4af37] focus:bg-white transition-all text-[#0a1628] font-medium"
+                          className="w-full px-3 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-[#d4af37] focus:bg-white transition-all text-[#0a1628] font-medium text-sm"
                           value={segments[0].to}
                           placeholder="Destination airport..."
                           onFocus={() => {
@@ -805,8 +805,8 @@ export const SearchBar = () => {
 
                     {/* Date & Time */}
                     <div className="md:col-span-2">
-                      <label className="flex items-center gap-2 text-sm font-semibold text-[#0a1628] mb-2">
-                        <FaCalendarAlt className="text-[#d4af37]" />
+                      <label className="flex items-center gap-2 text-xs font-semibold text-gray-600 mb-1.5">
+                        <FaCalendarAlt className="text-[#d4af37] text-xs" />
                         Departure
                       </label>
                       <input
@@ -825,20 +825,20 @@ export const SearchBar = () => {
                           }
                         }}
                         min={`${new Date().toISOString().split("T")[0]}T00:00`}
-                        className="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#d4af37] focus:bg-white transition-all text-[#0a1628] font-medium"
+                        className="w-full px-3 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-[#d4af37] focus:bg-white transition-all text-[#0a1628] font-medium text-sm"
                       />
                     </div>
 
                     {/* Passengers */}
                     <div className="md:col-span-1">
-                      <label className="flex items-center gap-2 text-sm font-semibold text-[#0a1628] mb-2">
-                        <FaUsers className="text-[#d4af37]" />
+                      <label className="flex items-center gap-2 text-xs font-semibold text-gray-600 mb-1.5">
+                        <FaUsers className="text-[#d4af37] text-xs" />
                         Seats
                       </label>
                       <select
                         value={segments[0].passengers}
                         onChange={(e) => handleSegmentChange(0, "passengers", e.target.value)}
-                        className="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#d4af37] focus:bg-white transition-all text-[#0a1628] font-medium appearance-none cursor-pointer"
+                        className="w-full px-3 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-[#d4af37] focus:bg-white transition-all text-[#0a1628] font-medium text-sm appearance-none cursor-pointer"
                       >
                         {[...Array(32).keys()].map((num) => (
                           <option key={num + 1} value={num + 1}>{num + 1}</option>
@@ -1054,82 +1054,74 @@ export const SearchBar = () => {
               {/* User Info Fields - Only if not verified */}
               {!isVerified && (
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mt-8 p-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200"
+                  className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200"
                 >
-                  <h4 className="text-sm font-bold text-[#0a1628] mb-4 flex items-center gap-2">
-                    <span className="w-8 h-8 bg-[#d4af37] rounded-full flex items-center justify-center text-white text-xs">✓</span>
-                    Quick Verification
-                  </h4>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
                     {/* Email */}
                     <div>
+                      <label className="text-xs font-semibold text-gray-600 mb-1 block">Email*</label>
                       <input
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="Email Address*"
-                        className={`w-full px-4 py-3 bg-white border-2 rounded-xl focus:outline-none focus:border-[#d4af37] transition-all ${
+                        placeholder="your@email.com"
+                        className={`w-full px-3 py-2.5 bg-white border rounded-lg focus:outline-none focus:border-[#d4af37] transition-all text-sm ${
                           emailError ? "border-red-400" : "border-gray-200"
                         }`}
                       />
-                      {emailError && (
-                        <p className="text-red-500 text-xs mt-1">{emailError}</p>
-                      )}
                     </div>
 
                     {/* Phone */}
                     <div>
+                      <label className="text-xs font-semibold text-gray-600 mb-1 block">Phone*</label>
                       <PhoneInput
                         value={phone}
                         onChange={setPhone}
                         defaultCountry="IN"
                         international
                         countryCallingCodeEditable={false}
-                        className={`phone-input-premium w-full px-4 py-3 bg-white border-2 rounded-xl focus:outline-none ${
+                        className={`phone-input-compact w-full px-3 py-2.5 bg-white border rounded-lg focus:outline-none text-sm ${
                           phoneError ? "border-red-400" : "border-gray-200"
                         }`}
                       />
-                      {phoneError && (
-                        <p className="text-red-500 text-xs mt-1">{phoneError}</p>
-                      )}
                     </div>
 
                     {/* Name */}
                     <div>
+                      <label className="text-xs font-semibold text-gray-600 mb-1 block">Name*</label>
                       <input
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder="Your Name*"
-                        className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#d4af37] transition-all"
+                        placeholder="Your Name"
+                        className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-[#d4af37] transition-all text-sm"
                       />
                     </div>
-                  </div>
 
-                  {/* Terms Checkbox */}
-                  <div className="mt-4 flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      id="policyCheck"
-                      checked={agreedToPolicy}
-                      onChange={(e) => setAgreedToPolicy(e.target.checked)}
-                      className="w-5 h-5 rounded border-gray-300 text-[#d4af37] focus:ring-[#d4af37]"
-                    />
-                    <label htmlFor="policyCheck" className="text-sm text-gray-600 cursor-pointer">
-                      I agree to the{" "}
-                      <Link href="/termsAndCondition" className="text-[#d4af37] font-semibold hover:underline">
-                        Terms & Conditions
-                      </Link>
-                    </label>
+                    {/* Terms */}
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="policyCheck"
+                        checked={agreedToPolicy}
+                        onChange={(e) => setAgreedToPolicy(e.target.checked)}
+                        className="w-4 h-4 rounded border-gray-300 text-[#d4af37] focus:ring-[#d4af37]"
+                      />
+                      <label htmlFor="policyCheck" className="text-xs text-gray-600 cursor-pointer">
+                        I agree to{" "}
+                        <Link href="/termsAndCondition" className="text-[#d4af37] font-semibold hover:underline">
+                          T&C
+                        </Link>
+                      </label>
+                    </div>
                   </div>
                 </motion.div>
               )}
 
               {/* Search Button */}
-              <div className="mt-8 flex justify-end items-center gap-4">
+              <div className="mt-4 flex justify-end items-center gap-4">
                 {showTroubleSigningIn && (
                   <button
                     type="button"
@@ -1148,20 +1140,17 @@ export const SearchBar = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   disabled={isLoading}
-                  className="relative px-10 py-4 bg-gradient-to-r from-[#0a1628] to-[#1e4976] text-white rounded-xl font-bold shadow-xl hover:shadow-2xl transition-all disabled:opacity-60 disabled:cursor-not-allowed overflow-hidden group"
+                  className="relative px-8 py-3 bg-gradient-to-r from-[#d4af37] to-[#f4d03f] text-[#0a1628] rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed overflow-hidden group"
                 >
-                  {/* Shimmer Effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                  
                   {isLoading ? (
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-[#0a1628] border-t-transparent rounded-full animate-spin" />
                       Searching...
                     </div>
                   ) : (
-                    <div className="flex items-center gap-3">
-                      <FaSearch />
-                      Search Flights
+                    <div className="flex items-center gap-2">
+                      <FaSearch className="text-sm" />
+                      Search
                     </div>
                   )}
                 </motion.button>
@@ -1201,15 +1190,15 @@ export const SearchBar = () => {
 
       {/* Custom Phone Input Styles */}
       <style jsx global>{`
-        .phone-input-premium .PhoneInputInput {
+        .phone-input-compact .PhoneInputInput {
           border: none !important;
           outline: none !important;
           background: transparent !important;
-          font-size: 1rem;
+          font-size: 0.875rem;
           width: 100%;
         }
-        .phone-input-premium .PhoneInputCountry {
-          margin-right: 0.5rem;
+        .phone-input-compact .PhoneInputCountry {
+          margin-right: 0.25rem;
         }
       `}</style>
     </>

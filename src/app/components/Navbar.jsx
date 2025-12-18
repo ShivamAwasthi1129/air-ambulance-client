@@ -1,15 +1,12 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { FaEye, FaEyeSlash, FaSpinner, FaCheckCircle, FaWhatsapp, FaPhoneAlt, FaBars, FaTimes } from "react-icons/fa";
+import { FaWhatsapp, FaPhoneAlt, FaBars, FaTimes, FaPlane, FaUser, FaSignOutAlt, FaHistory, FaChevronDown, FaGlobe } from "react-icons/fa";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import LoginModal from "./LoginModal";
 
 const NavBar = () => {
-  // ----------------------------------------------------------------
-  // States (same as previous code)
-  // ----------------------------------------------------------------
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [identifier, setIdentifier] = useState("");
@@ -29,18 +26,17 @@ const NavBar = () => {
   const [countries, setCountries] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState("worldwide");
 
-  // Set selectedCountry from sessionStorage on mount to sync dropdown with URL country
   useEffect(() => {
     const storedCountry = sessionStorage.getItem("country_name") || "worldwide";
     setSelectedCountry(storedCountry);
   }, []);
+
   const [countryPhones, setCountryPhones] = useState([]);
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
   const [isVerifying, setIsVerifying] = useState(false);
   const [userExists, setUserExists] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // fetch full list on mount
   useEffect(() => {
     fetch("https://admin.airambulanceaviation.co.in/api/contact?limit=255")
       .then((r) => r.json())
@@ -52,10 +48,9 @@ const NavBar = () => {
       })
       .catch(console.error);
   }, []);
-  // fetch phoneNumbers whenever selection changes (and isn’t “worldwide”)
+
   useEffect(() => {
     if (selectedCountry === "worldwide") {
-      // ─── default load: GET /api/contact and take the first entry’s two numbers ───
       fetch("https://admin.airambulanceaviation.co.in/api/contact")
         .then((r) => r.json())
         .then((json) => {
@@ -66,11 +61,8 @@ const NavBar = () => {
         })
         .catch(console.error);
     } else {
-      // ─── user picked a specific country ───
       fetch(
-        `https://admin.airambulanceaviation.co.in/api/contact/search?q=${encodeURIComponent(
-          selectedCountry
-        )}`
+        `https://admin.airambulanceaviation.co.in/api/contact/search?q=${encodeURIComponent(selectedCountry)}`
       )
         .then((r) => r.json())
         .then((arr) => {
@@ -79,14 +71,11 @@ const NavBar = () => {
         .catch(console.error);
     }
   }, [selectedCountry]);
-  // ----------------------------------------------------------------
-  // Effects
-  // ----------------------------------------------------------------
-  // Load user from session on mount
+
   useEffect(() => {
     loadUserFromSession();
   }, []);
-  // Listen for custom event to re-load user
+
   useEffect(() => {
     const updateHandler = () => {
       loadUserFromSession();
@@ -97,7 +86,6 @@ const NavBar = () => {
     };
   }, []);
 
-  // Hide dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -109,9 +97,7 @@ const NavBar = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-  // ----------------------------------------------------------------
-  // Helpers
-  // ----------------------------------------------------------------
+
   const loadUserFromSession = () => {
     try {
       if (sessionStorage.getItem("userVerified") === "true") {
@@ -142,590 +128,210 @@ const NavBar = () => {
     }
   };
 
-  // ----------------------------------------------------------------
-  // Fetch user data (email/phone) from your backend
-  // ----------------------------------------------------------------
-  const handleFetchUserData = async () => {
-    if (!identifier) {
-      // If cleared, reset
-      setEmail("");
-      setPhoneNumber("");
-      setFetchedName("");
-      setUserExists(false);
-      return;
-    }
-
-    try {
-      const resp = await fetch(
-        `/api/user/${encodeURIComponent(identifier)}`,
-        { method: "GET" }
-      );
-      if (!resp.ok) {
-        throw new Error("Failed to get user info");
-      }
-      const userData = await resp.json();
-      setInfoFetched(true);
-
-      // If API returns an array:
-      if (Array.isArray(userData) && userData.length > 0) {
-        const userObj = userData[0];
-        setPhoneNumber(userObj.phone || "");
-        setEmail(userObj.email || "");
-        setFetchedName(userObj.name || "");
-        setUserExists(true);
-      }
-      // If API returns an object, adjust accordingly:
-      else if (userData && userData.phone) {
-        setPhoneNumber(userData.phone || "");
-        setEmail(userData.email || "");
-        setFetchedName(userData.name || "");
-        setUserExists(true);
-      } else {
-        // No data found
-        setPhoneNumber("");
-        setEmail("");
-        setFetchedName("");
-        setUserExists(false);
-        toast.error("User doesn't exist. with such mobile number or email. Please fill the search query form for search result and Sign up.");
-      }
-    } catch (err) {
-      console.error("Error fetching user data:", err);
-      setPhoneNumber("");
-      setEmail("");
-      setFetchedName("");
-      setUserExists(false);
-      toast.error("User doesn't exist. with such mobile number or email. Please fill the search query form for search result and Sign up.");
-    }
-  };
-
-  const handleOtpChange = (index, value) => {
-    if (value.length > 1) return; // Only allow single digit
-
-    const newOtpDigits = [...otpDigits];
-    newOtpDigits[index] = value;
-    setOtpDigits(newOtpDigits);
-
-    // Auto focus next input
-    if (value && index < 5) {
-      const nextInput = document.getElementById(`otp-${index + 1}`);
-      if (nextInput) nextInput.focus();
-    }
-
-    // Auto verify when all 6 digits are filled
-    if (newOtpDigits.every(digit => digit !== '') && !isVerifying) {
-      const otpString = newOtpDigits.join('');
-      setEnteredOtp(otpString);
-      handleAutoVerifyOtp(otpString);
-    }
-  };
-
-  const handleOtpKeyDown = (index, e) => {
-    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
-      const prevInput = document.getElementById(`otp-${index - 1}`);
-      if (prevInput) prevInput.focus();
-    }
-  };
-
-  const handleAutoVerifyOtp = async (otp) => {
-    if ((!phoneNumber && !email) || !otp) {
-      return;
-    }
-
-    setIsVerifying(true);
-    try {
-      const query = `/api/user/signin?email=${encodeURIComponent(
-        email
-      )}&otp=${encodeURIComponent(otp)}&phone=${encodeURIComponent(
-        phoneNumber
-      )}`;
-
-      const resp = await fetch(query, { method: "GET" });
-      if (!resp.ok) {
-        throw new Error("Failed to verify OTP");
-      }
-      const data = await resp.json();
-      if (
-        data.message &&
-        data.message.toLowerCase().includes("otp verified successfully")
-      ) {
-        toast.success("OTP verified successfully! Logging in...");
-        // Same logic as handleVerifyOtp for session storage
-        const userLoginData = {
-          email,
-          phone: phoneNumber,
-          name: fetchedName,
-          agreedToPolicy: true,
-        };
-
-        const searchDataStr = sessionStorage.getItem("searchData");
-        let searchData = searchDataStr ? JSON.parse(searchDataStr) : {};
-        searchData.userInfo = { ...searchData.userInfo, ...userLoginData };
-        sessionStorage.setItem("searchData", JSON.stringify(searchData));
-        sessionStorage.setItem("loginData", JSON.stringify(userLoginData));
-        sessionStorage.setItem("userVerified", "true");
-
-        const finalDataFromSession = sessionStorage.getItem("searchData");
-        if (finalDataFromSession) {
-          const finalDataToSend = JSON.parse(finalDataFromSession);
-          await fetch("/api/query", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(finalDataToSend),
-          });
-        }
-
-        // Close and reset
-        setIsLoginModalOpen(false);
-        setIdentifier("");
-        setEmail("");
-        setPhoneNumber("");
-        setFetchedName("");
-        setOtpDigits(['', '', '', '', '', '']);
-        setEnteredOtp("");
-        setIsOtpMode(true);
-        setOtpSendStatus("idle");
-        setUserExists(false);
-
-        window.location.reload();
-      } else {
-        toast.error("Invalid OTP. Please try again.");
-        setOtpDigits(['', '', '', '', '', '']);
-        setEnteredOtp("");
-      }
-    } catch (err) {
-      console.error("Error verifying OTP:", err);
-      toast.error("Please Enter a Valid OTP");
-      setOtpDigits(['', '', '', '', '', '']);
-      setEnteredOtp("");
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-  // ----------------------------------------------------------------
-  // Send OTP
-  // ----------------------------------------------------------------
-  const handleSendOtp = async () => {
-    // getting at least phone or email to send OTP
-    // For example, if our OTP is phone-based, phoneNumber must exist
-    if (!phoneNumber && !email) {
-      toast.error("Please enter a valid phone or email first.");
-      return;
-    }
-
-    setOtpSendStatus("sending");
-    try {
-      const resp = await fetch("/api/user/signin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: fetchedName,
-          phone: phoneNumber,
-          email: email,
-        }),
-      });
-
-      if (!resp.ok) {
-        throw new Error("Failed to send OTP");
-      }
-      const data = await resp.json();
-      if (data.success) {
-        setReturnedOtp(data.otp?.toString() || "");
-        toast.success("OTP sent successfully");
-        setOtpSendStatus("sent");
-      } else {
-        toast.error("Failed to send OTP");
-        setOtpSendStatus("idle");
-      }
-    } catch (err) {
-      console.error("Error sending OTP:", err);
-      toast.error("Error sending OTP. Please try again.");
-      setOtpSendStatus("idle");
-    }
-  };
-  // ----------------------------------------------------------------
-  // Verify OTP
-  // ----------------------------------------------------------------
-  const handleVerifyOtp = async () => {
-    // Need phone or email plus the OTP
-    if ((!phoneNumber && !email) || !enteredOtp) {
-      toast.error("Please provide phone/email and OTP.");
-      return;
-    }
-
-    try {
-      const query = `/api/user/signin?email=${encodeURIComponent(
-        email
-      )}&otp=${encodeURIComponent(enteredOtp)}&phone=${encodeURIComponent(
-        phoneNumber
-      )}`;
-
-      const resp = await fetch(query, { method: "GET" });
-      if (!resp.ok) {
-        throw new Error("Failed to verify OTP");
-      }
-      const data = await resp.json();
-      if (
-        data.message &&
-        data.message.toLowerCase().includes("otp verified successfully")
-      ) {
-        toast.success("OTP verified successfully! Logging in...");
-        // Marking user as verified in session
-        const userLoginData = {
-          email,
-          phone: phoneNumber,
-          name: fetchedName,
-          agreedToPolicy: true,
-        };
-
-        const searchDataStr = sessionStorage.getItem("searchData");
-        let searchData = searchDataStr ? JSON.parse(searchDataStr) : {};
-        searchData.userInfo = { ...searchData.userInfo, ...userLoginData };
-        sessionStorage.setItem("searchData", JSON.stringify(searchData));
-        sessionStorage.setItem("loginData", JSON.stringify(userLoginData));
-        sessionStorage.setItem("userVerified", "true");
-
-        // Optionally sending final data
-        const finalDataFromSession = sessionStorage.getItem("searchData");
-        if (finalDataFromSession) {
-          const finalDataToSend = JSON.parse(finalDataFromSession);
-          await fetch("/api/query", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(finalDataToSend),
-          });
-        }
-
-        // Close and reset
-        setIsLoginModalOpen(false);
-        setIdentifier("");
-        setEmail("");
-        setPhoneNumber("");
-        setFetchedName("");
-        setEnteredOtp("");
-        setIsOtpMode(true);
-        setOtpSendStatus("idle");
-
-        window.location.reload();
-      } else {
-        toast.error("OTP verification failed. Please try again.");
-      }
-    } catch (err) {
-      console.error("Error verifying OTP:", err);
-      toast.error("Error verifying OTP. Please try again.");
-    }
-  };
-  // ----------------------------------------------------------------
-  // Normal (Password) login
-  // ----------------------------------------------------------------
-  const handleLoginClick = async () => {
-    setIsLoggingIn(true);
-
-    if (!email) {
-      toast.error("A valid email is required for password login.");
-      setIsLoggingIn(false);
-      return;
-    }
-    if (!password) {
-      toast.error("Password is required.");
-      setIsLoggingIn(false);
-      return;
-    }
-
-    try {
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        if (errorData.error) {
-          toast.error(errorData.error);
-        } else {
-          toast.error("Error logging in. Please try again.");
-        }
-        return;
-      }
-
-      const data = await response.json();
-      if (data.token) {
-        // If successful
-        const userLoginData = {
-          email,
-          name: data.name || fetchedName,
-          phone: phoneNumber,
-          token: data.token,
-        };
-        // Merging into searchData
-        const searchDataStr = sessionStorage.getItem("searchData");
-        let searchData = searchDataStr ? JSON.parse(searchDataStr) : {};
-        searchData.userInfo = { ...searchData.userInfo, ...userLoginData };
-        sessionStorage.setItem("searchData", JSON.stringify(searchData));
-        sessionStorage.setItem("loginData", JSON.stringify(userLoginData));
-        sessionStorage.setItem("userVerified", "true");
-
-        // Optionally sending the final data
-        const finalDataFromSession = sessionStorage.getItem("searchData");
-        if (finalDataFromSession) {
-          const finalDataToSend = JSON.parse(finalDataFromSession);
-          await fetch("/api/query", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(finalDataToSend),
-          });
-        }
-
-        toast.success("Logged in successfully!");
-        setIsLoginModalOpen(false);
-
-        // Reset
-        setIdentifier("");
-        setEmail("");
-        setPhoneNumber("");
-        setPassword("");
-        setFetchedName("");
-
-        window.location.reload();
-      } else if (data.error) {
-        toast.error(data.error);
-      }
-    } catch (err) {
-      console.error("Error during login:", err);
-      toast.error("An unexpected error occurred. Please try again.");
-    } finally {
-      setIsLoggingIn(false);
-    }
-  };
-  // ----------------------------------------------------------------
-  // Logout
-  // ----------------------------------------------------------------
   const handleLogout = () => {
     setUser(null);
     sessionStorage.clear();
     window.location.reload();
   };
+
+  const navLinks = [
+    { name: 'HOME', route: '/' },
+    { name: 'ABOUT', route: '/aboutUs' },
+    { name: 'GET IN TOUCH', route: '/getInTouch' },
+    { name: 'TERMS & CONDITIONS', route: '/termsAndCondition' },
+  ];
+
   return (
-    <div className="z-50 relative w-full top-0">
-
-
-      {/* Rotating Message Stripe */}
-      <div className="bg-[#0883bb] text-white text-sm overflow-hidden whitespace-nowrap">
-        <div className="hidden md:flex bg-customBlue py-1 overflow-hidden">
-          <div className="animate-marquee">
-            <p className="inline-block text-white text-sm md:text-base font-normal">
-              2025 Updates in Charter Flights Aviation: Embarking on global journeys 24/7. Introducing secure and fastest private jets, business jets, and helicopters. For additional information, please inquire.
-            </p>
+    <div className="z-50 relative w-full">
+      {/* Top Announcement Bar */}
+      <div className="bg-[#0a1628] text-white overflow-hidden">
+        <div className="flex items-center justify-center py-2 px-4">
+          <div className="animate-marquee whitespace-nowrap">
+            <span className="inline-flex items-center gap-2 text-sm">
+              <span className="text-[#d4af37]">✈️</span>
+              2025 Updates in Charter Flights Aviation: Embarking on global journeys 24/7. 
+              Introducing secure and fastest private jets, business jets, and helicopters.
+              <span className="text-[#d4af37] ml-4">|</span>
+              <span className="ml-4">📞 24/7 Support Available</span>
+              <span className="text-[#d4af37] ml-4">|</span>
+              <span className="ml-4">🌍 Worldwide Coverage</span>
+            </span>
           </div>
         </div>
       </div>
+
       {/* Main Navigation */}
-      <nav className=" bg-gradient-to-r from-[#f0f4f8] via-[#e6f2ff] to-[#fff0e6] shadow-lg z-20 ">
-        <div className="container mx-auto p-2 flex items-center justify-between sm:w-[80%] lgw-full">
-          {/* Logo */}
-          <Link href="/" className="flex items-center">
-            <img
-              src="https://www.charterflightsaviation.com/images/logo.png"
-              alt="Charter Flights Aviation Logo"
-              className="h-16 object-contain transition-transform duration-300 hover:scale-105"
-            />
-          </Link>
+      <nav className="bg-white shadow-lg border-b-4 border-[#d4af37]">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-3 group">
+              <div className="w-12 h-12 bg-gradient-to-r from-[#0a1628] to-[#1e4976] rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                <FaPlane className="text-[#d4af37] text-xl" />
+              </div>
+              <div className="hidden sm:block">
+                <h1 className="text-lg font-bold text-[#0a1628] leading-tight">Charter Flights</h1>
+                <p className="text-xs text-gray-500">Aviation®</p>
+              </div>
+            </Link>
 
-          {/* Contact and Dropdown Section */}
-          <div className="hidden md:flex items-center space-x-6">
-            {/* Country Dropdown */}
-            <select
-              value={selectedCountry}
-              onChange={(e) => {
-                const country = e.target.value;
-                setSelectedCountry(country);
-                sessionStorage.setItem("country_name", country);
-                window.dispatchEvent(new Event("countryNameChanged"));
-                if (country !== "worldwide") {
-                  window.open(`/${country.toLowerCase()}`, "_blank");
-                }
-              }}
-              className="rounded-lg px-3 py-2 text-sm border-2 border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-blue-300 transition-all duration-300"
-            >
-              <option value="worldwide">Worldwide</option>
-              {countries.map((c) => (
-                <option key={c._id} value={c.country}>
-                  {c.country
-                    .split("-")
-                    .map((w) => w[0].toUpperCase() + w.slice(1))
-                    .join(" ")}
-                </option>
-              ))}
-            </select>
-
-            {/* Phone and WhatsApp Numbers */}
-            <div className="flex items-center space-x-4">
-              {countryPhones.map((num, idx) => (
-                <a
-                  key={`${num}-${idx}`}
-                  href={idx === 0 ? `tel:${num}` : `https://wa.me/${num.replace(/^\+/, "")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center text-gray-700 hover:text-blue-600 group transition-all duration-300 transform hover:scale-110"
-                >
-                  {idx === 0 ? (
-                    <FaPhoneAlt className="mr-2 text-gray-600 group-hover:text-blue-500 transition-colors" />
-                  ) : (
-                    <FaWhatsapp className="mr-2 text-gray-600 group-hover:text-green-500 transition-colors" />
-                  )}
-                  <span className="font-medium text-sm">{num}</span>
-                </a>
-              ))}
-            </div>
-
-
-          </div>
-          {/* User Login/Profile Dropdown */}
-          <div className="relative hidden md:block" ref={dropdownRef}>
-            {user ? (
-              <>
-                <div
-                  className="flex items-center space-x-3 cursor-pointer group"
-                  onClick={() => setIsDropdownOpen((prev) => !prev)}
-                >
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-200 to-blue-400 rounded-full flex items-center justify-center shadow-md group-hover:scale-110 transition-all duration-300">
-                    <span className="text-white font-bold text-lg">
-                      {user.email?.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <span className="text-gray-800 font-semibold text-base group-hover:text-blue-600 transition-colors">
-                    {user.email}
-                  </span>
-                </div>
-                {isDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-3 bg-white shadow-2xl rounded-xl py-2 w-56 z-10 border border-gray-100 transform transition-all duration-300 origin-top-right">
-                    <Link href="/profile">
-                      <div className="px-4 py-3 hover:bg-gradient-to-r from-blue-50 to-blue-100 hover:text-blue-700 transition-all duration-300 cursor-pointer">
-                        <span className="font-medium">User Profile</span>
-                      </div>
-                    </Link>
-                    <Link href="/travelHistory">
-                      <div className="px-4 py-3 hover:bg-gradient-to-r from-green-50 to-green-100 hover:text-green-700 transition-all duration-300 cursor-pointer">
-                        <span className="font-medium">Travel History</span>
-                      </div>
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left px-4 py-3 hover:bg-gradient-to-r from-red-50 to-red-100 hover:text-red-700 transition-all duration-300"
-                    >
-                      <span className="font-medium">Logout</span>
-                    </button>
-                  </div>
-                )}
-              </>
-            ) : (
-              <button
-                onClick={() => setIsLoginModalOpen(true)}
-                className="px-6 py-2 rounded-2xl text-white font-bold bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
-              >
-                Login
-              </button>
-            )}
-          </div>
-          {/* Mobile hamburger */}
-          <button
-            aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
-            className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-800 hover:text-blue-600 hover:bg-white/60 focus:outline-none"
-            onClick={() => setIsMobileMenuOpen((o) => !o)}
-          >
-            {isMobileMenuOpen ? <FaTimes size={22} /> : <FaBars size={22} />}
-          </button>
-        </div>
-        {/* Navigation Links */}
-        <div className="hidden md:block border-t-4 border-[#0883bb] bg-gradient-to-r from-[#f0f8ff] via-[#e6f2ff] to-[#f0f0f0] text-gray-800 py-3 shadow-md">
-          <div className="container mx-auto px-4">
-            <div className="flex justify-center items-center space-x-10">
-              {[
-                { name: 'HOME', route: '/' },
-                { name: 'ABOUT', route: '/aboutUs' },
-                // { name: 'AIRCRAFTS', route: '/' },
-                { name: 'GET IN TOUCH', route: '/getInTouch' },
-                { name: 'TERMS & CONDITIONS', route: '/termsAndCondition' },
-              ].map((item, index) => (
-                <React.Fragment key={item.name}>
-                  <Link
-                    href={item.route}
-                    className="uppercase font-bold text-base tracking-wider 
-           text-gray-700 
-           relative 
-           group 
-           transition-all 
-           duration-300 
-           hover:text-transparent 
-           hover:bg-clip-text 
-           hover:bg-gradient-to-r 
-           hover:from-blue-500 
-           hover:to-purple-600 
-           before:absolute 
-           before:bottom-[-3px] 
-           before:left-0 
-           before:w-0 
-           before:h-1 
-           before:bg-gradient-to-r 
-           before:from-blue-500 
-           before:to-purple-600 
-           before:transition-all 
-           before:duration-300 
-           hover:before:w-full"
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex items-center gap-6">
+              {/* Country Selector */}
+              <div className="relative">
+                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer hover:border-[#d4af37] transition-colors">
+                  <FaGlobe className="text-[#d4af37]" />
+                  <select
+                    value={selectedCountry}
+                    onChange={(e) => {
+                      const country = e.target.value;
+                      setSelectedCountry(country);
+                      sessionStorage.setItem("country_name", country);
+                      window.dispatchEvent(new Event("countryNameChanged"));
+                      if (country !== "worldwide") {
+                        window.open(`/${country.toLowerCase()}`, "_blank");
+                      }
+                    }}
+                    className="bg-transparent text-sm font-medium text-[#0a1628] focus:outline-none cursor-pointer"
                   >
-                    {item.name}
-                  </Link>
-                  {index !== 4 && (
-                    <div className="h-5 w-px bg-gray-300"></div>
-                  )}
-                </React.Fragment>
-              ))}
+                    <option value="worldwide">Worldwide</option>
+                    {countries.map((c) => (
+                      <option key={c._id} value={c.country}>
+                        {c.country.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ")}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Contact Numbers */}
+              <div className="flex items-center gap-4">
+                {countryPhones.map((num, idx) => (
+                  <a
+                    key={`${num}-${idx}`}
+                    href={idx === 0 ? `tel:${num}` : `https://wa.me/${num.replace(/^\+/, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-300 ${
+                      idx === 0 
+                        ? "bg-[#0a1628] text-white hover:bg-[#1e4976]" 
+                        : "bg-green-500 text-white hover:bg-green-600"
+                    }`}
+                  >
+                    {idx === 0 ? <FaPhoneAlt /> : <FaWhatsapp />}
+                    <span className="hidden xl:inline">{num}</span>
+                  </a>
+                ))}
+              </div>
+
+              {/* User Section */}
+              <div className="relative" ref={dropdownRef}>
+                {user ? (
+                  <>
+                    <button
+                      onClick={() => setIsDropdownOpen((prev) => !prev)}
+                      className="flex items-center gap-3 px-4 py-2 rounded-xl bg-gradient-to-r from-[#0a1628] to-[#1e4976] text-white hover:shadow-lg transition-all"
+                    >
+                      <div className="w-8 h-8 bg-[#d4af37] rounded-full flex items-center justify-center font-bold">
+                        {user.email?.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="hidden xl:inline text-sm font-medium max-w-[120px] truncate">
+                        {user.email}
+                      </span>
+                      <FaChevronDown className={`text-xs transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
+                    </button>
+
+                    {isDropdownOpen && (
+                      <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-50 overflow-hidden">
+                        <div className="px-4 py-3 bg-gradient-to-r from-[#0a1628] to-[#1e4976] text-white mb-2">
+                          <p className="text-xs text-white/70">Signed in as</p>
+                          <p className="font-medium text-sm truncate">{user.email}</p>
+                        </div>
+                        <Link href="/profile" className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+                          <FaUser className="text-[#d4af37]" />
+                          <span className="font-medium text-gray-700">Profile</span>
+                        </Link>
+                        <Link href="/travelHistory" className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+                          <FaHistory className="text-[#d4af37]" />
+                          <span className="font-medium text-gray-700">Travel History</span>
+                        </Link>
+                        <div className="border-t border-gray-100 mt-2 pt-2">
+                          <button
+                            onClick={handleLogout}
+                            className="flex items-center gap-3 px-4 py-3 w-full text-left hover:bg-red-50 transition-colors text-red-600"
+                          >
+                            <FaSignOutAlt />
+                            <span className="font-medium">Logout</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setIsLoginModalOpen(true)}
+                    className="px-6 py-2.5 rounded-xl font-bold bg-gradient-to-r from-[#d4af37] to-[#f4d03f] text-[#0a1628] hover:shadow-lg transition-all duration-300"
+                  >
+                    Login
+                  </button>
+                )}
+              </div>
             </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+              className="lg:hidden p-2 rounded-xl bg-gray-100 text-[#0a1628] hover:bg-[#d4af37] hover:text-white transition-colors"
+              onClick={() => setIsMobileMenuOpen((o) => !o)}
+            >
+              {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
+            </button>
+          </div>
+
+          {/* Desktop Nav Links */}
+          <div className="hidden lg:flex items-center justify-center gap-8 mt-4 pt-4 border-t border-gray-100">
+            {navLinks.map((item, index) => (
+              <Link
+                key={item.name}
+                href={item.route}
+                className="relative text-sm font-semibold text-gray-600 hover:text-[#0a1628] transition-colors group py-2"
+              >
+                {item.name}
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#d4af37] group-hover:w-full transition-all duration-300" />
+              </Link>
+            ))}
           </div>
         </div>
       </nav>
 
-      {/* Mobile slide-out menu */}
+      {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-40 md:hidden">
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setIsMobileMenuOpen(false)}
-          />
-          <div className="absolute right-0 top-0 h-full w-80 max-w-[85%] bg-white shadow-2xl p-5 overflow-y-auto">
-            {/* User Section */}
-            <div className="mb-6">
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setIsMobileMenuOpen(false)} />
+          <div className="absolute right-0 top-0 h-full w-80 max-w-[85%] bg-white shadow-2xl overflow-y-auto">
+            {/* Mobile Menu Header */}
+            <div className="bg-gradient-to-r from-[#0a1628] to-[#1e4976] p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <FaPlane className="text-[#d4af37] text-2xl" />
+                  <span className="text-white font-bold">Charter Flights</span>
+                </div>
+                <button
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="p-2 rounded-xl bg-white/10 text-white"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+              
               {user ? (
-                <div>
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-200 to-blue-400 rounded-full flex items-center justify-center shadow-md">
-                      <span className="text-white font-bold text-lg">{user.email?.charAt(0).toUpperCase()}</span>
-                    </div>
-                    <span className="text-gray-800 font-semibold text-base">{user.email}</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-[#d4af37] rounded-full flex items-center justify-center font-bold text-[#0a1628]">
+                    {user.email?.charAt(0).toUpperCase()}
                   </div>
-
-                  {/* User menu options */}
-                  <div className="space-y-2 mb-4">
-                    <Link
-                      href="/profile"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="block w-full px-3 py-2 rounded-lg text-gray-800 font-medium hover:bg-blue-50"
-                    >
-                      User Profile
-                    </Link>
-                    <Link
-                      href="/travelHistory"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="block w-full px-3 py-2 rounded-lg text-gray-800 font-medium hover:bg-green-50"
-                    >
-                      Travel History
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="block w-full text-left px-3 py-2 rounded-lg text-red-600 font-medium hover:bg-red-50"
-                    >
-                      Logout
-                    </button>
+                  <div>
+                    <p className="text-xs text-white/70">Welcome back</p>
+                    <p className="text-white font-medium text-sm truncate max-w-[180px]">{user.email}</p>
                   </div>
                 </div>
               ) : (
@@ -734,83 +340,106 @@ const NavBar = () => {
                     setIsLoginModalOpen(true);
                     setIsMobileMenuOpen(false);
                   }}
-                  className="w-full px-4 py-2 rounded-xl text-white font-bold bg-gradient-to-r from-blue-500 to-purple-600"
+                  className="w-full py-3 rounded-xl font-bold bg-[#d4af37] text-[#0a1628]"
                 >
-                  Login
+                  Login / Sign Up
                 </button>
               )}
             </div>
 
-            {/* Country selector */}
-            <div className="mb-5">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
-              <select
-                value={selectedCountry}
-                onChange={(e) => {
-                  const country = e.target.value;
-                  setSelectedCountry(country);
-                  sessionStorage.setItem("country_name", country);
-                  window.dispatchEvent(new Event("countryNameChanged"));
-                  if (country !== "worldwide") {
-                    window.open(`/${country.toLowerCase()}`, "_blank");
-                  }
-                }}
-                className="w-full rounded-lg px-3 py-2 text-sm border-2 border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
-              >
-                <option value="worldwide">Worldwide</option>
-                {countries.map((c) => (
-                  <option key={c._id} value={c.country}>
-                    {c.country
-                      .split("-")
-                      .map((w) => w[0].toUpperCase() + w.slice(1))
-                      .join(" ")}
-                  </option>
+            {/* Mobile Menu Content */}
+            <div className="p-6 space-y-6">
+              {/* User Links (if logged in) */}
+              {user && (
+                <div className="space-y-2 pb-4 border-b border-gray-100">
+                  <Link
+                    href="/profile"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-gray-50"
+                  >
+                    <FaUser className="text-[#d4af37]" />
+                    <span className="font-medium">Profile</span>
+                  </Link>
+                  <Link
+                    href="/travelHistory"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-gray-50"
+                  >
+                    <FaHistory className="text-[#d4af37]" />
+                    <span className="font-medium">Travel History</span>
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-red-50 text-red-600 w-full"
+                  >
+                    <FaSignOutAlt />
+                    <span className="font-medium">Logout</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Country Selector */}
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Select Region</label>
+                <select
+                  value={selectedCountry}
+                  onChange={(e) => {
+                    const country = e.target.value;
+                    setSelectedCountry(country);
+                    sessionStorage.setItem("country_name", country);
+                    window.dispatchEvent(new Event("countryNameChanged"));
+                    if (country !== "worldwide") {
+                      window.open(`/${country.toLowerCase()}`, "_blank");
+                    }
+                  }}
+                  className="w-full mt-2 p-3 rounded-xl border-2 border-gray-200 focus:border-[#d4af37] focus:outline-none"
+                >
+                  <option value="worldwide">Worldwide</option>
+                  {countries.map((c) => (
+                    <option key={c._id} value={c.country}>
+                      {c.country.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ")}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Contact */}
+              <div className="space-y-3">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Contact Us</label>
+                {countryPhones.map((num, idx) => (
+                  <a
+                    key={`${num}-${idx}`}
+                    href={idx === 0 ? `tel:${num}` : `https://wa.me/${num.replace(/^\+/, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`flex items-center gap-3 p-3 rounded-xl font-medium ${
+                      idx === 0 ? "bg-[#0a1628] text-white" : "bg-green-500 text-white"
+                    }`}
+                  >
+                    {idx === 0 ? <FaPhoneAlt /> : <FaWhatsapp />}
+                    <span>{num}</span>
+                  </a>
                 ))}
-              </select>
-            </div>
+              </div>
 
-            {/* Contact numbers */}
-            <div className="mb-6 space-y-3">
-              {countryPhones.map((num, idx) => (
-                <a
-                  key={`${num}-${idx}`}
-                  href={idx === 0 ? `tel:${num}` : `https://wa.me/${num.replace(/^\+/, "")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center text-gray-800"
-                >
-                  {idx === 0 ? (
-                    <FaPhoneAlt className="mr-3 text-gray-600" />
-                  ) : (
-                    <FaWhatsapp className="mr-3 text-green-600" />
-                  )}
-                  <span className="font-medium">{num}</span>
-                </a>
-              ))}
-            </div>
-
-            {/* Nav links */}
-            <div className="space-y-2">
-              {[
-                { name: 'HOME', route: '/' },
-                { name: 'ABOUT', route: '/aboutUs' },
-                { name: 'GET IN TOUCH', route: '/getInTouch' },
-                { name: 'TERMS & CONDITIONS', route: '/termsAndCondition' },
-              ].map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.route}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block w-full px-3 py-3 rounded-lg text-gray-800 font-semibold hover:bg-gray-100"
-                >
-                  {item.name}
-                </Link>
-              ))}
+              {/* Navigation Links */}
+              <div className="space-y-2 pt-4 border-t border-gray-100">
+                {navLinks.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.route}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block p-3 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       )}
-      
+
       {/* Login Modal */}
       <LoginModal
         isOpen={isLoginModalOpen}
@@ -819,9 +448,9 @@ const NavBar = () => {
           setIsLoginModalOpen(false);
           window.location.reload();
         }}
-        source="navbar"  
+        source="navbar"
       />
-      {/* Toast notifications */}
+
       <ToastContainer
         autoClose={12000}
         hideProgressBar={false}
