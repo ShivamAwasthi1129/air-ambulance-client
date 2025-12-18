@@ -1,0 +1,159 @@
+name: 🚀 Deploy to Amazon Linux
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch: # Manual trigger bhi kar sakte ho
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  # ============================================
+  # Job 1: Build & Test
+  # ============================================
+  build:
+    name: 🔨 Build & Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📚 Install dependencies
+        run: npm ci
+
+      - name: 🔍 Run linting
+        run: npm run lint
+        continue-on-error: true
+
+      - name: 🏗️ Build application
+        run: npm run build
+        env:
+          # Add your environment variables here
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+
+      - name: 📤 Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextjs-build
+          path: |
+            .next/
+            public/
+            package.json
+            package-lock.json
+            next.config.mjs
+            ecosystem.config.cjs
+          retention-days: 1
+
+  # ============================================
+  # Job 2: Deploy to EC2
+  # ============================================
+  deploy:
+    name: 🚀 Deploy to EC2
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📥 Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: nextjs-build
+          path: .
+
+      - name: 🔑 Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2_key.pem
+          chmod 600 ~/.ssh/ec2_key.pem
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: 📂 Create deployment package
+        run: |
+          tar -czf deploy.tar.gz \
+            .next \
+            public \
+            package.json \
+            package-lock.json \
+            next.config.mjs \
+            ecosystem.config.cjs
+
+      - name: 📤 Upload to EC2
+        run: |
+          scp -i ~/.ssh/ec2_key.pem \
+            deploy.tar.gz \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USER }}/
+
+      - name: 🚀 Deploy on EC2
+        run: |
+          ssh -i ~/.ssh/ec2_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'ENDSSH'
+            set -e
+            
+            echo "📂 Extracting deployment package..."
+            cd /home/${{ secrets.EC2_USER }}
+            
+            # Backup current deployment
+            if [ -d "airamb" ]; then
+              rm -rf airamb_backup
+              cp -r airamb airamb_backup
+            fi
+            
+            # Create app directory if not exists
+            mkdir -p airamb
+            cd airamb
+            
+            # Extract new deployment
+            tar -xzf ../deploy.tar.gz
+            rm ../deploy.tar.gz
+            
+            echo "📦 Installing production dependencies..."
+            npm ci --only=production
+            
+            echo "🔄 Restarting application with PM2..."
+            pm2 restart ecosystem.config.cjs --env production || pm2 start ecosystem.config.cjs --env production
+            pm2 save
+            
+            echo "✅ Deployment successful!"
+          ENDSSH
+
+      - name: 🧹 Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/ec2_key.pem
+
+      - name: ✅ Deployment complete
+        run: echo "🎉 Application deployed successfully to ${{ secrets.EC2_HOST }}"
+
+  # ============================================
+  # Job 3: Health Check
+  # ============================================
+  health-check:
+    name: 🏥 Health Check
+    runs-on: ubuntu-latest
+    needs: deploy
+    
+    steps:
+      - name: ⏳ Wait for deployment to stabilize
+        run: sleep 30
+
+      - name: 🔍 Check application health
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.EC2_HOST }} || echo "000")
+          if [ "$response" = "200" ] || [ "$response" = "301" ] || [ "$response" = "302" ]; then
+            echo "✅ Application is healthy! Status: $response"
+          else
+            echo "⚠️ Health check returned status: $response"
+            exit 1
+          fi
+
